@@ -284,7 +284,7 @@ Tên package đã chốt: `entity` (không dùng `model`), có tầng `service`,
 - [x] Gắn logo vào ảnh sản phẩm (đã xong, ảnh ở `src/main/webapp/assets/images/`)
 - [x] Màu nhấn cobalt, font Manrope, responsive điện thoại (điểm ngắt 990px và 750px)
 - [x] Giao diện JSP của toàn bộ trang và khung file (Servlet, Service, DAO, Filter)
-- [ ] Database schema: bản nháp ở `database/schema.sql` (17 bảng), chờ team review, chưa chạy thử trên MySQL. Còn thiếu `database/data.sql`
+- [ ] Database: `database/schema.sql` (17 bảng) và `database/data.sql` (dữ liệu demo, tài khoản và voucher mẫu ghi ở đầu file) đã chạy thử trên MySQL 8.0, chờ team review. Chạy `schema.sql` trước rồi `data.sql`
 - [ ] Code convention đầy đủ
 - [ ] Quy trình GitHub (branch, PR, giao task)
 - [ ] Phân công 6 thành viên
