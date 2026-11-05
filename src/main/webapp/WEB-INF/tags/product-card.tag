@@ -1,0 +1,21 @@
+<%@ tag description="Thẻ sản phẩm (ô ảnh xám, hãng, tên, giá, sao)" pageEncoding="UTF-8" body-content="empty" %>
+<%@ attribute name="product" required="true" type="com.fashionweb.entity.Product" %>
+<%@ attribute name="eager" required="false" type="java.lang.Boolean" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="t" tagdir="/WEB-INF/tags" %>
+<a class="product-card" href="${ctx}/product?slug=${fn:escapeXml(product.slug)}">
+  <div class="product-card__media">
+    <c:if test="${product.stockTotal == 0}"><span class="product-card__badge product-card__badge--sold">Hết hàng</span></c:if>
+    <t:img src="${product.imageThumb}" alt="${product.name}" eager="${eager}"/>
+  </div>
+  <div class="product-card__body">
+    <span class="product-card__brand">Saltair</span>
+    <span class="product-card__name"><c:out value="${product.name}"/></span>
+    <span class="product-card__price"><t:price value="${product.price}"/></span>
+    <c:if test="${product.reviewCount > 0}">
+      <span class="product-card__rating"><t:stars rating="${product.avgRating}"/><span class="rating-count">(<fmt:formatNumber value="${product.avgRating}" minFractionDigits="1" maxFractionDigits="1"/>)</span></span>
+    </c:if>
+  </div>
+</a>

@@ -1,0 +1,23 @@
+# Build
+target/
+*.class
+*.war
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+.smarttomcat/
+
+# Cấu hình DB của từng máy (mỗi người một mật khẩu khác nhau)
+src/main/resources/db.properties
+
+# Ảnh upload lúc chạy thử
+uploads/
+
+# Hệ điều hành
+.DS_Store
+Thumbs.db
