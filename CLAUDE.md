@@ -25,20 +25,20 @@ Website thương mại điện tử bán quần áo thời trang. Đồ án môn
 - **Giá tham khảo**: áo thun 199.000 đến 349.000đ, hoodie và nỉ 399.000 đến 599.000đ, áo khoác 499.000 đến 899.000đ, quần 299.000 đến 549.000đ.
 - Mỗi sản phẩm có 2 đến 3 màu. Dữ liệu tạo bằng script `database/data.sql`, không nhập tay.
 - Không có danh mục phụ kiện.
-- Danh sách đầy đủ 24 sản phẩm (giá, màu): `docs/product-catalog.md` và `docs/product-catalog.csv` (dùng sinh `data.sql`).
-- Quy trình tạo ảnh (cho Codex agent): `docs/image-workflow.md`. Phase 1 tạo ảnh, Phase 2 gắn logo Saltair (logo đã có sẵn).
+- Danh sách đầy đủ 24 sản phẩm (giá, màu): `docs/product-catalog.csv` (dùng sinh `data.sql`).
+- Ảnh sản phẩm, banner, danh mục đã tạo và gắn logo Saltair xong, nằm ở `src/main/webapp/assets/images/` (`products/`, `banners/`, `categories/`).
 
 **Ảnh sản phẩm**
 - 1 ảnh chính cho mỗi sản phẩm, nền trơn sáng, chỉ có sản phẩm (không người mẫu), không logo, không chữ. Màu hiển thị bằng ô chọn màu (swatch).
 - Nguồn ảnh: ảnh do ChatGPT tạo, hoặc ảnh stock miễn phí bản quyền (Unsplash, Pexels, Pixabay) và phải đọc giấy phép. **Không dùng ảnh lấy từ web bán hàng của hãng khác.**
-- Logo Saltair (PNG nền trong suốt) được gắn vào ảnh bằng script hàng loạt.
+- Logo Saltair đã được gắn sẵn vào ảnh sản phẩm.
 - Ảnh banner: lifestyle bãi biển sáng, khoảng 2 đến 3 ảnh.
 
 ## Phong cách giao diện
 
 Tham khảo phong cách của template A-dam (light, airy, flat). **Chỉ mượn phong cách**, không dùng logo, ảnh hay câu chữ của họ.
 
-**Số liệu thật đo từ a-dam.com** (kích thước, hiệu ứng, bố cục): `docs/a-dam-measurements.md`. Khi số liệu đo khác `design.md`, **theo số liệu đo**.
+**Số liệu thật đo từ a-dam.com** (kích thước, hiệu ứng, bố cục): `docs/a-dam-measurements.md`. Khi mô tả trong file này khác số liệu đo, **theo số liệu đo**.
 
 **Màu**
 - Nền trang `#ffffff`; ô ảnh, thẻ sản phẩm, hộp thông tin `#f4f4f4`
@@ -76,7 +76,8 @@ File CSS dùng chung: `webapp/assets/css/style.css` (khách hàng) và `admin.cs
 - **Ảnh rỗng**: `MockData.SAMPLE_IMAGES = false` nên mọi ô ảnh hiện khung xám (chờ Admin tải ảnh lên). Đặt `true` để xem bằng ảnh mẫu trong `assets/images`.
 - Giả lập đăng nhập bằng tham số URL (`DevPreviewFilter`, xóa khi làm xong đăng nhập thật): `?as=customer`, `?as=admin`, `?as=guest`.
 - `demoMode` trong `web.xml` (mặc định `true`): form chưa có logic chỉ hiện thông báo. Đổi `false` khi nhóm làm xong logic.
-- Trang nào cần dữ liệu gì: `docs/ui-data-contract.md` (tên thuộc tính request, tham số, form, việc cần làm cho từng trang).
+- Trang nào cần dữ liệu gì: đọc comment đầu mỗi file JSP (route, thuộc tính request, kiểu dữ liệu) và Javadoc `TODO(logic)` trong Servlet tương ứng (việc cần làm, các `action` của form).
+- Khung file cho thành viên: Servlet (đang dùng `MockData`), Service, DAO, Filter đã tạo sẵn trong từng package chức năng. Service và DAO chỉ có chữ ký phương thức, thân hàm ném `UnsupportedOperationException("TODO ...")`; `AuthFilter` và `AdminFilter` đang cho mọi request đi qua. Làm xong mục nào thì thay `MockData` ở Servlet bằng Service tương ứng; khi hết chỗ dùng thì xóa package `mock`.
 - Cách chạy: Java 17, Tomcat 11 (Jakarta). Build bằng Maven (`mvn package`), deploy `target/saltair.war`, mở `/saltair/home`.
 
 ## Phân quyền (Roles)
@@ -280,9 +281,9 @@ Tên package đã chốt: `entity` (không dùng `model`), có tầng `service`,
 ## Còn cần chốt
 
 - [x] Logo Saltair: đã có, lưu ở `src/main/webapp/assets/brand/` (`saltair-logo.png`, `saltair-logo-white.png`, bản gốc `saltair-logo-original.webp`)
-- [ ] Script gắn logo vào ảnh (`tools/add_logo.py`, Codex viết ở Phase 2 của `docs/image-workflow.md`)
+- [x] Gắn logo vào ảnh sản phẩm (đã xong, ảnh ở `src/main/webapp/assets/images/`)
 - [x] Màu nhấn cobalt, font Manrope, responsive điện thoại (điểm ngắt 990px và 750px)
-- [ ] Giao diện JSP của toàn bộ trang (đang dựng, xem `docs/ui-data-contract.md`)
+- [x] Giao diện JSP của toàn bộ trang và khung file (Servlet, Service, DAO, Filter)
 - [ ] Database schema: bản nháp ở `database/schema.sql` (17 bảng), chờ team review, chưa chạy thử trên MySQL. Còn thiếu `database/data.sql`
 - [ ] Code convention đầy đủ
 - [ ] Quy trình GitHub (branch, PR, giao task)
