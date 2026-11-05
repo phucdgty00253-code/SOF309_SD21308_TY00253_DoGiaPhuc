@@ -1,9 +1,9 @@
 /**
- * CHỨC NĂNG: Đăng nhập, đăng ký, quên mật khẩu, đặt lại mật khẩu, đăng xuất, phân quyền.
+ * CHỨC NĂNG: Đăng nhập, đăng ký, quên và đặt lại mật khẩu, đăng xuất, phân quyền, quản lý người dùng (Admin).
  *
- * <p>Servlet (đã có khung): LoginServlet, RegisterServlet, ForgotPasswordServlet, ResetPasswordServlet, LogoutServlet.
- * <p>Cần tạo: AuthService, UserDAO, AuthFilter (bắt buộc đăng nhập), AdminFilter (chỉ ADMIN vào /admin/*).
- * <p>JSP: WEB-INF/views/auth/.
- * <p>Luồng: Servlet -> AuthService -> UserDAO -> MySQL.
+ * Servlet: LoginServlet, RegisterServlet, ForgotPasswordServlet, ResetPasswordServlet, LogoutServlet.
+ * Khung đã có: AuthService, UserService, UserDAO, AuthFilter (bắt buộc đăng nhập), AdminFilter (chỉ ADMIN vào /admin/*).
+ * JSP: WEB-INF/views/auth/.
+ * Luồng: Servlet -> Service -> DAO -> MySQL.
  */
 package com.fashionweb.auth;

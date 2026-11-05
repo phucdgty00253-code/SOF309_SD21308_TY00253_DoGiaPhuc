@@ -1,9 +1,8 @@
 /**
- * CHỨC NĂNG: Trang chủ, danh sách và chi tiết sản phẩm (lọc, sắp xếp, tìm kiếm, phân trang), đánh giá hiển thị, blog, giới thiệu.
+ * CHỨC NĂNG: Trang chủ, danh sách và chi tiết sản phẩm (lọc, sắp xếp, tìm kiếm, phân trang), blog, giới thiệu; cũng là nơi đặt Service/DAO về sản phẩm, danh mục, màu, size, blog, banner mà gói admin dùng lại.
  *
- * <p>Servlet (đã có khung): HomeServlet, ProductListServlet, ProductDetailServlet, BlogServlet, BlogDetailServlet, AboutServlet.
- * <p>Cần tạo: ProductService, BlogService, ProductDAO, CategoryDAO, BlogDAO, BannerDAO, ReviewDAO (đọc đánh giá).
- * <p>JSP: WEB-INF/views/shop/.
- * <p>Các Service/DAO của gói này được gói admin dùng lại.
+ * Servlet: HomeServlet, ProductListServlet, ProductDetailServlet, BlogServlet, BlogDetailServlet, AboutServlet.
+ * Khung đã có: ProductService, ProductDAO, CategoryService, CategoryDAO, AttributeService, ColorDAO, SizeDAO, BlogService, BlogDAO, BannerService, BannerDAO.
+ * JSP: WEB-INF/views/shop/.
  */
 package com.fashionweb.shop;
