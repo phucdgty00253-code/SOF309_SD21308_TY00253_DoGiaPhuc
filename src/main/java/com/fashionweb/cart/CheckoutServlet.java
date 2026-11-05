@@ -24,7 +24,7 @@ import java.util.List;
  *
  * TODO(logic):
  *  - doGet: lấy giỏ và sổ địa chỉ từ CartService / AddressService; giỏ trống thì redirect /cart.
- *  - doPost action=applyVoucher (voucherCode): VoucherService.validate theo 7 bước trong CLAUDE.md,
+ *  - doPost action=applyVoucher (voucherCode): VoucherService.validate theo 7 bước trong project.md,
  *    lưu mã vào session rồi redirect /checkout (PRG); lỗi thì forward lại với voucherError.
  *  - doPost action=placeOrder (addressId | receiverName, receiverPhone, addressLine, ward, district, city,
  *    voucherCode, paymentMethod=COD, note): OrderService.placeOrder trong một transaction

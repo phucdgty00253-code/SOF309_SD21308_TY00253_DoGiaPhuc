@@ -4,6 +4,6 @@
  * Servlet: CartServlet, CheckoutServlet.
  * Khung đã có: CartService, CartDAO, VoucherService, VoucherDAO, VoucherException.
  * JSP: WEB-INF/views/cart/.
- * Quy tắc voucher và phí ship: xem CLAUDE.md. Đặt hàng thành công gọi OrderService (gói order) trong một transaction.
+ * Quy tắc voucher và phí ship: xem project.md. Đặt hàng thành công gọi OrderService (gói order) trong một transaction.
  */
 package com.fashionweb.cart;

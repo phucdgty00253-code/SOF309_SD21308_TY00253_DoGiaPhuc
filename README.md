@@ -5,7 +5,7 @@ Website thương mại điện tử bán đồ basic phong cách biển của th
 Java Servlet/JSP thuần, mô hình **MVC + DAO + Service**, render phía server, một project Maven duy nhất.
 
 - Công nghệ: Java 17, Servlet 6.1 / JSP 4 / JSTL 3 (Jakarta EE), JDBC thuần, MySQL 8, Maven, Tomcat 11.
-- Mô tả đầy đủ chức năng theo role, quy tắc voucher và phí ship, trạng thái đơn hàng: xem file đặc tả dự án (file `.md` viết hoa ở thư mục gốc của repo).
+- Mô tả đầy đủ chức năng theo role, quy tắc voucher và phí ship, trạng thái đơn hàng: xem [project.md](project.md).
 - Việc cần làm: tab **Issues** của repo (mỗi issue có checklist nghiệm thu).
 
 ## 1. Chạy project trên máy mình

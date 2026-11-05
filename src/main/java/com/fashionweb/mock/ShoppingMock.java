@@ -61,7 +61,7 @@ public final class ShoppingMock {
     }
 
     /**
-     * Kiểm tra mã theo thứ tự trong CLAUDE.md. Trả về câu báo lỗi, hoặc null nếu hợp lệ.
+     * Kiểm tra mã theo thứ tự trong project.md. Trả về câu báo lỗi, hoặc null nếu hợp lệ.
      * Bước "khách đã dùng đủ số lần" chưa kiểm tra (cần dữ liệu đơn thật).
      * TODO(logic): chuyển toàn bộ sang VoucherService.validate(code, userId, cart).
      */

@@ -13,7 +13,7 @@ import java.util.List;
 public class VoucherService {
 
     /**
-     * Kiểm tra theo 7 bước trong CLAUDE.md (không tồn tại, vô hiệu hóa, ngoài hạn, hết lượt, khách đã dùng đủ, chưa đạt đơn tối thiểu, đơn không có sản phẩm thuộc danh mục áp dụng).
+     * Kiểm tra theo 7 bước trong project.md (không tồn tại, vô hiệu hóa, ngoài hạn, hết lượt, khách đã dùng đủ, chưa đạt đơn tối thiểu, đơn không có sản phẩm thuộc danh mục áp dụng).
      * Hợp lệ trả Voucher; sai ném lỗi riêng (VoucherException) kèm thông báo tiếng Việt.
      */
     public Voucher validate(String code, int userId, Cart cart) {
