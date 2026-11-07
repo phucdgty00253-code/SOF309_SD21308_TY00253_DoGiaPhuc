@@ -1,0 +1,9 @@
+# Chỉ người làm chức năng Quên mật khẩu và trưởng nhóm cần file này.
+# Sao chép thành mail.properties (cùng thư mục) rồi điền thông tin. File mail.properties đã nằm trong .gitignore.
+# mail.password là "Mật khẩu ứng dụng" 16 ký tự của Gmail (không phải mật khẩu đăng nhập Gmail), do trưởng nhóm gửi riêng.
+# Không ghi mật khẩu vào code, issue, comment hay chat chung.
+mail.host=smtp.gmail.com
+mail.port=587
+mail.username=
+mail.password=
+mail.from.name=Saltair
