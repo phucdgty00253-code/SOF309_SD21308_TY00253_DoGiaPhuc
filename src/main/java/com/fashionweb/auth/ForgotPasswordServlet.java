@@ -13,7 +13,7 @@ import java.io.IOException;
  * <p>JSP: /WEB-INF/views/auth/forgot-password.jsp. Tham số: sent=1 (hiện trạng thái "đã gửi").
  * <p>Request attribute: sent (Boolean, true khi sent=1).
  * <p>TODO(logic): doPost action=sendReset (email): tìm user, tạo token ngẫu nhiên lưu bảng password_resets (có hạn),
- * gửi email (JavaMail + SMTP hoặc cách đơn giản đã chốt), luôn redirect /forgot-password?sent=1 dù email có tồn tại hay không
+ * gửi email thật bằng MailUtil.send (SMTP Gmail), token hết hạn sau 15 phút, luôn redirect /forgot-password?sent=1 dù email có tồn tại hay không
  * (không để lộ tài khoản nào tồn tại).
  */
 @WebServlet("/forgot-password")

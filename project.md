@@ -213,8 +213,7 @@ Role Staff và Marketing, thanh toán online (VNPay, MoMo, QR), đăng nhập Go
 - Font Manrope (Google Fonts), bộ icon đường nét kiểu Lucide (sprite SVG nội bộ)
 - Git + GitHub
 
-Chưa chốt:
-- [ ] Cách làm "Quên mật khẩu" (gửi email bằng JavaMail + SMTP, hay cách đơn giản hơn)
+- "Quên mật khẩu": gửi **email thật qua SMTP (Gmail)** bằng `util/MailUtil`, token băm SHA-256, hết hạn 15 phút, dùng một lần. Cấu hình ở `mail.properties` (không commit, chỉ trưởng nhóm cần).
 
 ## Design pattern áp dụng
 

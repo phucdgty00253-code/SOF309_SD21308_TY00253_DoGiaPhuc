@@ -25,7 +25,7 @@ public class AuthService {
     }
 
     /**
-     * Tạo token ngẫu nhiên, lưu băm SHA-256 vào password_resets (hạn 30 phút), trả token để gửi mail. Trả null nếu email không tồn tại.
+     * Tạo token ngẫu nhiên, lưu băm SHA-256 vào password_resets (hạn 15 phút), trả token để gửi mail. Trả null nếu email không tồn tại.
      */
     public String createResetToken(String email) {
         throw new UnsupportedOperationException("TODO AuthService.createResetToken");
