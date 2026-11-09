@@ -39,7 +39,7 @@ import java.util.Set;
  * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL. Thao tác nhiều bảng (đặt hàng, hủy đơn) chạy trong một
  * transaction do Service mở; DAO nhận Connection của transaction đó.
  * <p>Đã làm: placeOrder (#14); findByUser, findPageByUser, countByStatusForUser, findByCodeAndUser, countByUser (#16);
- * cancelByCustomer, confirmReceived, cancelByAdmin (#17, hàm hủy dùng chung). Các hàm còn lại thuộc #19, #20, #26.
+ * cancelByCustomer, confirmReceived, cancelByAdmin (#17, hàm hủy dùng chung). search, countByStatus, findByCode, latest (#19, #26). updateStatus thuộc #20.
  */
 public class OrderService {
 
@@ -270,21 +270,32 @@ public class OrderService {
      * Admin: tìm theo mã đơn hoặc tên khách, lọc trạng thái và thanh toán.
      */
     public Page<Order> search(String q, OrderStatus status, PaymentStatus payment, int page, int pageSize) {
-        throw new UnsupportedOperationException("TODO OrderService.search");
+        Page<Order> p = orderDAO.findPage(q, status, payment, page, pageSize);
+        if (p.getPage() > p.getTotalPages() && p.getTotalPages() > 0) {
+            p = orderDAO.findPage(q, status, payment, p.getTotalPages(), pageSize);
+        }
+        return p;
     }
 
     /**
      * Admin: số đơn theo trạng thái cho các chip lọc.
      */
     public Map<String, Integer> countByStatus(String q, PaymentStatus payment) {
-        throw new UnsupportedOperationException("TODO OrderService.countByStatus");
+        return orderDAO.countByStatus(null, q, payment);
     }
 
     /**
      * Admin: đơn kèm items, customerName, customerEmail.
      */
     public Order findByCode(String code) {
-        throw new UnsupportedOperationException("TODO OrderService.findByCode");
+        if (code == null || code.isBlank()) {
+            return null;
+        }
+        Order o = orderDAO.findByCode(code.trim());
+        if (o != null) {
+            o.setItems(orderDetailDAO.findByOrder(o.getId()));
+        }
+        return o;
     }
 
     /**
@@ -306,6 +317,6 @@ public class OrderService {
      * n đơn mới nhất (dashboard).
      */
     public List<Order> latest(int n) {
-        throw new UnsupportedOperationException("TODO OrderService.latest");
+        return orderDAO.findLatest(n);
     }
 }
