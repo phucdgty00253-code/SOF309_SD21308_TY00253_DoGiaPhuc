@@ -9,13 +9,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Truy vấn bảng reviews.
  *
- * <p>Hiện chỉ là KHUNG: mỗi phương thức ném UnsupportedOperationException. Thành viên được giao viết thân hàm.
+ * <p>Đã làm: phần của khách (#8, #18). findPage, setHidden thuộc #21 (Admin).
  * <p>Chỉ chứa SQL (PreparedStatement) và chuyển ResultSet thành entity. Kết nối lấy từ DBContext.getConnection().
  */
 public class ReviewDAO {
@@ -24,28 +25,53 @@ public class ReviewDAO {
      * SELECT.
      */
     public Review findByUserAndProduct(int userId, int productId) {
-        throw new UnsupportedOperationException("TODO ReviewDAO.findByUserAndProduct");
+        String sql = "SELECT r.*, u.full_name FROM reviews r JOIN users u ON u.id = r.user_id "
+                + "WHERE r.user_id = ? AND r.product_id = ?";
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, productId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? map(rs) : null;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi đọc đánh giá", e);
+        }
     }
 
     /**
-     * INSERT.
+     * INSERT. Trả id vừa tạo.
      */
     public int insert(Review r) {
-        throw new UnsupportedOperationException("TODO ReviewDAO.insert");
+        String sql = "INSERT INTO reviews (user_id, product_id, rating, comment) VALUES (?, ?, ?, ?)";
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1, r.getUserId());
+            ps.setInt(2, r.getProductId());
+            ps.setInt(3, r.getRating());
+            ps.setString(4, r.getComment());
+            ps.executeUpdate();
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                return keys.next() ? keys.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi thêm đánh giá", e);
+        }
     }
 
     /**
-     * UPDATE rating, comment.
+     * UPDATE rating, comment theo (user_id, product_id).
      */
     public void update(Review r) {
-        throw new UnsupportedOperationException("TODO ReviewDAO.update");
+        executeUpdate("UPDATE reviews SET rating = ?, comment = ? WHERE user_id = ? AND product_id = ?",
+                r.getRating(), r.getComment(), r.getUserId(), r.getProductId());
     }
 
     /**
-     * DELETE.
+     * DELETE đánh giá của user cho sản phẩm.
      */
     public void delete(int userId, int productId) {
-        throw new UnsupportedOperationException("TODO ReviewDAO.delete");
+        executeUpdate("DELETE FROM reviews WHERE user_id = ? AND product_id = ?", userId, productId);
     }
 
     /**
@@ -60,17 +86,7 @@ public class ReviewDAO {
             ps.setInt(1, productId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    Review r = new Review();
-                    r.setId(rs.getInt("id"));
-                    r.setUserId(rs.getInt("user_id"));
-                    r.setProductId(rs.getInt("product_id"));
-                    r.setRating(rs.getInt("rating"));
-                    r.setComment(rs.getString("comment"));
-                    r.setHidden(rs.getBoolean("is_hidden"));
-                    r.setCreatedAt(rs.getTimestamp("created_at"));
-                    r.setUpdatedAt(rs.getTimestamp("updated_at"));
-                    r.setUserName(rs.getString("full_name"));
-                    list.add(r);
+                    list.add(map(rs));
                 }
             }
         } catch (SQLException e) {
@@ -91,5 +107,33 @@ public class ReviewDAO {
      */
     public void setHidden(int id, boolean hidden) {
         throw new UnsupportedOperationException("TODO ReviewDAO.setHidden");
+    }
+
+    // ----- Hàm phụ -----
+
+    private void executeUpdate(String sql, Object... params) {
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            for (int i = 0; i < params.length; i++) {
+                ps.setObject(i + 1, params[i]);
+            }
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi cập nhật đánh giá", e);
+        }
+    }
+
+    private static Review map(ResultSet rs) throws SQLException {
+        Review r = new Review();
+        r.setId(rs.getInt("id"));
+        r.setUserId(rs.getInt("user_id"));
+        r.setProductId(rs.getInt("product_id"));
+        r.setRating(rs.getInt("rating"));
+        r.setComment(rs.getString("comment"));
+        r.setHidden(rs.getBoolean("is_hidden"));
+        r.setCreatedAt(rs.getTimestamp("created_at"));
+        r.setUpdatedAt(rs.getTimestamp("updated_at"));
+        r.setUserName(rs.getString("full_name"));
+        return r;
     }
 }
