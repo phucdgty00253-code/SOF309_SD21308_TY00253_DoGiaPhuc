@@ -1,6 +1,5 @@
 package com.fashionweb.controller.shop;
 
-import com.fashionweb.mock.MockData;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -14,16 +13,14 @@ import java.io.IOException;
  * <p>
  * JSP: /WEB-INF/views/shop/about.jsp. Không có tham số.
  * <p>
- * TODO(logic): không cần service. Khi Admin tải ảnh lên, thay MockData.img(...) bằng đường dẫn ảnh thật
- * (ví dụ lấy từ một banner "giới thiệu" hoặc cấu hình ảnh).
+ * Thuộc tính: aboutImage (ảnh câu chuyện thương hiệu có sẵn trong assets/images/banners).
  */
 @WebServlet("/about")
 public class AboutServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // null (mặc định) = ô ảnh rỗng, JSP hiện khung xám
-        req.setAttribute("aboutImage", MockData.img("assets/images/banners/story-01.jpg"));
+        req.setAttribute("aboutImage", "assets/images/banners/story-01.jpg");
         req.getRequestDispatcher("/WEB-INF/views/shop/about.jsp").forward(req, resp);
     }
 }

@@ -110,6 +110,19 @@ public class ProductDAO {
     }
 
     /**
+     * n sản phẩm nổi bật (is_featured = 1) đang bán, mới nhất trước.
+     */
+    public List<Product> findFeatured(int n) {
+        try (Connection con = DBContext.getConnection()) {
+            List<Product> list = queryList(con, SELECT_WITH_STATS + VISIBLE + "AND p.is_featured = 1 " + orderBy("newest") + "LIMIT ?", List.of(n));
+            loadColors(con, list);
+            return list;
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi đọc sản phẩm nổi bật", e);
+        }
+    }
+
+    /**
      * SELECT một sản phẩm theo slug.
      */
     public Product findBySlug(String slug) {

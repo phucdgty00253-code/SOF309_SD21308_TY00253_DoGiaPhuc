@@ -1,5 +1,6 @@
 package com.fashionweb.service.shop;
 
+import com.fashionweb.dao.shop.BlogDAO;
 import com.fashionweb.model.Blog;
 import com.fashionweb.util.Page;
 import java.util.List;
@@ -7,16 +8,25 @@ import java.util.List;
 /**
  * Bài viết blog.
  *
- * <p>Hiện chỉ là KHUNG: mỗi phương thức ném UnsupportedOperationException. Thành viên được giao viết thân hàm.
+ * <p>Đã làm: listPublished, latestPublished (#9). Các hàm còn lại thuộc #10.
  * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL.
  */
 public class BlogService {
+
+    private final BlogDAO blogDAO = new BlogDAO();
 
     /**
      * Bài đã xuất bản, mới nhất trước.
      */
     public List<Blog> listPublished() {
-        throw new UnsupportedOperationException("TODO BlogService.listPublished");
+        return blogDAO.findPublished(0);
+    }
+
+    /**
+     * n bài đã xuất bản mới nhất (trang chủ).
+     */
+    public List<Blog> latestPublished(int n) {
+        return blogDAO.findPublished(n);
     }
 
     /**

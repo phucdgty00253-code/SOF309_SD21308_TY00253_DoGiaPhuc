@@ -96,6 +96,46 @@ public class ReviewDAO {
     }
 
     /**
+     * n đánh giá chưa ẩn mới nhất kèm tên khách và sản phẩm (trang chủ). Bỏ đánh giá của sản phẩm đã xóa mềm.
+     */
+    public List<Review> findLatestVisible(int n) {
+        String sql = "SELECT r.*, u.full_name, p.name AS product_name, p.slug AS product_slug, p.image AS product_image "
+                + "FROM reviews r JOIN users u ON u.id = r.user_id JOIN products p ON p.id = r.product_id "
+                + "WHERE r.is_hidden = 0 AND p.is_deleted = 0 ORDER BY r.created_at DESC, r.id DESC LIMIT ?";
+        List<Review> list = new ArrayList<>();
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, n);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Review r = map(rs);
+                    r.setProductName(rs.getString("product_name"));
+                    r.setProductSlug(rs.getString("product_slug"));
+                    r.setProductImage(rs.getString("product_image"));
+                    list.add(r);
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi đọc đánh giá mới nhất", e);
+        }
+        return list;
+    }
+
+    /**
+     * {số đánh giá chưa ẩn, điểm trung bình} trên toàn cửa hàng (trang chủ).
+     */
+    public double[] visibleStats() {
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement("SELECT COUNT(*), COALESCE(AVG(rating), 0) FROM reviews WHERE is_hidden = 0");
+             ResultSet rs = ps.executeQuery()) {
+            rs.next();
+            return new double[]{rs.getLong(1), rs.getDouble(2)};
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi thống kê đánh giá", e);
+        }
+    }
+
+    /**
      * SELECT phân trang cho Admin.
      */
     public Page<Review> findPage(Integer productId, Boolean hidden, int page, int pageSize) {

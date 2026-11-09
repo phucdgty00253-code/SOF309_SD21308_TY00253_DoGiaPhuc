@@ -102,6 +102,13 @@ public class ProductService {
     }
 
     /**
+     * n sản phẩm nổi bật (Admin bật "Hiển thị nổi bật"), mới nhất trước.
+     */
+    public List<Product> featured(int n) {
+        return productDAO.findFeatured(n);
+    }
+
+    /**
      * n sản phẩm bán chạy nhất: tổng quantity trong order_details của đơn không bị hủy.
      */
     public List<Product> bestSellers(int n) {

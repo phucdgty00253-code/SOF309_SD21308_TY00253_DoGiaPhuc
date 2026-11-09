@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * Đánh giá sản phẩm và quản lý bình luận.
  *
- * <p>Đã làm: phần của khách (#8, #18). latestVisible thuộc #9; search, toggleHidden thuộc #21.
+ * <p>Đã làm: phần của khách (#8, #18). latestVisible, overallStats (#9); search, toggleHidden thuộc #21.
  * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL.
  */
 public class ReviewService {
@@ -103,7 +103,15 @@ public class ReviewService {
      * n đánh giá mới nhất cho trang chủ.
      */
     public List<Review> latestVisible(int n) {
-        throw new UnsupportedOperationException("TODO ReviewService.latestVisible");
+        return reviewDAO.findLatestVisible(n);
+    }
+
+    /**
+     * {số đánh giá chưa ẩn, điểm trung bình làm tròn 1 chữ số} trên toàn cửa hàng.
+     */
+    public double[] overallStats() {
+        double[] s = reviewDAO.visibleStats();
+        return new double[]{s[0], Math.round(s[1] * 10) / 10.0};
     }
 
     /**
