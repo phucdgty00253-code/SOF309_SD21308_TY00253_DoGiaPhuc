@@ -6,7 +6,7 @@
 <%--
   ADMIN - DANH SÁCH ĐƠN HÀNG
   Route:   GET /admin/orders?q=&status=&payment=&page=
-  Servlet: com.fashionweb.controller.admin.AdminOrderServlet (active menu: orders)
+  Servlet: com.fashionweb.controller.admin.sales.AdminOrderServlet (active menu: orders)
   Request attributes:
     orderPage    : Page<Order>          - đơn của trang hiện tại (ADMIN_PAGE_SIZE), mới nhất trước
     q            : String               - từ khóa (mã đơn hoặc tên khách), "" nếu không lọc

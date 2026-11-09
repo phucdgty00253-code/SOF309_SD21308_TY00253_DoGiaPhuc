@@ -6,7 +6,7 @@
 <%--
   ADMIN - THÊM / SỬA BÀI VIẾT
   Route:   GET /admin/blogs/form?id=
-  Servlet: com.fashionweb.controller.admin.AdminBlogFormServlet (active menu: blogs)
+  Servlet: com.fashionweb.controller.admin.system.AdminBlogFormServlet (active menu: blogs)
   Request attributes:
     blog   : Blog                - bài đang sửa; null khi thêm mới
     mode   : String              - "create" | "edit"

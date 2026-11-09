@@ -6,7 +6,7 @@
 <%--
   ADMIN - NGƯỜI DÙNG
   Route:   GET /admin/users?q=&role=&page=
-  Servlet: com.fashionweb.controller.admin.AdminUserServlet (active menu: users)
+  Servlet: com.fashionweb.controller.admin.system.AdminUserServlet (active menu: users)
   Request attributes:
     userPage       : Page<User> - người dùng của trang hiện tại; mỗi User cần orderCount (số đơn của khách)
     q              : String     - từ khóa (email hoặc họ tên), "" nếu không lọc

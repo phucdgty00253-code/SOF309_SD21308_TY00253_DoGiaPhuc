@@ -1,5 +1,5 @@
 <%@ tag description="Thẻ sản phẩm (ô ảnh xám, hãng, tên, giá, sao)" pageEncoding="UTF-8" body-content="empty" %>
-<%@ attribute name="product" required="true" type="com.fashionweb.entity.Product" %>
+<%@ attribute name="product" required="true" type="com.fashionweb.model.Product" %>
 <%@ attribute name="eager" required="false" type="java.lang.Boolean" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>

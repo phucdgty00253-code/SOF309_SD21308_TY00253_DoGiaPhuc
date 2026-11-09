@@ -6,7 +6,7 @@
 <%--
   ADMIN - BÌNH LUẬN / ĐÁNH GIÁ
   Route:   GET /admin/reviews?product=&status=&page=
-  Servlet: com.fashionweb.controller.admin.AdminReviewServlet (active menu: reviews)
+  Servlet: com.fashionweb.controller.admin.sales.AdminReviewServlet (active menu: reviews)
   Request attributes:
     reviewPage : Page<Review>    - bình luận của trang hiện tại (ADMIN_PAGE_SIZE), cả bình luận đã ẩn, mới nhất trước;
                                    mỗi Review cần userName, productName, productImage

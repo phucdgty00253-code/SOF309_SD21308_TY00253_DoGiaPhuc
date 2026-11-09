@@ -6,7 +6,7 @@
 <%--
   ADMIN - DANH SÁCH BÀI VIẾT (BLOG)
   Route:   GET /admin/blogs?q=&page=
-  Servlet: com.fashionweb.controller.admin.AdminBlogServlet (active menu: blogs)
+  Servlet: com.fashionweb.controller.admin.system.AdminBlogServlet (active menu: blogs)
   Request attributes:
     blogPage : Page<Blog> - bài viết của trang hiện tại (ADMIN_PAGE_SIZE), cả bài đang ẩn, mới nhất trước; mỗi Blog cần authorName
     q        : String     - từ khóa tìm theo tiêu đề, "" nếu không lọc

@@ -6,7 +6,7 @@
 <%--
   ADMIN - CHI TIẾT ĐƠN HÀNG
   Route:   GET /admin/order?code=
-  Servlet: com.fashionweb.controller.admin.AdminOrderDetailServlet (active menu: orders). Không tìm thấy đơn thì trả 404.
+  Servlet: com.fashionweb.controller.admin.sales.AdminOrderDetailServlet (active menu: orders). Không tìm thấy đơn thì trả 404.
   Request attributes:
     order  : Order               - đơn kèm items (List<OrderDetail>), customerName, customerEmail, voucherCode, cancelReason, cancelledBy
     errors : Map<String,String>  - (tùy chọn) lỗi theo ô, hiện tại chỉ có khóa cancelReason

@@ -6,7 +6,7 @@
 <%--
   ADMIN - BANNER
   Route:   GET /admin/banners
-  Servlet: com.fashionweb.controller.admin.AdminBannerServlet (active menu: banners)
+  Servlet: com.fashionweb.controller.admin.system.AdminBannerServlet (active menu: banners)
   Request attributes:
     banners : List<Banner>         - toàn bộ banner (cả banner đang tắt), sắp theo sortOrder
     errors  : Map<String,String>   - (tùy chọn) lỗi sau khi POST thất bại: title, linkUrl, sortOrder, imageFile

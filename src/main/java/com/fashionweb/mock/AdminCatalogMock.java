@@ -1,9 +1,9 @@
 package com.fashionweb.mock;
 
-import com.fashionweb.entity.Category;
-import com.fashionweb.entity.Color;
-import com.fashionweb.entity.Product;
-import com.fashionweb.entity.Size;
+import com.fashionweb.model.Category;
+import com.fashionweb.model.Color;
+import com.fashionweb.model.Product;
+import com.fashionweb.model.Size;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;

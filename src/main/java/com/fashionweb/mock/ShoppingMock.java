@@ -1,11 +1,11 @@
 package com.fashionweb.mock;
 
 import com.fashionweb.constant.DiscountType;
-import com.fashionweb.entity.Cart;
-import com.fashionweb.entity.CartItem;
-import com.fashionweb.entity.Order;
-import com.fashionweb.entity.Product;
-import com.fashionweb.entity.Voucher;
+import com.fashionweb.model.Cart;
+import com.fashionweb.model.CartItem;
+import com.fashionweb.model.Order;
+import com.fashionweb.model.Product;
+import com.fashionweb.model.Voucher;
 
 import java.text.NumberFormat;
 import java.time.LocalDateTime;

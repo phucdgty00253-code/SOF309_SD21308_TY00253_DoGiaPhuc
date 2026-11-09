@@ -54,7 +54,7 @@ Quy tắc nhớ nhanh: khách chỉ hủy được khi đơn **Chờ xác nhận
 
 ## 4. Code được tổ chức thế nào
 
-Mỗi chức năng một thư mục (`auth`, `account`, `shop`, `cart`, `order`, `admin`), bên trong có đủ Servlet, Service, DAO.
+Code chia theo **tầng** (`controller`, `service`, `dao`, `model`), mỗi tầng chia tiếp thư mục con theo chức năng (`auth`, `account`, `shop`, `cart`, `order`, `admin`). Ví dụ đăng nhập: `controller/auth/LoginServlet`, `service/auth/AuthService`, `dao/auth/UserDAO`.
 
 ```
 Trình duyệt → Servlet → Service → DAO → MySQL

@@ -1,6 +1,6 @@
 package com.fashionweb.dto;
 
-import com.fashionweb.entity.Product;
+import com.fashionweb.model.Product;
 
 import java.util.LinkedHashMap;
 import java.util.List;

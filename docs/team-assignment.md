@@ -92,4 +92,4 @@ Mỗi issue có sẵn: mô tả, danh sách file cần làm, và tiêu chí nghi
 
 ## File dùng chung, dễ xung đột
 
-`web.xml`, `style.css`, `schema.sql`, thư mục `entity/`. Sửa các file này thì ghi rõ trong PR, và `git pull origin develop` trước khi mở PR.
+`web.xml`, `style.css`, `schema.sql`, thư mục `model/`. Sửa các file này thì ghi rõ trong PR, và `git pull origin develop` trước khi mở PR.

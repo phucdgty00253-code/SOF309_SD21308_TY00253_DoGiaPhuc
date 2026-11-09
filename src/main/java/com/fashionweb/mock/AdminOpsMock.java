@@ -3,11 +3,11 @@ package com.fashionweb.mock;
 import com.fashionweb.constant.OrderStatus;
 import com.fashionweb.constant.PaymentStatus;
 import com.fashionweb.constant.Role;
-import com.fashionweb.entity.Banner;
-import com.fashionweb.entity.Blog;
-import com.fashionweb.entity.Order;
-import com.fashionweb.entity.Review;
-import com.fashionweb.entity.User;
+import com.fashionweb.model.Banner;
+import com.fashionweb.model.Blog;
+import com.fashionweb.model.Order;
+import com.fashionweb.model.Review;
+import com.fashionweb.model.User;
 import com.fashionweb.util.Page;
 
 import java.util.ArrayList;

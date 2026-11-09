@@ -77,7 +77,7 @@ File CSS dùng chung: `webapp/assets/css/style.css` (khách hàng) và `admin.cs
 - Giả lập đăng nhập bằng tham số URL (`DevPreviewFilter`, xóa khi làm xong đăng nhập thật): `?as=customer`, `?as=admin`, `?as=guest`.
 - `demoMode` trong `web.xml` (mặc định `true`): form chưa có logic chỉ hiện thông báo. Đổi `false` khi nhóm làm xong logic.
 - Trang nào cần dữ liệu gì: đọc comment đầu mỗi file JSP (route, thuộc tính request, kiểu dữ liệu) và Javadoc `TODO(logic)` trong Servlet tương ứng (việc cần làm, các `action` của form).
-- Khung file cho thành viên: Servlet (đang dùng `MockData`), Service, DAO, Filter đã tạo sẵn trong từng package chức năng. Service và DAO chỉ có chữ ký phương thức, thân hàm ném `UnsupportedOperationException("TODO ...")`; `AuthFilter` và `AdminFilter` đang cho mọi request đi qua. Làm xong mục nào thì thay `MockData` ở Servlet bằng Service tương ứng; khi hết chỗ dùng thì xóa package `mock`.
+- Khung file cho thành viên: Servlet (đang dùng `MockData`), Service, DAO, Filter đã tạo sẵn trong từng tầng (`controller`, `service`, `dao`, `filter`), mỗi tầng chia thư mục con theo chức năng. Service và DAO chỉ có chữ ký phương thức, thân hàm ném `UnsupportedOperationException("TODO ...")`; `AuthFilter` và `AdminFilter` đang cho mọi request đi qua. Làm xong mục nào thì thay `MockData` ở Servlet bằng Service tương ứng; khi hết chỗ dùng thì xóa package `mock`.
 - Cách chạy: Java 17, Tomcat 11 (Jakarta). Build bằng Maven (`mvn package`), deploy `target/saltair.war`, mở `/saltair/home`.
 
 ## Phân quyền (Roles)
@@ -219,7 +219,7 @@ Role Staff và Marketing, thanh toán online (VNPay, MoMo, QR), đăng nhập Go
 
 | Pattern | Dùng ở đâu | Tác dụng |
 |---|---|---|
-| **MVC** | Toàn project: Servlet = Controller, JSP = View, `entity`/`dao`/`service` = Model | Tách giao diện, điều phối, dữ liệu |
+| **MVC** | Toàn project: Servlet (`controller`) = Controller, JSP = View, `model`/`dao`/`service` = Model | Tách giao diện, điều phối, dữ liệu |
 | **DAO** | Package `dao` | Gom toàn bộ SQL vào một chỗ |
 | **Service Layer** | Package `service` | Logic nghiệp vụ và transaction giữa Controller và DAO |
 | **Intercepting Filter** | Package `filter` | Kiểm tra đăng nhập, quyền Admin, encoding trước khi vào Servlet |
@@ -232,25 +232,33 @@ Không dùng Front Controller: mỗi chức năng có Servlet riêng.
 - DAO chỉ chứa SQL, không chứa nghiệp vụ.
 - JSP chỉ hiển thị, không gọi DAO/Service.
 
-## Cấu trúc package (chia theo chức năng)
+## Cấu trúc package (chia theo tầng, mỗi tầng chia tiếp theo chức năng)
 
-Mỗi chức năng một thư mục. Một thành viên nhận chức năng nào thì làm gần như trong một thư mục Java và một thư mục JSP. Vẫn là MVC + DAO + Service, luồng gọi không đổi.
+Kiến trúc 3 tầng (Controller, Service, DAO) kết hợp MVC. Thư mục gốc chia theo **tầng kỹ thuật**; bên trong mỗi tầng chia tiếp theo **chức năng** (`auth`, `account`, `shop`, `cart`, `order`, `admin`). Một thành viên nhận chức năng nào thì làm trong thư mục con cùng tên ở ba tầng. Luồng gọi không đổi.
 
 ```
 src/main/java/com/fashionweb/
-  entity/            16 lớp ánh xạ bảng (dùng chung)
-  constant/ dto/ util/ filter/ listener/    dùng chung (Role, OrderStatus, AppConstant, Page, DBContext, EncodingFilter...)
-  mock/              DỮ LIỆU GIẢ chỉ để xem giao diện, xóa khi làm logic thật
-  auth/              đăng nhập, đăng ký, quên và đặt lại mật khẩu, đăng xuất, AuthFilter, AdminFilter
-  account/           hồ sơ, đổi mật khẩu, sổ địa chỉ, yêu thích
-  shop/              trang chủ, danh sách và chi tiết sản phẩm, tìm kiếm, blog, giới thiệu
-  cart/              giỏ hàng, thanh toán COD, voucher, phí ship
-  order/             đơn hàng của khách (danh sách, chi tiết, hủy, đã nhận), đánh giá
-  admin/
-    catalog/         sản phẩm, danh mục, màu và size, thùng rác
-    sales/           đơn hàng, voucher, bình luận
-    system/          dashboard, người dùng, banner, blog
-    AdminOpsParams   hàm đọc tham số an toàn dùng chung cho Servlet admin
+  controller/            Servlet (Presentation)
+    auth/                LoginServlet, RegisterServlet, LogoutServlet, ForgotPasswordServlet, ResetPasswordServlet
+    account/             ProfileServlet, AddressServlet, WishlistServlet
+    shop/                HomeServlet, AboutServlet, ProductListServlet, ProductDetailServlet, BlogServlet, BlogDetailServlet
+    cart/                CartServlet, CheckoutServlet
+    order/               OrderServlet, OrderDetailServlet, OrderSuccessServlet
+    admin/
+      catalog/           sản phẩm, danh mục, màu và size, thùng rác
+      sales/             đơn hàng, voucher, bình luận
+      system/            dashboard, người dùng, banner, blog
+      AdminOpsParams     hàm đọc tham số an toàn dùng chung cho Servlet admin
+  service/               nghiệp vụ và transaction
+    auth/  account/  shop/  cart/  order/  admin/
+  dao/                   toàn bộ SQL (PreparedStatement)
+    auth/  account/  shop/  cart/  order/  admin/
+  model/                 16 lớp ánh xạ bảng (User, Product, Order...), dùng chung
+  dto/                   đối tượng truyền dữ liệu (DashboardStats)
+  exception/             lỗi nghiệp vụ (VoucherException)
+  filter/                AuthFilter, AdminFilter, EncodingFilter, DevPreviewFilter
+  listener/  constant/  util/    dùng chung (AppStartupListener; Role, OrderStatus, AppConstant; Page, DBContext, MailUtil)
+  mock/                  DỮ LIỆU GIẢ chỉ để xem giao diện, xóa khi làm logic thật
 
 src/main/webapp/
   assets/            css (style.css, admin.css, pages/), js (app.js, pages/), images, brand
@@ -258,15 +266,17 @@ src/main/webapp/
     web.xml
     tags/            layout.tag, admin-layout.tag, icon, img, price, stars, product-card, pagination
     views/
-      auth/  account/  shop/  cart/  order/      JSP khách hàng, tên thư mục trùng tên package Java
+      auth/  account/  shop/  cart/  order/      JSP khách hàng, tên thư mục trùng tên chức năng
       admin/catalog/  admin/sales/  admin/system/   JSP quản trị
       common/        icons, flash, account-nav (dùng chung)
       error/         403, 404, 500
 ```
 
-Trong mỗi package chức năng có `package-info.java` ghi: chức năng, Servlet đã có khung, Service/DAO cần tạo, thư mục JSP tương ứng. Service và DAO của một chức năng đặt **cùng package** với Servlet của chức năng đó (ví dụ `shop/ProductService`, `shop/ProductDAO`); gói `admin` dùng lại Service/DAO của các gói khác.
+Ví dụ chức năng đăng nhập nằm ở `controller/auth/LoginServlet`, `service/auth/AuthService`, `dao/auth/UserDAO`, JSP `views/auth/login.jsp`. Servlet admin dùng lại Service và DAO của các chức năng khác (ví dụ `service/order/OrderService`, `service/cart/VoucherService`).
 
-Tên package đã chốt: `entity` (không dùng `model`), có tầng `service`, chia theo chức năng.
+Mỗi package Servlet có `package-info.java` ghi: chức năng, Servlet đã có khung, thư mục JSP tương ứng.
+
+Tên package đã chốt: `model` (thay cho `entity`), `dao` (không dùng `repository`), chia tầng rồi chia theo chức năng.
 
 ## Quy ước sơ bộ
 

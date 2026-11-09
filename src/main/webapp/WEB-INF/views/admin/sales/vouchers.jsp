@@ -6,7 +6,7 @@
 <%--
   ADMIN - MÃ GIẢM GIÁ (VOUCHER)
   Route:   GET /admin/vouchers
-  Servlet: com.fashionweb.controller.admin.AdminVoucherServlet (active menu: vouchers)
+  Servlet: com.fashionweb.controller.admin.sales.AdminVoucherServlet (active menu: vouchers)
   Request attributes:
     vouchers   : List<Voucher>  - toàn bộ voucher; mỗi Voucher cần usedCount, categoryName ("Tất cả danh mục" khi categoryId null) và statusLabel
                                   (Đang hoạt động | Hết hạn | Hết lượt | Tạm dừng | Chưa bắt đầu)
