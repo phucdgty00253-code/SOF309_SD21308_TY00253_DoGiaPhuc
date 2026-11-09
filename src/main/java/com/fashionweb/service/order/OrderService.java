@@ -39,7 +39,7 @@ import java.util.Set;
  * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL. Thao tác nhiều bảng (đặt hàng, hủy đơn) chạy trong một
  * transaction do Service mở; DAO nhận Connection của transaction đó.
  * <p>Đã làm: placeOrder (#14); findByUser, findPageByUser, countByStatusForUser, findByCodeAndUser, countByUser (#16);
- * cancelByCustomer, confirmReceived, cancelByAdmin (#17, hàm hủy dùng chung). search, countByStatus, findByCode, latest (#19, #26). updateStatus thuộc #20.
+ * cancelByCustomer, confirmReceived, cancelByAdmin (#17, hàm hủy dùng chung). search, countByStatus, findByCode, latest (#19, #26). updateStatus, cancelByAdmin (#20).
  */
 public class OrderService {
 
@@ -302,7 +302,30 @@ public class OrderService {
      * Admin: PENDING -> SHIPPING -> COMPLETED. COMPLETED đặt paymentStatus = PAID và completedAt.
      */
     public void updateStatus(String code, OrderStatus next) {
-        throw new UnsupportedOperationException("TODO OrderService.updateStatus");
+        try (Connection con = DBContext.getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                Order o = lockOrder(con, code, null);
+                OrderStatus allowedNext = switch (o.getStatus()) {
+                    case PENDING -> OrderStatus.SHIPPING;
+                    case SHIPPING -> OrderStatus.COMPLETED;
+                    default -> null;
+                };
+                if (next == null || next != allowedNext) {
+                    throw new ValidationException(null, allowedNext == null
+                            ? "Đơn đã " + (o.getStatus() == OrderStatus.CANCELLED ? "hủy" : "hoàn thành") + ", không đổi trạng thái được nữa."
+                            : "Chỉ chuyển được theo thứ tự Chờ xác nhận → Đang giao → Hoàn thành.");
+                }
+                boolean done = next == OrderStatus.COMPLETED;
+                orderDAO.updateStatus(con, o.getId(), next, done ? PaymentStatus.PAID : o.getPaymentStatus(), done ? new Date() : null);
+                con.commit();
+            } catch (SQLException | RuntimeException e) {
+                con.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi cập nhật trạng thái đơn", e);
+        }
     }
 
     /**

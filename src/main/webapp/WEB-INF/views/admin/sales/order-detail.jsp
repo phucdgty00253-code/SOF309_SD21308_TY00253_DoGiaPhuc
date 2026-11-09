@@ -127,7 +127,7 @@
           <div class="action-stack">
             <c:choose>
               <c:when test="${order.status == 'PENDING'}">
-                <form method="post" action="${ctx}/admin/order" data-demo>
+                <form method="post" action="${ctx}/admin/order">
                   <input type="hidden" name="action" value="updateStatus">
                   <input type="hidden" name="orderCode" value="${fn:escapeXml(order.orderCode)}">
                   <input type="hidden" name="status" value="SHIPPING">
@@ -136,7 +136,7 @@
                 <p class="action-note">Đơn sẽ chuyển sang Đang giao. Hãy kiểm tra hàng và địa chỉ trước khi xác nhận.</p>
               </c:when>
               <c:when test="${order.status == 'SHIPPING'}">
-                <form method="post" action="${ctx}/admin/order" data-demo>
+                <form method="post" action="${ctx}/admin/order">
                   <input type="hidden" name="action" value="updateStatus">
                   <input type="hidden" name="orderCode" value="${fn:escapeXml(order.orderCode)}">
                   <input type="hidden" name="status" value="COMPLETED">
@@ -201,7 +201,7 @@
     <%-- Hộp thoại hủy đơn --%>
     <c:if test="${order.status == 'PENDING' or order.status == 'SHIPPING'}">
       <dialog class="dialog" id="cancel-dialog" aria-labelledby="cancel-dialog-title" data-auto-open="${not empty errors.cancelReason}">
-        <form method="post" action="${ctx}/admin/order" data-demo data-confirm="Hủy đơn ${fn:escapeXml(order.orderCode)}? Tồn kho và lượt dùng voucher (nếu có) sẽ được trả lại.">
+        <form method="post" action="${ctx}/admin/order" data-confirm="Hủy đơn ${fn:escapeXml(order.orderCode)}? Tồn kho và lượt dùng voucher (nếu có) sẽ được trả lại.">
           <input type="hidden" name="action" value="cancel">
           <input type="hidden" name="orderCode" value="${fn:escapeXml(order.orderCode)}">
           <div class="dialog__head">
