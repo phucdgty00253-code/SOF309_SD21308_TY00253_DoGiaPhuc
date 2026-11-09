@@ -94,7 +94,7 @@
                         </span>
                       </c:when>
                       <c:otherwise>
-                        <form method="post" action="${ctx}/admin/users" data-demo data-confirm="${u.active ? 'Khóa' : 'Mở khóa'} tài khoản ${fn:escapeXml(u.email)}?">
+                        <form method="post" action="${ctx}/admin/users" data-confirm="${u.active ? 'Khóa' : 'Mở khóa'} tài khoản ${fn:escapeXml(u.email)}?">
                           <input type="hidden" name="action" value="toggleActive">
                           <input type="hidden" name="id" value="${u.id}">
                           <button class="btn ${u.active ? 'btn--danger' : 'btn--ghost'} btn--xs" type="submit">${u.active ? 'Khóa' : 'Mở khóa'}</button>
@@ -131,7 +131,7 @@
 
     <%-- Hộp thoại đổi quyền --%>
     <dialog class="dialog" id="role-dialog" aria-labelledby="role-dialog-title" data-auto-open="${not empty errors.role}">
-      <form method="post" action="${ctx}/admin/users" data-demo>
+      <form method="post" action="${ctx}/admin/users">
         <input type="hidden" name="action" value="changeRole">
         <input type="hidden" name="id" value="${fn:escapeXml(param.id)}">
         <div class="dialog__head">
