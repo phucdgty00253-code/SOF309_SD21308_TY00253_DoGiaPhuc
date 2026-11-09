@@ -49,7 +49,7 @@
                 <p class="t-muted">Nhập email đã đăng ký, chúng tôi sẽ gửi liên kết để bạn đặt mật khẩu mới.</p>
               </div>
               <%@ include file="/WEB-INF/views/common/flash.jspf" %>
-              <form class="auth-form" method="post" action="${ctx}/forgot-password" data-demo data-demo-redirect="${ctx}/forgot-password?sent=1">
+              <form class="auth-form" method="post" action="${ctx}/forgot-password">
                 <input type="hidden" name="action" value="sendReset">
                 <div class="field">
                   <label class="field__label" for="forgot-email">Email</label>

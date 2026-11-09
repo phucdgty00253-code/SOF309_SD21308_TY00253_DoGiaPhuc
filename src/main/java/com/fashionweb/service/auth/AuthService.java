@@ -5,6 +5,11 @@ import com.fashionweb.dao.auth.UserDAO;
 import com.fashionweb.exception.ValidationException;
 import com.fashionweb.model.User;
 import org.mindrot.jbcrypt.BCrypt;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Base64;
 
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -14,7 +19,7 @@ import java.util.regex.Pattern;
 /**
  * Đăng nhập, đăng ký, quên và đặt lại mật khẩu.
  *
- * <p>Hiện chỉ là KHUNG: mỗi phương thức ném UnsupportedOperationException. Thành viên được giao viết thân hàm.
+ * <p>Đã làm: đăng nhập, đăng ký (#1), quên mật khẩu (#3).
  * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL.
  */
 public class AuthService {
@@ -24,6 +29,10 @@ public class AuthService {
     private static final int MAX_PASSWORD = 72;
     private static final Pattern EMAIL = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
     private static final Pattern PHONE = Pattern.compile("0[0-9]{9}");
+
+    /** Thời hạn liên kết đặt lại mật khẩu (phút). */
+    public static final int RESET_TOKEN_MINUTES = 15;
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     private final UserDAO userDAO = new UserDAO();
 
@@ -97,23 +106,56 @@ public class AuthService {
     }
 
     /**
-     * Tạo token ngẫu nhiên, lưu băm SHA-256 vào password_resets (hạn 15 phút), trả token để gửi mail. Trả null nếu email không tồn tại.
+     * Tạo token ngẫu nhiên (32 byte, Base64 URL), lưu băm SHA-256 vào password_resets (hạn 15 phút), trả token để gửi mail.
+     * Trả null nếu email không tồn tại hoặc tài khoản bị khóa (Servlet vẫn báo chung chung).
      */
     public String createResetToken(String email) {
-        throw new UnsupportedOperationException("TODO AuthService.createResetToken");
+        if (email == null || email.isBlank()) {
+            return null;
+        }
+        User u = userDAO.findByEmail(email.trim().toLowerCase(Locale.ROOT));
+        if (u == null || !u.isActive()) {
+            return null;
+        }
+        byte[] raw = new byte[32];
+        RANDOM.nextBytes(raw);
+        String token = Base64.getUrlEncoder().withoutPadding().encodeToString(raw);
+        userDAO.insertResetToken(u.getId(), sha256(token), RESET_TOKEN_MINUTES);
+        return token;
     }
 
     /**
      * Token tồn tại, chưa dùng, chưa hết hạn.
      */
     public boolean isResetTokenValid(String token) {
-        throw new UnsupportedOperationException("TODO AuthService.isResetTokenValid");
+        return token != null && !token.isBlank() && userDAO.findUserIdByValidToken(sha256(token.trim())) != null;
     }
 
     /**
-     * Băm BCrypt, cập nhật mật khẩu, đánh dấu token đã dùng.
+     * Băm BCrypt, cập nhật mật khẩu, đánh dấu token đã dùng (trong một transaction).
+     * Mật khẩu 6 đến 72 ký tự; token sai, đã dùng hoặc hết hạn thì ném ValidationException với field "token".
      */
     public void resetPassword(String token, String newPassword) {
-        throw new UnsupportedOperationException("TODO AuthService.resetPassword");
+        if (newPassword == null || newPassword.isBlank() || newPassword.length() < MIN_PASSWORD || newPassword.length() > MAX_PASSWORD) {
+            throw new ValidationException("password", "Mật khẩu từ 6 đến 72 ký tự.");
+        }
+        if (token == null || token.isBlank()
+                || !userDAO.resetPasswordByToken(sha256(token.trim()), BCrypt.hashpw(newPassword, BCrypt.gensalt(10)))) {
+            throw new ValidationException("token", "Liên kết đặt lại mật khẩu không hợp lệ, đã dùng hoặc đã hết hạn.");
+        }
+    }
+
+    /** Chuỗi hex SHA-256 (64 ký tự) để lưu token, không lưu token gốc. */
+    private static String sha256(String s) {
+        try {
+            byte[] d = MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(64);
+            for (byte b : d) {
+                hex.append(String.format("%02x", b));
+            }
+            return hex.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 }

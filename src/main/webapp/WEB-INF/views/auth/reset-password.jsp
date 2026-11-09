@@ -27,7 +27,7 @@
                 <p class="t-muted">Mật khẩu mới tối thiểu 6 ký tự. Sau khi đổi, bạn đăng nhập lại bằng mật khẩu này.</p>
               </div>
               <%@ include file="/WEB-INF/views/common/flash.jspf" %>
-              <form class="auth-form" method="post" action="${ctx}/reset-password" data-demo>
+              <form class="auth-form" method="post" action="${ctx}/reset-password">
                 <input type="hidden" name="action" value="resetPassword">
                 <input type="hidden" name="token" value="${fn:escapeXml(token)}">
 

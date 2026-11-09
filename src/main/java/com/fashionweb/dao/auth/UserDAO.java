@@ -15,7 +15,7 @@ import java.sql.Statement;
 /**
  * Truy vấn bảng users và password_resets.
  *
- * <p>Hiện chỉ là KHUNG: mỗi phương thức ném UnsupportedOperationException. Thành viên được giao viết thân hàm.
+ * <p>Đã làm: tài khoản (#1, #4), token đặt lại mật khẩu (#3). findPage thuộc #6.
  * <p>Chỉ chứa SQL (PreparedStatement) và chuyển ResultSet thành entity. Kết nối lấy từ DBContext.getConnection().
  */
 public class UserDAO {
@@ -158,23 +158,68 @@ public class UserDAO {
     }
 
     /**
-     * INSERT vào password_resets.
+     * INSERT vào password_resets, hết hạn sau minutes phút tính theo giờ của MySQL (cùng đồng hồ với NOW() khi kiểm tra).
      */
-    public void insertResetToken(int userId, String tokenHash, java.util.Date expiresAt) {
-        throw new UnsupportedOperationException("TODO UserDAO.insertResetToken");
+    public void insertResetToken(int userId, String tokenHash, int minutes) {
+        executeUpdate("INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL ? MINUTE))",
+                userId, tokenHash, minutes);
     }
 
     /**
-     * SELECT user_id WHERE token_hash = ? AND used = 0 AND expires_at > NOW().
+     * SELECT user_id WHERE token_hash = ? AND used = 0 AND expires_at &gt; NOW(). null nếu token không dùng được.
      */
     public Integer findUserIdByValidToken(String tokenHash) {
-        throw new UnsupportedOperationException("TODO UserDAO.findUserIdByValidToken");
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement(
+                     "SELECT user_id FROM password_resets WHERE token_hash = ? AND used = 0 AND expires_at > NOW()")) {
+            ps.setString(1, tokenHash);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : null;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi kiểm tra token đặt lại mật khẩu", e);
+        }
     }
 
     /**
-     * UPDATE used = 1.
+     * Một transaction: khóa token còn hiệu lực (FOR UPDATE), đổi mật khẩu, đánh dấu used = 1 cho MỌI token của user đó
+     * (liên kết cũ gửi trước đó cũng hết dùng được). Trả false nếu token sai, đã dùng hoặc hết hạn.
      */
-    public void markTokenUsed(String tokenHash) {
-        throw new UnsupportedOperationException("TODO UserDAO.markTokenUsed");
+    public boolean resetPasswordByToken(String tokenHash, String passwordHash) {
+        try (Connection con = DBContext.getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                Integer userId = null;
+                try (PreparedStatement ps = con.prepareStatement(
+                        "SELECT user_id FROM password_resets WHERE token_hash = ? AND used = 0 AND expires_at > NOW() FOR UPDATE")) {
+                    ps.setString(1, tokenHash);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            userId = rs.getInt(1);
+                        }
+                    }
+                }
+                if (userId == null) {
+                    con.rollback();
+                    return false;
+                }
+                try (PreparedStatement ps = con.prepareStatement("UPDATE users SET password_hash = ? WHERE id = ?")) {
+                    ps.setString(1, passwordHash);
+                    ps.setInt(2, userId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = con.prepareStatement("UPDATE password_resets SET used = 1 WHERE user_id = ? AND used = 0")) {
+                    ps.setInt(1, userId);
+                    ps.executeUpdate();
+                }
+                con.commit();
+                return true;
+            } catch (SQLException | RuntimeException e) {
+                con.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi đặt lại mật khẩu", e);
+        }
     }
 }
