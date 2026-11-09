@@ -25,7 +25,7 @@ import java.util.TreeMap;
 /**
  * Sản phẩm phía khách và dùng lại ở trang Admin.
  *
- * <p>Đã làm: phía khách (#7, #8); Admin thêm, sửa, xóa mềm (#24). findAllForFilter (#21). lowestStock thuộc #26.
+ * <p>Đã làm: phía khách (#7, #8); Admin thêm, sửa, xóa mềm (#24). findAllForFilter (#21), lowestStock (#26).
  * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL.
  */
 public class ProductService {
@@ -140,7 +140,7 @@ public class ProductService {
      * n sản phẩm có tổng tồn kho thấp nhất (dashboard).
      */
     public List<Product> lowestStock(int n) {
-        throw new UnsupportedOperationException("TODO ProductService.lowestStock");
+        return productDAO.findLowestStock(n);
     }
 
     /**

@@ -1,9 +1,11 @@
 package com.fashionweb.controller.admin.system;
 
 import com.fashionweb.dto.DashboardStats;
-import com.fashionweb.mock.MockData;
 import com.fashionweb.model.Order;
 import com.fashionweb.model.Product;
+import com.fashionweb.service.admin.StatisticService;
+import com.fashionweb.service.order.OrderService;
+import com.fashionweb.service.shop.ProductService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -13,7 +15,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -22,9 +23,9 @@ import java.util.List;
  * Tham số: dateFrom, dateTo (yyyy-MM-dd, mặc định 7 ngày gần nhất tính đến hôm nay; sai định dạng thì dùng mặc định).
  * Thuộc tính: stats, recentOrders, lowStockProducts, dateFrom, dateTo, revenueMax, rangeRevenue.
  * AdminFilter phải bảo vệ /admin/* (chỉ role ADMIN).
- * TODO(logic): thay MockData.dashboard() bằng StatisticService.getStats(dateFrom, dateTo) (tổng đơn, doanh thu đơn
- * hoàn thành, khách, đơn chờ xác nhận, doanh thu theo ngày trong khoảng, top sản phẩm bán chạy, đơn theo trạng thái);
- * recentOrders = OrderService.latest(5); lowStockProducts = ProductService.lowestStock(5).
+ * Dữ liệu: StatisticService.getStats(dateFrom, dateTo), OrderService.latest(5), ProductService.lowestStock(5).
+ * Ngày kết thúc trước ngày bắt đầu thì đổi chỗ hai ngày; khoảng dài hơn 92 ngày thì lấy 92 ngày tính lùi từ ngày kết thúc
+ * (biểu đồ theo ngày không quá dài).
  */
 @WebServlet("/admin")
 public class AdminDashboardServlet extends HttpServlet {
@@ -32,6 +33,11 @@ public class AdminDashboardServlet extends HttpServlet {
     private static final int RECENT_ORDERS = 5;
     private static final int LOW_STOCK = 5;
     private static final int DEFAULT_RANGE_DAYS = 7;
+    private static final int MAX_RANGE_DAYS = 92;
+
+    private final StatisticService statisticService = new StatisticService();
+    private final OrderService orderService = new OrderService();
+    private final ProductService productService = new ProductService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -42,16 +48,13 @@ public class AdminDashboardServlet extends HttpServlet {
             from = to;
             to = tmp;
         }
+        if (from.isBefore(to.minusDays(MAX_RANGE_DAYS - 1))) {
+            from = to.minusDays(MAX_RANGE_DAYS - 1);
+        }
 
-        DashboardStats stats = MockData.dashboard();
-        List<Order> recentOrders = MockData.orders().stream()
-                .sorted(Comparator.comparing(Order::getCreatedAt).reversed())
-                .limit(RECENT_ORDERS)
-                .toList();
-        List<Product> lowStockProducts = MockData.products().stream()
-                .sorted(Comparator.comparingInt(Product::getStockTotal))
-                .limit(LOW_STOCK)
-                .toList();
+        DashboardStats stats = statisticService.getStats(from, to);
+        List<Order> recentOrders = orderService.latest(RECENT_ORDERS);
+        List<Product> lowStockProducts = productService.lowestStock(LOW_STOCK);
 
         long revenueMax = 0;
         long rangeRevenue = 0;

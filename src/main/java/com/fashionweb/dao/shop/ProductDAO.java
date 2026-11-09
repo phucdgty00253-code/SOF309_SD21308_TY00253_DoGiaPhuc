@@ -158,6 +158,17 @@ public class ProductDAO {
     }
 
     /**
+     * n sản phẩm chưa xóa mềm có tổng tồn kho thấp nhất (dashboard).
+     */
+    public List<Product> findLowestStock(int n) {
+        try (Connection con = DBContext.getConnection()) {
+            return queryList(con, SELECT_WITH_STATS + "WHERE p.is_deleted = 0 ORDER BY stock_total ASC, p.id LIMIT ?", List.of(n));
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi đọc sản phẩm sắp hết hàng", e);
+        }
+    }
+
+    /**
      * n sản phẩm nổi bật (is_featured = 1) đang bán, mới nhất trước.
      */
     public List<Product> findFeatured(int n) {
