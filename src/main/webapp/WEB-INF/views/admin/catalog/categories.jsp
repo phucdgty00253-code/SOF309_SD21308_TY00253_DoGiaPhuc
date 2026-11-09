@@ -51,7 +51,7 @@
                 <td>
                   <div class="cell-actions">
                     <button type="button" class="icon-btn" data-dialog-open="category-dialog" data-dialog-title="Sửa danh mục" data-fill="{&quot;id&quot;:${cat.id},&quot;name&quot;:&quot;${fn:escapeXml(fn:replace(cat.name, '"', '\\"'))}&quot;,&quot;slug&quot;:&quot;${fn:escapeXml(fn:replace(cat.slug, '"', '\\"'))}&quot;}" aria-label="Sửa danh mục ${fn:escapeXml(cat.name)}" title="Sửa"><t:icon name="pencil"/></button>
-                    <form class="inline-form" method="post" action="${ctx}/admin/categories" data-demo data-confirm="Xóa danh mục “${fn:escapeXml(cat.name)}”?<c:if test='${cat.productCount > 0}'> Hiện còn ${cat.productCount} sản phẩm thuộc danh mục này.</c:if> Danh mục sẽ được chuyển vào Thùng rác (xóa mềm) và có thể khôi phục lại sau.">
+                    <form class="inline-form" method="post" action="${ctx}/admin/categories" data-confirm="Xóa danh mục “${fn:escapeXml(cat.name)}”?<c:if test='${cat.productCount > 0}'> Hiện còn ${cat.productCount} sản phẩm thuộc danh mục này.</c:if> Danh mục sẽ được chuyển vào Thùng rác (xóa mềm) và có thể khôi phục lại sau.">
                       <input type="hidden" name="action" value="delete">
                       <input type="hidden" name="id" value="${cat.id}">
                       <button class="icon-btn icon-btn--danger" type="submit" aria-label="Xóa danh mục ${fn:escapeXml(cat.name)}" title="Xóa"><t:icon name="trash"/></button>
@@ -69,7 +69,7 @@
     <%-- Hộp thoại thêm / sửa danh mục (mở bằng data-dialog-open, điền dữ liệu bằng data-fill) --%>
     <c:set var="dlgErr" value="${openDialog == 'category-dialog' ? errors : null}"/>
     <dialog class="dialog" id="category-dialog" aria-labelledby="category-dialog-title" data-reset-on-close${openDialog == 'category-dialog' ? ' data-open-on-load' : ''}>
-      <form method="post" action="${ctx}/admin/categories" enctype="multipart/form-data" data-demo>
+      <form method="post" action="${ctx}/admin/categories" enctype="multipart/form-data">
         <input type="hidden" name="action" value="save">
         <input type="hidden" name="id" value="${openDialog == 'category-dialog' ? fn:escapeXml(param.id) : ''}">
         <div class="dialog__head">

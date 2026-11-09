@@ -1,41 +1,123 @@
 package com.fashionweb.service.shop;
 
+import com.fashionweb.dao.shop.CategoryDAO;
+import com.fashionweb.exception.ValidationException;
 import com.fashionweb.model.Category;
+import com.fashionweb.util.SlugUtil;
+
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Danh mục sản phẩm.
  *
- * <p>Hiện chỉ là KHUNG: mỗi phương thức ném UnsupportedOperationException. Thành viên được giao viết thân hàm.
  * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL.
+ * <p>Quy ước của nhóm: KHÔNG cho xóa mềm danh mục còn sản phẩm đang bán (báo rõ số sản phẩm),
+ * để trang cửa hàng không có sản phẩm "mồ côi" danh mục.
  */
 public class CategoryService {
+
+    private final CategoryDAO categoryDAO = new CategoryDAO();
 
     /**
      * Danh mục chưa xóa mềm kèm productCount.
      */
     public List<Category> findAll() {
-        throw new UnsupportedOperationException("TODO CategoryService.findAll");
+        return categoryDAO.findAll();
     }
 
     /**
-     * Một danh mục theo slug.
+     * Một danh mục chưa xóa mềm theo slug. null nếu không có.
      */
     public Category findBySlug(String slug) {
-        throw new UnsupportedOperationException("TODO CategoryService.findBySlug");
+        if (slug == null || slug.isBlank()) {
+            return null;
+        }
+        return categoryDAO.findBySlug(slug.trim());
     }
 
     /**
-     * id = 0 thêm, id > 0 sửa. slug duy nhất.
+     * Một danh mục theo id, kể cả đã xóa mềm. null nếu không có.
+     */
+    public Category findById(int id) {
+        return categoryDAO.findById(id);
+    }
+
+    /**
+     * id = 0 thêm, id > 0 sửa. Slug để trống thì tự sinh từ tên; slug phải đúng định dạng và duy nhất.
+     * Sai thì ném ValidationException với lỗi theo ô (name, slug).
      */
     public void save(Category c) {
-        throw new UnsupportedOperationException("TODO CategoryService.save");
+        Map<String, String> errors = new LinkedHashMap<>();
+        String name = c.getName() == null ? "" : c.getName().trim();
+        String slug = c.getSlug() == null ? "" : c.getSlug().trim().toLowerCase();
+        if (slug.isEmpty()) {
+            slug = SlugUtil.toSlug(name);
+        }
+
+        if (name.length() < 2 || name.length() > 100) {
+            errors.put("name", "Tên danh mục từ 2 đến 100 ký tự.");
+        }
+        if (slug.isEmpty() || slug.length() > 120 || !SlugUtil.isValid(slug)) {
+            errors.put("slug", "Slug chỉ gồm chữ thường không dấu, số và dấu gạch ngang (tối đa 120 ký tự).");
+        } else if (categoryDAO.existsSlug(slug, c.getId())) {
+            errors.put("slug", "Slug \"" + slug + "\" đã được dùng (có thể ở danh mục trong Thùng rác).");
+        }
+
+        Category existing = null;
+        if (c.getId() > 0) {
+            existing = categoryDAO.findById(c.getId());
+            if (existing == null || existing.isDeleted()) {
+                errors.put("name", "Danh mục không tồn tại hoặc đã bị xóa.");
+            }
+        }
+        if (!errors.isEmpty()) {
+            throw new ValidationException(errors);
+        }
+
+        c.setName(name);
+        c.setSlug(slug);
+        if (existing == null) {
+            c.setId(categoryDAO.insert(c));
+        } else {
+            if (c.getImage() == null) {
+                c.setImage(existing.getImage()); // không chọn ảnh mới thì giữ ảnh cũ
+            }
+            categoryDAO.update(c);
+        }
     }
 
     /**
-     * Xóa mềm. Nhóm quyết định chặn khi còn sản phẩm đang bán hay không.
+     * Xóa mềm. Chặn khi danh mục còn sản phẩm đang bán.
      */
     public void softDelete(int id) {
-        throw new UnsupportedOperationException("TODO CategoryService.softDelete");
+        Category c = categoryDAO.findById(id);
+        if (c == null || c.isDeleted()) {
+            throw new ValidationException(null, "Danh mục không tồn tại hoặc đã nằm trong Thùng rác.");
+        }
+        if (c.getProductCount() > 0) {
+            throw new ValidationException(null, "Không thể xóa \"" + c.getName() + "\" vì còn " + c.getProductCount()
+                    + " sản phẩm đang bán. Hãy chuyển hoặc xóa các sản phẩm này trước.");
+        }
+        categoryDAO.setDeleted(id, true);
+    }
+
+    /**
+     * Danh mục đã xóa mềm (Thùng rác).
+     */
+    public List<Category> findDeleted() {
+        return categoryDAO.findDeleted();
+    }
+
+    /**
+     * Khôi phục danh mục đã xóa mềm.
+     */
+    public void restore(int id) {
+        Category c = categoryDAO.findById(id);
+        if (c == null || !c.isDeleted()) {
+            throw new ValidationException(null, "Danh mục không có trong Thùng rác.");
+        }
+        categoryDAO.setDeleted(id, false);
     }
 }

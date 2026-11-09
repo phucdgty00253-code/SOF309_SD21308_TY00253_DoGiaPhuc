@@ -23,6 +23,13 @@ public final class DBContext {
         } catch (IOException e) {
             throw new ExceptionInInitializerError(e);
         }
+        // Tomcat không tự đăng ký driver nằm trong WEB-INF/lib với DriverManager
+        // (lỗi "No suitable driver found"), nên nạp driver MySQL thủ công.
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new ExceptionInInitializerError(e);
+        }
     }
 
     private DBContext() {
