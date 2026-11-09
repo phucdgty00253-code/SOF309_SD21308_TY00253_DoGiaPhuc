@@ -1,10 +1,16 @@
 package com.fashionweb.service.shop;
 
 import com.fashionweb.dao.shop.ProductDAO;
+import com.fashionweb.model.Color;
 import com.fashionweb.model.Product;
 import com.fashionweb.model.ProductVariant;
+import com.fashionweb.model.Size;
 import com.fashionweb.util.Page;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Sản phẩm phía khách và dùng lại ở trang Admin.
@@ -28,7 +34,37 @@ public class ProductService {
      * Chi tiết sản phẩm kèm variants, colors, sizes, avgRating, reviewCount. null nếu không có hoặc đã xóa mềm.
      */
     public Product findBySlug(String slug) {
-        throw new UnsupportedOperationException("TODO ProductService.findBySlug");
+        if (slug == null || slug.isBlank()) {
+            return null;
+        }
+        Product p = productDAO.findBySlug(slug.trim());
+        if (p == null) {
+            return null;
+        }
+        // Màu và size lấy từ các biến thể. DAO trả biến thể theo sort_order của size,
+        // nên size giữ thứ tự xuất hiện; màu sắp theo id.
+        List<ProductVariant> variants = productDAO.findVariants(p.getId());
+        Map<Integer, Color> colors = new TreeMap<>();
+        Map<Integer, Size> sizes = new LinkedHashMap<>();
+        for (ProductVariant v : variants) {
+            colors.computeIfAbsent(v.getColorId(), id -> {
+                Color c = new Color();
+                c.setId(id);
+                c.setName(v.getColorName());
+                c.setHexCode(v.getColorHex());
+                return c;
+            });
+            sizes.computeIfAbsent(v.getSizeId(), id -> {
+                Size s = new Size();
+                s.setId(id);
+                s.setName(v.getSizeName());
+                return s;
+            });
+        }
+        p.setVariants(variants);
+        p.setColors(new ArrayList<>(colors.values()));
+        p.setSizes(new ArrayList<>(sizes.values()));
+        return p;
     }
 
     /**
@@ -56,7 +92,7 @@ public class ProductService {
      * n sản phẩm cùng danh mục (trừ chính nó).
      */
     public List<Product> related(Product p, int n) {
-        throw new UnsupportedOperationException("TODO ProductService.related");
+        return productDAO.findRelated(p.getCategoryId(), p.getId(), n);
     }
 
     /**

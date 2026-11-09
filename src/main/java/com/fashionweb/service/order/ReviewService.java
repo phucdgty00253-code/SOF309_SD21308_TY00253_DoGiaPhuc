@@ -1,5 +1,6 @@
 package com.fashionweb.service.order;
 
+import com.fashionweb.dao.order.ReviewDAO;
 import com.fashionweb.model.Review;
 import com.fashionweb.util.Page;
 import java.util.List;
@@ -11,6 +12,8 @@ import java.util.List;
  * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL.
  */
 public class ReviewService {
+
+    private final ReviewDAO reviewDAO = new ReviewDAO();
 
     /**
      * Có đơn COMPLETED chứa sản phẩm và chưa đánh giá.
@@ -37,14 +40,18 @@ public class ReviewService {
      * Đánh giá chưa bị ẩn, kèm userName, mới nhất trước.
      */
     public List<Review> listVisibleByProduct(int productId) {
-        throw new UnsupportedOperationException("TODO ReviewService.listVisibleByProduct");
+        return reviewDAO.findVisibleByProduct(productId);
     }
 
     /**
-     * Mảng 6 phần tử, chỉ số 1 đến 5 là số đánh giá mỗi mức sao.
+     * Mảng 6 phần tử, chỉ số 1 đến 5 là số đánh giá mỗi mức sao (chỉ đánh giá chưa bị ẩn).
      */
     public int[] ratingBreakdown(int productId) {
-        throw new UnsupportedOperationException("TODO ReviewService.ratingBreakdown");
+        int[] breakdown = new int[6];
+        for (Review r : reviewDAO.findVisibleByProduct(productId)) {
+            breakdown[Math.min(5, Math.max(1, r.getRating()))]++;
+        }
+        return breakdown;
     }
 
     /**
