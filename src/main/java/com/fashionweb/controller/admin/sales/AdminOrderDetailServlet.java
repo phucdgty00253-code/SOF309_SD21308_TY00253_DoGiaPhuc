@@ -3,7 +3,7 @@ package com.fashionweb.controller.admin.sales;
 import com.fashionweb.controller.admin.AdminOpsParams;
 
 import com.fashionweb.model.Order;
-import com.fashionweb.mock.MockData;
+import com.fashionweb.service.order.OrderService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -17,8 +17,8 @@ import java.io.IOException;
  * JSP: /WEB-INF/views/admin/sales/order-detail.jsp
  * Tham số: code (mã đơn). Không tìm thấy thì trả 404.
  * AdminFilter phải bảo vệ /admin/*.
- * TODO(logic):
- * - doGet: thay MockData.orderByCode bằng OrderService.findByCode(code) (kèm items, tên và email khách).
+ * GET: OrderService.findByCode(code) (kèm items, tên và email khách).
+ * TODO(#20):
  * - doPost action=updateStatus (orderCode, status=SHIPPING|COMPLETED): kiểm tra luồng PENDING -> SHIPPING -> COMPLETED;
  *   khi COMPLETED đặt paymentStatus=PAID và completedAt. Sau đó redirect về GET /admin/order?code= kèm flash.
  * - doPost action=cancel (orderCode, cancelReason bắt buộc): chỉ hủy được khi PENDING hoặc SHIPPING, cancelledBy=ADMIN,
@@ -27,10 +27,12 @@ import java.io.IOException;
 @WebServlet("/admin/order")
 public class AdminOrderDetailServlet extends HttpServlet {
 
+    private final OrderService orderService = new OrderService();
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String code = AdminOpsParams.text(req, "code");
-        Order order = code.isEmpty() ? null : MockData.orderByCode(code);
+        Order order = orderService.findByCode(code);
         if (order == null) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
