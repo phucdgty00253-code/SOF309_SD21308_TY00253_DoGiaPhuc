@@ -29,18 +29,6 @@
                 <a class="btn btn--primary btn--block" href="${ctx}/login">Quay lại đăng nhập</a>
                 <a class="btn btn--ghost btn--block" href="${ctx}/forgot-password">Gửi lại liên kết</a>
               </div>
-              <c:if test="${initParam.demoMode == true}">
-                <div class="dev-box">
-                  <div class="dev-box__head">
-                    <span class="t-label">Xem nhanh giao diện</span>
-                    <span class="badge badge--muted">Chỉ dành cho dev</span>
-                  </div>
-                  <div class="dev-box__links">
-                    <a class="chip" href="${ctx}/reset-password?token=demo-token">Mở liên kết đặt lại</a>
-                    <a class="chip" href="${ctx}/reset-password?invalid=1">Liên kết hết hạn</a>
-                  </div>
-                </div>
-              </c:if>
             </c:when>
             <c:otherwise>
               <span class="state-icon"><t:icon name="mail"/></span>

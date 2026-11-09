@@ -1,7 +1,6 @@
 package com.fashionweb.controller.admin;
 
 import com.fashionweb.constant.AppConstant;
-import com.fashionweb.mock.MockData;
 import com.fashionweb.model.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -59,12 +58,5 @@ public final class AdminOpsParams {
         } catch (IllegalArgumentException e) {
             return null;
         }
-    }
-
-    /** Id của tài khoản Admin đang đăng nhập; khi chưa có session (chế độ xem giao diện) dùng Admin mẫu. */
-    public static int currentAdminId(HttpServletRequest req) {
-        HttpSession session = req.getSession(false);
-        Object u = session == null ? null : session.getAttribute(AppConstant.SESSION_USER);
-        return u instanceof User ? ((User) u).getId() : MockData.admin().getId();
     }
 }

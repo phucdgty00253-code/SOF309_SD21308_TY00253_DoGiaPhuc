@@ -9,7 +9,7 @@
     authImage : String               - đường dẫn ảnh nửa trái (rỗng/null = khung xám)
     errors    : Map<String,String>   - (tùy chọn) lỗi theo ô: email, password
     message / messageType            - (tùy chọn) thông báo chung, xem flash.jspf (vd. sai email hoặc mật khẩu)
-  Tham số URL: redirect (trang quay lại sau khi đăng nhập), ?as=customer|admin|guest (DevPreviewFilter, chỉ ở demoMode)
+  Tham số URL: redirect (trang quay lại sau khi đăng nhập)
   Form: POST /login  action=login  fields=email,password,redirect
 --%>
 <t:layout title="Đăng nhập" description="Đăng nhập tài khoản Saltair để mua sắm, theo dõi đơn hàng và lưu sản phẩm yêu thích.">
@@ -67,20 +67,6 @@
 
           <p class="auth__alt acc-enter" style="--d:2">Chưa có tài khoản? <a class="link-underline" href="${ctx}/register">Tạo tài khoản</a></p>
 
-          <c:if test="${initParam.demoMode == true}">
-            <div class="dev-box acc-enter" style="--d:3">
-              <div class="dev-box__head">
-                <span class="t-label">Xem nhanh giao diện</span>
-                <span class="badge badge--muted">Chỉ dành cho dev</span>
-              </div>
-              <p class="t-small t-muted">Giả lập đăng nhập để xem các trang theo vai trò. Khối này tự ẩn khi demoMode tắt.</p>
-              <div class="dev-box__links">
-                <a class="chip" href="${ctx}/profile?as=customer">Khách hàng</a>
-                <a class="chip" href="${ctx}/admin?as=admin">Quản trị</a>
-                <a class="chip" href="${ctx}/home?as=guest">Khách (đăng xuất)</a>
-              </div>
-            </div>
-          </c:if>
         </div>
       </div>
     </div>
