@@ -4,13 +4,14 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="t" tagdir="/WEB-INF/tags" %>
 <%--
-  CHI TIẾT SẢN PHẨM  (GET /product?slug=... -> ProductDetailServlet; POST /product action=review do Servlet này xử lý sau)
+  CHI TIẾT SẢN PHẨM  (GET /product?slug=... -> ProductDetailServlet; POST /product action=review | deleteReview cũng do Servlet này xử lý)
   Thuộc tính request:
     product          Product            sản phẩm kèm colors, sizes, variants (không tìm thấy thì Servlet trả 404)
     galleryImages    List<String>       danh sách ảnh (hiện 0 hoặc 1 phần tử; nhiều ảnh thì tự thêm ô)
     reviews          List<Review>       đánh giá hiển thị, mới nhất trước
     relatedProducts  List<Product>      sản phẩm cùng danh mục
-    canReview        boolean            true khi được viết đánh giá (khách đã nhận hàng)
+    canReview        boolean            true khi được viết đánh giá (khách có đơn Hoàn thành chứa sản phẩm)
+    myReview         Review             đánh giá của chính khách (null nếu chưa có); có thì form là form sửa
     inWishlist       boolean            sản phẩm đã có trong danh sách yêu thích
     ratingBreakdown  int[6]             số lượt đánh giá theo sao, dùng chỉ số 1..5
     reviewTotal      int                tổng số đánh giá (tổng ratingBreakdown)
@@ -19,7 +20,8 @@
     errors           Map<String,String> (tùy chọn) lỗi form đánh giá: rating, comment
   Form:
     POST ${ctx}/cart    action=add     productId, variantId, quantity (data-demo data-demo-cart)
-    POST ${ctx}/product action=review  productId, rating, comment (data-demo)
+    POST ${ctx}/product action=review        productId, slug, rating, comment (thêm hoặc sửa)
+    POST ${ctx}/product action=deleteReview  productId, slug
 --%>
 <c:set var="soldOut" value="${product.stockTotal == 0}"/>
 <t:layout title="${product.name}" nav="shop" bodyClass="pdp-page" description="${product.description}">
@@ -195,16 +197,19 @@
 
           <c:choose>
             <c:when test="${canReview}">
-              <form class="review-form reveal" id="review-form" method="post" action="${ctx}/product" data-demo>
+              <c:set var="ratingValue" value="${not empty param.rating ? param.rating : myReview.rating}"/>
+              <form class="review-form reveal" id="review-form" method="post" action="${ctx}/product">
                 <input type="hidden" name="action" value="review">
                 <input type="hidden" name="productId" value="${product.id}">
-                <h3 class="h-2">Viết đánh giá</h3>
+                <input type="hidden" name="slug" value="${fn:escapeXml(product.slug)}">
+                <h3 class="h-2">${empty myReview ? 'Viết đánh giá' : 'Sửa đánh giá của bạn'}</h3>
+                <c:if test="${myReview.hidden}"><p class="t-small t-muted">Đánh giá của bạn đang bị quản trị viên ẩn khỏi trang sản phẩm.</p></c:if>
                 <div class="field">
                   <span class="field__label" id="rating-label">Số sao</span>
                   <div class="star-input" role="radiogroup" aria-labelledby="rating-label">
                     <c:forEach begin="1" end="5" var="k">
                       <c:set var="star" value="${6 - k}"/>
-                      <input class="sr-only" type="radio" name="rating" id="rate-${star}" value="${star}" required${param.rating == star ? ' checked' : ''}>
+                      <input class="sr-only" type="radio" name="rating" id="rate-${star}" value="${star}" required${ratingValue == star ? ' checked' : ''}>
                       <label for="rate-${star}" title="${star} sao"><span class="sr-only">${star} sao</span><t:icon name="star"/></label>
                     </c:forEach>
                   </div>
@@ -212,16 +217,26 @@
                 </div>
                 <div class="field">
                   <label class="field__label" for="review-comment">Nhận xét</label>
-                  <textarea class="textarea" id="review-comment" name="comment" required minlength="10" maxlength="1000" placeholder="Chia sẻ cảm nhận về chất vải, form dáng, màu sắc..."><c:out value="${param.comment}"/></textarea>
+                  <textarea class="textarea" id="review-comment" name="comment" required minlength="10" maxlength="1000" placeholder="Chia sẻ cảm nhận về chất vải, form dáng, màu sắc..."><c:out value="${not empty param.comment ? param.comment : myReview.comment}"/></textarea>
                   <c:if test="${not empty errors.comment}"><span class="field__error">${errors.comment}</span></c:if>
                 </div>
-                <div><button type="submit" class="btn btn--primary">Gửi đánh giá</button></div>
+                <div class="row row--wrap">
+                  <button type="submit" class="btn btn--primary">${empty myReview ? 'Gửi đánh giá' : 'Lưu thay đổi'}</button>
+                  <c:if test="${not empty myReview}"><button type="submit" form="review-delete-form" class="btn btn--ghost">Xóa đánh giá</button></c:if>
+                </div>
               </form>
+              <c:if test="${not empty myReview}">
+                <form id="review-delete-form" method="post" action="${ctx}/product" data-confirm="Xóa đánh giá của bạn cho sản phẩm này?">
+                  <input type="hidden" name="action" value="deleteReview">
+                  <input type="hidden" name="productId" value="${product.id}">
+                  <input type="hidden" name="slug" value="${fn:escapeXml(product.slug)}">
+                </form>
+              </c:if>
             </c:when>
             <c:otherwise>
               <div class="note-box review-note reveal">
                 <t:icon name="info" size="md"/>
-                <p class="t-small">Chỉ khách hàng đã nhận sản phẩm này mới có thể viết đánh giá.<c:if test="${empty sessionScope.currentUser}"> <a class="link-plain" href="${ctx}/login">Đăng nhập</a> để kiểm tra đơn hàng của bạn.</c:if></p>
+                <p class="t-small">Chỉ khách hàng có đơn đã hoàn thành chứa sản phẩm này mới có thể viết đánh giá.<c:if test="${empty sessionScope.currentUser}"> <a class="link-plain" href="${ctx}/login">Đăng nhập</a> để kiểm tra đơn hàng của bạn.</c:if></p>
               </div>
             </c:otherwise>
           </c:choose>

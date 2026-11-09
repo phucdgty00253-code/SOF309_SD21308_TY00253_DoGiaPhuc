@@ -1,39 +1,84 @@
 package com.fashionweb.service.order;
 
+import com.fashionweb.dao.order.OrderDetailDAO;
 import com.fashionweb.dao.order.ReviewDAO;
+import com.fashionweb.exception.DataAccessException;
+import com.fashionweb.exception.ValidationException;
 import com.fashionweb.model.Review;
 import com.fashionweb.util.Page;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Đánh giá sản phẩm và quản lý bình luận.
  *
- * <p>Hiện chỉ là KHUNG: mỗi phương thức ném UnsupportedOperationException. Thành viên được giao viết thân hàm.
+ * <p>Đã làm: phần của khách (#8, #18). latestVisible thuộc #9; search, toggleHidden thuộc #21.
  * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL.
  */
 public class ReviewService {
 
     private final ReviewDAO reviewDAO = new ReviewDAO();
+    private final OrderDetailDAO orderDetailDAO = new OrderDetailDAO();
 
     /**
-     * Có đơn COMPLETED chứa sản phẩm và chưa đánh giá.
+     * Được viết (hoặc sửa) đánh giá khi có đơn COMPLETED của chính mình chứa sản phẩm.
+     * Đã đánh giá rồi thì form dùng để sửa (xem findMine).
      */
     public boolean canReview(int userId, int productId) {
-        throw new UnsupportedOperationException("TODO ReviewService.canReview");
+        return orderDetailDAO.hasPurchased(userId, productId);
     }
 
     /**
-     * Thêm hoặc sửa đánh giá của chính user (UNIQUE user_id, product_id). rating 1 đến 5.
+     * Đánh giá của chính user cho sản phẩm (kể cả đang bị ẩn), null nếu chưa có.
      */
-    public void save(Review r) {
-        throw new UnsupportedOperationException("TODO ReviewService.save");
+    public Review findMine(int userId, int productId) {
+        return reviewDAO.findByUserAndProduct(userId, productId);
     }
 
     /**
-     * Khách xóa đánh giá của mình.
+     * Thêm hoặc sửa đánh giá của chính user (UNIQUE user_id, product_id): đã có thì sửa, chưa có thì thêm.
+     * rating 1 đến 5, nhận xét 10 đến 1000 ký tự. Trả true nếu là sửa.
+     */
+    public boolean save(Review r) {
+        Map<String, String> errors = new LinkedHashMap<>();
+        if (r.getRating() < 1 || r.getRating() > 5) {
+            errors.put("rating", "Hãy chọn từ 1 đến 5 sao.");
+        }
+        String comment = r.getComment() == null ? "" : r.getComment().trim();
+        if (comment.length() < 10 || comment.length() > 1000) {
+            errors.put("comment", "Nhận xét cần từ 10 đến 1000 ký tự.");
+        }
+        if (!errors.isEmpty()) {
+            throw new ValidationException(errors);
+        }
+        if (!canReview(r.getUserId(), r.getProductId())) {
+            throw new ValidationException(null, "Bạn chỉ đánh giá được sản phẩm nằm trong đơn đã hoàn thành của mình.");
+        }
+        r.setComment(comment);
+        if (reviewDAO.findByUserAndProduct(r.getUserId(), r.getProductId()) != null) {
+            reviewDAO.update(r);
+            return true;
+        }
+        try {
+            reviewDAO.insert(r);
+            return false;
+        } catch (DataAccessException e) {
+            // Hai lần gửi cùng lúc: lần sau vướng UNIQUE (user_id, product_id) thì chuyển sang sửa
+            if (e.getCause() instanceof SQLIntegrityConstraintViolationException) {
+                reviewDAO.update(r);
+                return true;
+            }
+            throw e;
+        }
+    }
+
+    /**
+     * Khách xóa đánh giá của mình (chỉ xóa được dòng có user_id của chính mình).
      */
     public void delete(int userId, int productId) {
-        throw new UnsupportedOperationException("TODO ReviewService.delete");
+        reviewDAO.delete(userId, productId);
     }
 
     /**

@@ -3,20 +3,23 @@ package com.fashionweb.controller.shop;
 
 import com.fashionweb.constant.AppConstant;
 import com.fashionweb.constant.Role;
+import com.fashionweb.exception.ValidationException;
 import com.fashionweb.model.Product;
 import com.fashionweb.model.Review;
 import com.fashionweb.model.User;
 import com.fashionweb.service.account.AccountService;
 import com.fashionweb.service.order.ReviewService;
 import com.fashionweb.service.shop.ProductService;
+import com.fashionweb.util.WebUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,19 +30,15 @@ import java.util.List;
  * <p>
  * Tham số: slug (bắt buộc). Thiếu hoặc không tìm thấy sản phẩm thì trả 404.
  * <p>
- * TODO(logic):
+ * Thuộc tính thêm: canReview (khách có đơn Hoàn thành chứa sản phẩm), myReview (đánh giá của chính khách, null nếu chưa có).
+ * <p>
+ * POST /product (khách đã đăng nhập, AuthFilter không chặn /product nên Servlet tự kiểm tra):
  * <ul>
- *   <li>Thay MockData bằng ProductService.findBySlug (kèm variants/colors/sizes), ReviewService.listVisibleByProduct,
- *       ProductService.related.</li>
- *   <li>canReview: true khi khách đã đăng nhập, có đơn "Hoàn thành" chứa sản phẩm này và chưa đánh giá
- *       (hiện chỉ mock: session có người dùng role CUSTOMER).</li>
- *   <li>inWishlist: kiểm tra WishlistService (hiện mock theo MockData.wishlistProducts()).</li>
- *   <li>doPost action=review (productId, rating 1..5, comment): kiểm tra đăng nhập + quyền đánh giá,
- *       lưu qua ReviewService, đặt flashMessage rồi redirect về /product?slug=...#reviews.
- *       Chưa đăng nhập thì chuyển sang /login.</li>
- *   <li>Thêm vào giỏ POST /cart action=add (productId, variantId, quantity) do CartServlet xử lý;
- *       nút yêu thích ([data-wish]) cần nối với WishlistServlet.</li>
+ *   <li>action=review (productId, slug, rating 1..5, comment 10..1000 ký tự): thêm, hoặc sửa nếu đã đánh giá.
+ *       Sai dữ liệu thì hiện lại trang kèm errors; đúng thì flash rồi redirect về /product?slug=...#reviews.</li>
+ *   <li>action=deleteReview (productId, slug): xóa đánh giá của chính mình.</li>
  * </ul>
+ * Chưa đăng nhập thì chuyển sang /login.
  */
 @WebServlet("/product")
 public class ProductDetailServlet extends HttpServlet {
@@ -78,14 +77,11 @@ public class ProductDetailServlet extends HttpServlet {
             galleryImages.add(product.getImage());
         }
 
-        // Người dùng hiện tại. TODO(#18): canReview = ReviewService.canReview(userId, productId)
-        // (đơn hoàn thành chứa sản phẩm và chưa đánh giá); tạm thời chỉ cần là CUSTOMER.
-        User user = null;
-        HttpSession session = req.getSession(false);
-        if (session != null && session.getAttribute(AppConstant.SESSION_USER) instanceof User u) {
-            user = u;
-        }
-        boolean canReview = user != null && user.getRole() == Role.CUSTOMER;
+        // Được đánh giá khi có đơn Hoàn thành chứa sản phẩm; đã đánh giá thì form dùng để sửa
+        User user = WebUtil.currentUser(req);
+        boolean customer = user != null && user.getRole() == Role.CUSTOMER;
+        boolean canReview = customer && reviewService.canReview(user.getId(), product.getId());
+        Review myReview = customer ? reviewService.findMine(user.getId(), product.getId()) : null;
         boolean inWishlist = user != null && accountService.isInWishlist(user.getId(), product.getId());
 
         req.setAttribute("product", product);
@@ -93,11 +89,55 @@ public class ProductDetailServlet extends HttpServlet {
         req.setAttribute("reviews", reviews);
         req.setAttribute("relatedProducts", productService.related(product, RELATED_LIMIT));
         req.setAttribute("canReview", canReview);
+        req.setAttribute("myReview", myReview);
         req.setAttribute("inWishlist", inWishlist);
         req.setAttribute("ratingBreakdown", breakdown);
         req.setAttribute("reviewTotal", total);
         req.setAttribute("reviewAvg", avg);
         req.setAttribute("shippingFee", AppConstant.SHIPPING_FEE);
         req.getRequestDispatcher("/WEB-INF/views/shop/product-detail.jsp").forward(req, resp);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String slug = req.getParameter("slug");
+        String back = req.getContextPath() + "/product?slug=" + URLEncoder.encode(slug == null ? "" : slug, StandardCharsets.UTF_8);
+        User user = WebUtil.currentUser(req);
+        if (user == null) {
+            resp.sendRedirect(req.getContextPath() + "/login?redirect=" + URLEncoder.encode(
+                    "/product?slug=" + (slug == null ? "" : slug), StandardCharsets.UTF_8));
+            return;
+        }
+        int productId = WebUtil.parseInt(req.getParameter("productId"), 0);
+        String action = req.getParameter("action");
+        if ("deleteReview".equals(action)) {
+            reviewService.delete(user.getId(), productId);
+            WebUtil.flash(req, "Đã xóa đánh giá của bạn.", "success");
+            resp.sendRedirect(back + "#reviews");
+            return;
+        }
+        if (!"review".equals(action)) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+        Review r = new Review();
+        r.setUserId(user.getId());
+        r.setProductId(productId);
+        r.setRating(WebUtil.parseInt(req.getParameter("rating"), 0));
+        r.setComment(req.getParameter("comment"));
+        try {
+            boolean updated = reviewService.save(r);
+            WebUtil.flash(req, updated ? "Đã cập nhật đánh giá của bạn." : "Cảm ơn bạn đã đánh giá sản phẩm!", "success");
+        } catch (ValidationException e) {
+            if (e.getErrors().isEmpty()) {
+                WebUtil.flash(req, e.getMessage(), "error");
+            } else {
+                // Lỗi nhập liệu: hiện lại trang, giữ sao và nhận xét đã nhập (param.rating, param.comment)
+                req.setAttribute("errors", e.getErrors());
+                doGet(req, resp);
+                return;
+            }
+        }
+        resp.sendRedirect(back + "#reviews");
     }
 }
