@@ -38,6 +38,23 @@ public class ColorDAO {
     }
 
     /**
+     * Màu đã xóa mềm, mới xóa trước (Thùng rác).
+     */
+    public List<Color> findDeleted() {
+        List<Color> list = new ArrayList<>();
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement("SELECT * FROM colors WHERE is_deleted = 1 ORDER BY deleted_at DESC, id DESC");
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(map(rs));
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi đọc màu đã xóa", e);
+        }
+        return list;
+    }
+
+    /**
      * INSERT, trả id.
      */
     public int insert(Color c) {

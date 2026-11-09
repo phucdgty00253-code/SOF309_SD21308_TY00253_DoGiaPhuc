@@ -131,6 +131,33 @@ public class ProductDAO {
     }
 
     /**
+     * Sản phẩm đã xóa mềm kèm tên danh mục, mới xóa trước (Thùng rác).
+     */
+    public List<Product> findDeleted() {
+        try (Connection con = DBContext.getConnection()) {
+            return queryList(con, SELECT_WITH_STATS + "WHERE p.is_deleted = 1 ORDER BY p.deleted_at DESC, p.id DESC", List.of());
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi đọc sản phẩm đã xóa", e);
+        }
+    }
+
+    /**
+     * id danh mục và trạng thái xóa của danh mục chứa sản phẩm đã xóa mềm; null nếu sản phẩm không nằm trong Thùng rác.
+     */
+    public Boolean isCategoryDeletedOfDeletedProduct(int productId) {
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement("SELECT c.is_deleted FROM products p JOIN categories c ON c.id = p.category_id "
+                     + "WHERE p.id = ? AND p.is_deleted = 1")) {
+            ps.setInt(1, productId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getBoolean(1) : null;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi kiểm tra sản phẩm đã xóa", e);
+        }
+    }
+
+    /**
      * n sản phẩm nổi bật (is_featured = 1) đang bán, mới nhất trước.
      */
     public List<Product> findFeatured(int n) {

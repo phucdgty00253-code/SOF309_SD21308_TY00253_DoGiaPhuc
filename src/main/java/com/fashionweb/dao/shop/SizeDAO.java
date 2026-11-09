@@ -38,6 +38,23 @@ public class SizeDAO {
     }
 
     /**
+     * Size đã xóa mềm, mới xóa trước (Thùng rác).
+     */
+    public List<Size> findDeleted() {
+        List<Size> list = new ArrayList<>();
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement("SELECT * FROM sizes WHERE is_deleted = 1 ORDER BY deleted_at DESC, id DESC");
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(map(rs));
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi đọc size đã xóa", e);
+        }
+        return list;
+    }
+
+    /**
      * INSERT, trả id.
      */
     public int insert(Size s) {

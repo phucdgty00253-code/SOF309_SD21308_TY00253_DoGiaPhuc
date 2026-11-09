@@ -41,6 +41,42 @@ public class AttributeService {
     }
 
     /**
+     * Màu đã xóa mềm (Thùng rác).
+     */
+    public List<Color> findDeletedColors() {
+        return colorDAO.findDeleted();
+    }
+
+    /**
+     * Size đã xóa mềm (Thùng rác).
+     */
+    public List<Size> findDeletedSizes() {
+        return sizeDAO.findDeleted();
+    }
+
+    /**
+     * Khôi phục màu từ Thùng rác.
+     */
+    public void restoreColor(int id) {
+        Color c = colorDAO.findById(id);
+        if (c == null || !c.isDeleted()) {
+            throw new ValidationException(null, "Màu không có trong Thùng rác.");
+        }
+        colorDAO.setDeleted(id, false);
+    }
+
+    /**
+     * Khôi phục size từ Thùng rác.
+     */
+    public void restoreSize(int id) {
+        Size s = sizeDAO.findById(id);
+        if (s == null || !s.isDeleted()) {
+            throw new ValidationException(null, "Size không có trong Thùng rác.");
+        }
+        sizeDAO.setDeleted(id, false);
+    }
+
+    /**
      * id = 0 thêm, id > 0 sửa. code duy nhất, hexCode dạng #RRGGBB. Sai thì ném ValidationException (name, code, hexCode).
      */
     public void saveColor(Color c) {

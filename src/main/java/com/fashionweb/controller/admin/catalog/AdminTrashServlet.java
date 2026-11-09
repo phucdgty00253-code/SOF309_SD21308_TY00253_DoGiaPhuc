@@ -1,6 +1,11 @@
     package com.fashionweb.controller.admin;
 
-import com.fashionweb.mock.AdminCatalogMock;
+import com.fashionweb.exception.ValidationException;
+import com.fashionweb.listener.AppStartupListener;
+import com.fashionweb.service.shop.AttributeService;
+import com.fashionweb.service.shop.CategoryService;
+import com.fashionweb.service.shop.ProductService;
+import com.fashionweb.util.WebUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -19,12 +24,16 @@ import java.util.Map;
  * Thuộc tính: tab (String), items (List: Product | Category | Color | Size tùy tab), tabCounts (Map tab -> số mục).
  * Các nhóm khác có thể thêm tab mới (banners, blogs...) bằng cách mở rộng servlet và JSP này.
  * AdminFilter phải bảo vệ /admin/*.
- * TODO(logic): thay AdminCatalogMock bằng TrashService.findDeleted(type) (is_deleted = 1, sắp theo deleted_at giảm dần).
- * doPost action=restore, type (products|categories|colors|sizes), id: đặt is_deleted = 0, deleted_at = NULL.
- * Khôi phục sản phẩm thì kiểm tra danh mục của nó còn tồn tại (chưa xóa mềm), slug chưa bị chiếm.
+ * Dữ liệu: ProductService/CategoryService/AttributeService.findDeleted... (is_deleted = 1, mới xóa trước).
+ * POST action=restore, type (products|categories|colors|sizes), id: đặt is_deleted = 0, deleted_at = NULL, rồi quay về tab đó.
+ * Khôi phục sản phẩm mà danh mục đang bị xóa mềm thì báo rõ; khôi phục danh mục thì làm mới menu.
  */
 @WebServlet("/admin/trash")
 public class AdminTrashServlet extends HttpServlet {
+
+    private final ProductService productService = new ProductService();
+    private final CategoryService categoryService = new CategoryService();
+    private final AttributeService attributeService = new AttributeService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -35,10 +44,10 @@ public class AdminTrashServlet extends HttpServlet {
         tab = tab.trim();
 
         Map<String, List<?>> all = new LinkedHashMap<>();
-        all.put("products", AdminCatalogMock.deletedProducts());
-        all.put("categories", AdminCatalogMock.deletedCategories());
-        all.put("colors", AdminCatalogMock.deletedColors());
-        all.put("sizes", AdminCatalogMock.deletedSizes());
+        all.put("products", productService.findDeleted());
+        all.put("categories", categoryService.findDeleted());
+        all.put("colors", attributeService.findDeletedColors());
+        all.put("sizes", attributeService.findDeletedSizes());
         if (!all.containsKey(tab)) {
             tab = "products";
         }
@@ -50,5 +59,34 @@ public class AdminTrashServlet extends HttpServlet {
         req.setAttribute("items", all.get(tab));
         req.setAttribute("tabCounts", tabCounts);
         req.getRequestDispatcher("/WEB-INF/views/admin/catalog/trash.jsp").forward(req, resp);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String type = req.getParameter("type");
+        int id = WebUtil.parseInt(req.getParameter("id"), 0);
+        if (!"restore".equals(req.getParameter("action")) || type == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+        try {
+            switch (type) {
+                case "products" -> productService.restore(id);
+                case "categories" -> {
+                    categoryService.restore(id);
+                    AppStartupListener.refreshNavCategories(getServletContext());
+                }
+                case "colors" -> attributeService.restoreColor(id);
+                case "sizes" -> attributeService.restoreSize(id);
+                default -> {
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                    return;
+                }
+            }
+            WebUtil.flash(req, "Đã khôi phục.", "success");
+        } catch (ValidationException e) {
+            WebUtil.flash(req, e.getMessage(), "error");
+        }
+        resp.sendRedirect(req.getContextPath() + "/admin/trash?tab=" + type);
     }
 }
