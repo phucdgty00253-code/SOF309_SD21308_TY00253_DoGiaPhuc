@@ -1,28 +1,31 @@
 package com.fashionweb.service.shop;
 
+import com.fashionweb.dao.shop.BannerDAO;
 import com.fashionweb.model.Banner;
 import java.util.List;
 
 /**
  * Banner trang chủ.
  *
- * <p>Hiện chỉ là KHUNG: mỗi phương thức ném UnsupportedOperationException. Thành viên được giao viết thân hàm.
+ * <p>Đã làm: findActive, findAll (#9). save, toggle, delete thuộc #11.
  * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL.
  */
 public class BannerService {
+
+    private final BannerDAO bannerDAO = new BannerDAO();
 
     /**
      * Banner đang bật, theo sortOrder (trang chủ).
      */
     public List<Banner> findActive() {
-        throw new UnsupportedOperationException("TODO BannerService.findActive");
+        return bannerDAO.findAll(true);
     }
 
     /**
      * Mọi banner (Admin).
      */
     public List<Banner> findAll() {
-        throw new UnsupportedOperationException("TODO BannerService.findAll");
+        return bannerDAO.findAll(false);
     }
 
     /**

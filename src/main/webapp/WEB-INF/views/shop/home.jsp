@@ -5,11 +5,14 @@
 <%@ taglib prefix="t" tagdir="/WEB-INF/tags" %>
 <%--
   TRANG CHỦ  (GET /home -> HomeServlet)
-  Dữ liệu: banners, newProducts, bestSellers, categories, latestReviews, reviewAvg, reviewTotal, latestBlogs, splitImage1, splitImage2
+  Dữ liệu: banners (đang bật, theo sort_order), newProducts, featuredProducts, bestSellers, categories, latestReviews,
+           reviewAvg, reviewTotal, latestBlogs, splitImage1, splitImage2
+  Mục nào không có dữ liệu thì ẩn.
 --%>
 <t:layout title="Trang chủ" nav="home" overlay="true" description="Saltair - đồ basic phong cách biển, nhẹ, thoáng và dễ phối.">
 
   <%-- 1. Hero --%>
+  <c:if test="${not empty banners}">
   <section class="hero" data-hero-slider aria-label="Nổi bật">
     <div class="hero__slides">
       <c:forEach items="${banners}" var="b" varStatus="s">
@@ -29,16 +32,18 @@
       </div>
     </c:if>
   </section>
+  </c:if>
 
   <%-- 2. Dải lợi ích --%>
   <section class="usp" aria-label="Lợi ích">
-    <div class="usp__item reveal"><t:icon name="star"/><p class="usp__title"><fmt:formatNumber value="${reviewAvg}" minFractionDigits="1" maxFractionDigits="1"/>/5 từ khách hàng</p><p class="usp__text">Dựa trên ${reviewTotal} đánh giá của khách đã nhận hàng.</p></div>
+    <c:if test="${reviewTotal > 0}"><div class="usp__item reveal"><t:icon name="star"/><p class="usp__title"><fmt:formatNumber value="${reviewAvg}" minFractionDigits="1" maxFractionDigits="1"/>/5 từ khách hàng</p><p class="usp__text">Dựa trên ${reviewTotal} đánh giá của khách đã nhận hàng.</p></div></c:if>
     <div class="usp__item reveal"><t:icon name="truck"/><p class="usp__title">Phí ship 30.000đ</p><p class="usp__text">Giao tận nơi, thanh toán khi nhận hàng.</p></div>
     <div class="usp__item reveal"><t:icon name="percent"/><p class="usp__title">Miễn phí ship với mã giảm giá</p><p class="usp__text">Áp dụng mã hợp lệ ở bước thanh toán.</p></div>
     <div class="usp__item reveal"><t:icon name="tag"/><p class="usp__title">Ưu đãi đơn đầu tiên</p><p class="usp__text">Nhập WELCOME10 giảm 10%, tối đa 50.000đ.</p></div>
   </section>
 
   <%-- 3. Hàng mới về --%>
+  <c:if test="${not empty newProducts}">
   <section class="section--lg" data-carousel>
     <div class="container section__head reveal">
       <h2 class="h-1">Hàng mới về</h2>
@@ -55,6 +60,27 @@
     </div>
     <div class="carousel__progress"><div class="carousel__bar"></div></div>
   </section>
+  </c:if>
+
+  <%-- 3b. Nổi bật (sản phẩm Admin bật "Hiển thị nổi bật") --%>
+  <c:if test="${not empty featuredProducts}">
+  <section class="section--lg" data-carousel>
+    <div class="container section__head reveal">
+      <h2 class="h-1">Nổi bật</h2>
+      <div class="row">
+        <div class="carousel__nav hide-mobile">
+          <button type="button" class="carousel__btn" data-carousel-prev aria-label="Trước"><t:icon name="chevron-left"/></button>
+          <button type="button" class="carousel__btn" data-carousel-next aria-label="Sau"><t:icon name="chevron-right"/></button>
+        </div>
+        <a class="btn btn--outline" href="${ctx}/products">Xem tất cả</a>
+      </div>
+    </div>
+    <div class="carousel__track">
+      <c:forEach items="${featuredProducts}" var="p"><div class="carousel__item"><t:product-card product="${p}"/></div></c:forEach>
+    </div>
+    <div class="carousel__progress"><div class="carousel__bar"></div></div>
+  </section>
+  </c:if>
 
   <%-- 4. Khối chữ nền navy --%>
   <section class="dark-text reveal">
@@ -86,6 +112,7 @@
   </section>
 
   <%-- 6. Danh mục --%>
+  <c:if test="${not empty categories}">
   <h2 class="h-1 section-title reveal">Danh mục</h2>
   <section class="tile-row" data-stagger>
     <c:forEach items="${categories}" var="c">
@@ -95,8 +122,10 @@
       </a>
     </c:forEach>
   </section>
+  </c:if>
 
   <%-- 7. Bán chạy --%>
+  <c:if test="${not empty bestSellers}">
   <section class="section--lg" data-carousel>
     <div class="container section__head reveal">
       <h2 class="h-1">Bán chạy</h2>
@@ -113,8 +142,10 @@
     </div>
     <div class="carousel__progress"><div class="carousel__bar"></div></div>
   </section>
+  </c:if>
 
   <%-- 8. Đánh giá khách hàng --%>
+  <c:if test="${not empty latestReviews}">
   <section class="container section reveal">
     <div class="reviews-strip">
       <div class="reviews-summary">
@@ -134,8 +165,10 @@
       </div>
     </div>
   </section>
+  </c:if>
 
   <%-- 9. Khám phá thêm (Blog) --%>
+  <c:if test="${not empty latestBlogs}">
   <section class="section--lg">
     <div class="container section__head reveal">
       <div>
@@ -157,6 +190,7 @@
       </c:forEach>
     </div>
   </section>
+  </c:if>
 
   <%-- 10. Ưu đãi --%>
   <section class="cta-band reveal">
