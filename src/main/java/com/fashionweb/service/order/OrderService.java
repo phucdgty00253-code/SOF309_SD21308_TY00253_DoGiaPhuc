@@ -1,5 +1,6 @@
 package com.fashionweb.service.order;
 
+import com.fashionweb.constant.CancelledBy;
 import com.fashionweb.constant.OrderStatus;
 import com.fashionweb.constant.PaymentMethod;
 import com.fashionweb.constant.PaymentStatus;
@@ -27,15 +28,18 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Đặt hàng, đơn của khách và quản lý đơn của Admin.
  *
  * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL. Thao tác nhiều bảng (đặt hàng, hủy đơn) chạy trong một
  * transaction do Service mở; DAO nhận Connection của transaction đó.
- * <p>Đã làm (#14): placeOrder, findByCodeAndUser. Các hàm còn lại thuộc #16, #17, #19, #20, #26.
+ * <p>Đã làm: placeOrder (#14); findByUser, findPageByUser, countByStatusForUser, findByCodeAndUser, countByUser (#16);
+ * cancelByCustomer, confirmReceived, cancelByAdmin (#17, hàm hủy dùng chung). Các hàm còn lại thuộc #19, #20, #26.
  */
 public class OrderService {
 
@@ -181,14 +185,78 @@ public class OrderService {
      * Chỉ khi PENDING. Cộng trả tồn kho, trả lượt voucher, status = CANCELLED, cancelledBy = CUSTOMER.
      */
     public void cancelByCustomer(String code, int userId, String reason) {
-        throw new UnsupportedOperationException("TODO OrderService.cancelByCustomer");
+        cancel(code, userId, CancelledBy.CUSTOMER, reason, EnumSet.of(OrderStatus.PENDING),
+                "Chỉ hủy được đơn đang ở trạng thái Chờ xác nhận.");
     }
 
     /**
      * Chỉ khi SHIPPING. status = COMPLETED, paymentStatus = PAID, completedAt = NOW().
      */
     public void confirmReceived(String code, int userId) {
-        throw new UnsupportedOperationException("TODO OrderService.confirmReceived");
+        try (Connection con = DBContext.getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                Order o = lockOrder(con, code, userId);
+                if (o.getStatus() != OrderStatus.SHIPPING) {
+                    throw new ValidationException(null, "Chỉ xác nhận đã nhận hàng khi đơn đang giao.");
+                }
+                orderDAO.updateStatus(con, o.getId(), OrderStatus.COMPLETED, PaymentStatus.PAID, new Date());
+                con.commit();
+            } catch (SQLException | RuntimeException e) {
+                con.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi xác nhận đã nhận hàng", e);
+        }
+    }
+
+    /**
+     * Hủy đơn dùng chung cho khách (#17) và Admin (#20), chạy trong MỘT transaction:
+     * khóa dòng đơn (SELECT ... FOR UPDATE) rồi kiểm tra trạng thái, nên gọi hủy hai lần thì lần sau bị từ chối
+     * và tồn kho không bị cộng hai lần. Cộng trả tồn kho từng biến thể, trả một lượt voucher, ghi lý do và người hủy.
+     *
+     * @param ownerId id khách sở hữu đơn; null khi Admin hủy (không kiểm tra chủ đơn)
+     */
+    private void cancel(String code, Integer ownerId, CancelledBy by, String reason,
+                        Set<OrderStatus> allowed, String notAllowedMessage) {
+        String r = reason == null ? "" : reason.trim();
+        if (r.length() < 5 || r.length() > 255) {
+            throw new ValidationException("cancelReason", "Lý do hủy cần từ 5 đến 255 ký tự.");
+        }
+        try (Connection con = DBContext.getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                Order o = lockOrder(con, code, ownerId);
+                if (!allowed.contains(o.getStatus())) {
+                    throw new ValidationException(null, notAllowedMessage);
+                }
+                for (OrderDetail d : orderDetailDAO.findByOrder(o.getId())) {
+                    productDAO.increaseStock(con, d.getVariantId(), d.getQuantity());
+                }
+                if (o.getVoucherId() != null) {
+                    voucherDAO.decreaseUsed(con, o.getVoucherId());
+                }
+                orderDAO.cancel(con, o.getId(), r, by);
+                con.commit();
+            } catch (SQLException | RuntimeException e) {
+                con.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi hủy đơn hàng", e);
+        }
+    }
+
+    /**
+     * Khóa đơn theo mã trong transaction. Không có, hoặc không phải đơn của ownerId (khi khác null), thì báo không tìm thấy.
+     */
+    private Order lockOrder(Connection con, String code, Integer ownerId) throws SQLException {
+        Order o = code == null || code.isBlank() ? null : orderDAO.lockByCode(con, code.trim());
+        if (o == null || (ownerId != null && o.getUserId() != ownerId)) {
+            throw new ValidationException(null, "Không tìm thấy đơn hàng.");
+        }
+        return o;
     }
 
     /**
@@ -230,7 +298,8 @@ public class OrderService {
      * Admin: hủy khi PENDING hoặc SHIPPING, cancelledBy = ADMIN, trả tồn kho và lượt voucher.
      */
     public void cancelByAdmin(String code, String reason) {
-        throw new UnsupportedOperationException("TODO OrderService.cancelByAdmin");
+        cancel(code, null, CancelledBy.ADMIN, reason, EnumSet.of(OrderStatus.PENDING, OrderStatus.SHIPPING),
+                "Chỉ hủy được đơn đang Chờ xác nhận hoặc Đang giao.");
     }
 
     /**
