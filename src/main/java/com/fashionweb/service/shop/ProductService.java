@@ -1,26 +1,42 @@
 package com.fashionweb.service.shop;
 
+import com.fashionweb.dao.shop.CategoryDAO;
 import com.fashionweb.dao.shop.ProductDAO;
+import com.fashionweb.exception.DataAccessException;
+import com.fashionweb.exception.ValidationException;
+import com.fashionweb.model.Category;
 import com.fashionweb.model.Color;
 import com.fashionweb.model.Product;
 import com.fashionweb.model.ProductVariant;
 import com.fashionweb.model.Size;
+import com.fashionweb.util.DBContext;
 import com.fashionweb.util.Page;
+import com.fashionweb.util.SlugUtil;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 /**
  * Sản phẩm phía khách và dùng lại ở trang Admin.
  *
- * <p>Hiện chỉ là KHUNG: mỗi phương thức ném UnsupportedOperationException. Thành viên được giao viết thân hàm.
+ * <p>Đã làm: phía khách (#7, #8); Admin thêm, sửa, xóa mềm (#24). findAllForFilter thuộc #21, lowestStock thuộc #26.
  * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL.
  */
 public class ProductService {
 
+    private static final long MIN_PRICE = 1000;
+    private static final long MAX_PRICE = 99_999_999;
+    private static final int MAX_STOCK = 99_999;
+
     private final ProductDAO productDAO = new ProductDAO();
+    private final CategoryDAO categoryDAO = new CategoryDAO();
+    private final AttributeService attributeService = new AttributeService();
 
     /**
      * Danh sách sản phẩm cho trang /products. Chỉ lấy sản phẩm chưa xóa mềm. sort: newest | price_asc | price_desc | bestseller | rating.
@@ -68,10 +84,14 @@ public class ProductService {
     }
 
     /**
-     * Như findBySlug nhưng theo id (dùng ở form sửa của Admin, kể cả sản phẩm ẩn).
+     * Sản phẩm chưa xóa mềm theo id kèm variants (form sửa của Admin). null nếu không có.
      */
     public Product findById(int id) {
-        throw new UnsupportedOperationException("TODO ProductService.findById");
+        Product p = productDAO.findById(id);
+        if (p != null) {
+            p.setVariants(productDAO.findVariants(id));
+        }
+        return p;
     }
 
     /**
@@ -99,7 +119,7 @@ public class ProductService {
      * Danh sách cho /admin/products. Tính stockTotal từ product_variants.
      */
     public Page<Product> searchForAdmin(String q, String categorySlug, int page, int pageSize) {
-        throw new UnsupportedOperationException("TODO ProductService.searchForAdmin");
+        return productDAO.findPageForAdmin(q, categorySlug, page, pageSize);
     }
 
     /**
@@ -117,23 +137,106 @@ public class ProductService {
     }
 
     /**
-     * Thêm sản phẩm và các biến thể trong một transaction. slug phải duy nhất.
+     * Thêm sản phẩm và các biến thể trong một transaction. Slug để trống thì tự sinh từ tên; slug phải duy nhất.
      */
     public void create(Product p, List<ProductVariant> variants) {
-        throw new UnsupportedOperationException("TODO ProductService.create");
+        p.setId(0);
+        validate(p, variants);
+        save(p, variants);
     }
 
     /**
-     * Sửa sản phẩm và upsert biến thể. Biến thể đã có trong đơn hoặc giỏ thì đặt tồn = 0 thay vì xóa.
+     * Sửa sản phẩm và upsert biến thể trong một transaction. Biến thể bị bỏ chọn: xóa nếu chưa nằm trong đơn
+     * hay giỏ nào, ngược lại đặt tồn = 0.
      */
     public void update(Product p, List<ProductVariant> variants) {
-        throw new UnsupportedOperationException("TODO ProductService.update");
+        if (p.getId() <= 0 || productDAO.findById(p.getId()) == null) {
+            throw new ValidationException(null, "Sản phẩm không tồn tại hoặc đã bị xóa.");
+        }
+        validate(p, variants);
+        save(p, variants);
     }
 
     /**
-     * is_deleted = 1, deleted_at = NOW(). Đơn cũ giữ nguyên.
+     * is_deleted = 1, deleted_at = NOW(). Đơn cũ giữ nguyên (order_details lưu sẵn tên, giá, ảnh).
      */
     public void softDelete(int id) {
-        throw new UnsupportedOperationException("TODO ProductService.softDelete");
+        if (!productDAO.setDeleted(id, true)) {
+            throw new ValidationException(null, "Sản phẩm không tồn tại hoặc đã nằm trong Thùng rác.");
+        }
+    }
+
+    // ----- Hàm phụ -----
+
+    private void save(Product p, List<ProductVariant> variants) {
+        try (Connection con = DBContext.getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                if (p.getId() == 0) {
+                    p.setId(productDAO.insert(con, p));
+                } else {
+                    productDAO.update(con, p);
+                }
+                productDAO.upsertVariants(con, p.getId(), variants);
+                con.commit();
+            } catch (SQLException | RuntimeException e) {
+                con.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi lưu sản phẩm", e);
+        }
+    }
+
+    /** Kiểm tra dữ liệu form; gom mọi lỗi theo tên trường rồi ném ValidationException. Chuẩn hóa name, slug, description. */
+    private void validate(Product p, List<ProductVariant> variants) {
+        Map<String, String> errors = new LinkedHashMap<>();
+        String name = p.getName() == null ? "" : p.getName().trim();
+        p.setName(name);
+        if (name.length() < 2 || name.length() > 150) {
+            errors.put("name", "Tên sản phẩm cần từ 2 đến 150 ký tự.");
+        }
+        String slug = p.getSlug() == null || p.getSlug().isBlank() ? SlugUtil.toSlug(name) : p.getSlug().trim();
+        p.setSlug(slug);
+        if (!SlugUtil.isValid(slug) || slug.length() > 170) {
+            errors.put("slug", "Slug chỉ gồm chữ thường không dấu, số và dấu gạch ngang.");
+        } else if (productDAO.existsSlug(slug, p.getId())) {
+            errors.put("slug", "Slug đã được dùng cho sản phẩm khác (kể cả trong Thùng rác).");
+        }
+        Category c = p.getCategoryId() > 0 ? categoryDAO.findById(p.getCategoryId()) : null;
+        if (c == null || c.isDeleted()) {
+            errors.put("categoryId", "Hãy chọn danh mục.");
+        }
+        if (p.getPrice() < MIN_PRICE || p.getPrice() > MAX_PRICE) {
+            errors.put("price", "Giá bán từ 1.000đ đến 99.999.999đ.");
+        }
+        if (p.getDescription() != null) {
+            String d = p.getDescription().trim();
+            p.setDescription(d.isEmpty() ? null : d);
+            if (d.length() > 2000) {
+                errors.put("description", "Mô tả tối đa 2000 ký tự.");
+            }
+        }
+        if (variants == null || variants.isEmpty()) {
+            errors.put("colorIds", "Chọn ít nhất một màu.");
+        } else {
+            Set<Integer> colorIds = new HashSet<>();
+            Set<Integer> sizeIds = new HashSet<>();
+            attributeService.findColors().forEach(col -> colorIds.add(col.getId()));
+            attributeService.findSizes().forEach(sz -> sizeIds.add(sz.getId()));
+            Set<String> seen = new HashSet<>();
+            for (ProductVariant v : variants) {
+                if (!colorIds.contains(v.getColorId()) || !sizeIds.contains(v.getSizeId())) {
+                    errors.put("colorIds", "Màu hoặc size không hợp lệ (có thể đã bị xóa).");
+                } else if (!seen.add(v.getColorId() + "_" + v.getSizeId())) {
+                    errors.put("stock", "Mỗi cặp màu x size chỉ được nhập một lần.");
+                } else if (v.getStock() < 0 || v.getStock() > MAX_STOCK) {
+                    errors.put("stock", "Tồn kho phải là số nguyên từ 0 đến 99.999.");
+                }
+            }
+        }
+        if (!errors.isEmpty()) {
+            throw new ValidationException(errors);
+        }
     }
 }
