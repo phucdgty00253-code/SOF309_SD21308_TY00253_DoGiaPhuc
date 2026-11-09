@@ -1,7 +1,9 @@
 package com.fashionweb.controller.order;
 
-import com.fashionweb.mock.ShoppingMock;
 import com.fashionweb.model.Order;
+import com.fashionweb.model.User;
+import com.fashionweb.service.order.OrderService;
+import com.fashionweb.util.WebUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -16,19 +18,17 @@ import java.io.IOException;
  * Tham số: code (mã đơn). Không có hoặc không phải đơn của khách thì trả 404.
  * Thuộc tính request: order (Order, có items).
  *
- * TODO(logic):
- *  - doGet: OrderService.findByCodeAndUser(code, userId).
- *  - doPost action=cancel (orderCode, cancelReason): chỉ khi đơn PENDING; cộng trả tồn kho, trả lượt dùng voucher,
- *    ghi cancelledBy=CUSTOMER. Form gửi từ cả /orders và /order (field returnTo = "orders" | "detail" để biết redirect về đâu).
- *  - doPost action=confirmReceived (orderCode): chỉ khi đơn SHIPPING; chuyển COMPLETED, đặt paymentStatus=PAID, ghi completedAt.
- *  - Sau khi xử lý: flash message rồi redirect (PRG).
+ * TODO(#17): doPost action=cancel và action=confirmReceived.
  */
 @WebServlet("/order")
 public class OrderDetailServlet extends HttpServlet {
 
+    private final OrderService orderService = new OrderService();
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        Order order = ShoppingMock.customerOrderByCode(req.getParameter("code"));
+        User user = WebUtil.currentUser(req);
+        Order order = orderService.findByCodeAndUser(req.getParameter("code"), user.getId());
         if (order == null) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;

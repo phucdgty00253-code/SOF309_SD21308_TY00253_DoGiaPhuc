@@ -1,8 +1,12 @@
 package com.fashionweb.controller.order;
 
+import com.fashionweb.constant.AppConstant;
 import com.fashionweb.constant.OrderStatus;
-import com.fashionweb.mock.MockData;
 import com.fashionweb.model.Order;
+import com.fashionweb.model.User;
+import com.fashionweb.service.order.OrderService;
+import com.fashionweb.util.Page;
+import com.fashionweb.util.WebUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -10,56 +14,44 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
- * GET /orders?status=... : danh sách đơn hàng của khách đang đăng nhập (Customer, khu vực tài khoản).
+ * GET /orders?status=...&page=... : danh sách đơn hàng của khách đang đăng nhập (Customer, khu vực tài khoản).
  * JSP: /WEB-INF/views/order/orders.jsp
- * Tham số: status = PENDING | SHIPPING | COMPLETED | CANCELLED (rỗng hoặc sai = tất cả).
- * Thuộc tính request: orders (List&lt;Order&gt; đã lọc, mới nhất trước), status (String), statusCounts (Map&lt;String,Integer&gt;).
- *
- * TODO(logic):
- *  - doGet: OrderService.findByUser(userId, status) và đếm theo trạng thái.
- *  - Hủy đơn và "Đã nhận hàng" gửi POST sang /order (xem OrderDetailServlet), không phải /orders.
+ * Tham số: status = PENDING | SHIPPING | COMPLETED | CANCELLED (rỗng hoặc sai = tất cả); page (mặc định 1).
+ * Thuộc tính request: orders (List&lt;Order&gt; của trang hiện tại, mới nhất trước, kèm items), orderPage (Page&lt;Order&gt;),
+ * status (String), statusCounts (Map&lt;String,Integer&gt;), baseUrl (cho phân trang).
+ * Hủy đơn và "Đã nhận hàng" gửi POST sang /order (xem OrderDetailServlet).
  */
 @WebServlet("/orders")
 public class OrderServlet extends HttpServlet {
 
+    private final OrderService orderService = new OrderService();
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String status = parseStatus(req.getParameter("status"));
+        User user = WebUtil.currentUser(req);
+        OrderStatus status = parseStatus(req.getParameter("status"));
+        int page = WebUtil.parseInt(req.getParameter("page"), 1);
 
-        List<Order> all = MockData.customerOrders().stream()
-                .sorted(Comparator.comparing(Order::getCreatedAt).reversed())
-                .collect(Collectors.toList());
+        Page<Order> orderPage = orderService.findPageByUser(user.getId(), status, page, AppConstant.ORDER_PAGE_SIZE);
 
-        Map<String, Integer> counts = new LinkedHashMap<>();
-        counts.put("ALL", all.size());
-        for (OrderStatus s : OrderStatus.values()) {
-            counts.put(s.name(), (int) all.stream().filter(o -> o.getStatus() == s).count());
-        }
-
-        List<Order> filtered = status.isEmpty() ? all
-                : all.stream().filter(o -> o.getStatus().name().equals(status)).collect(Collectors.toList());
-
-        req.setAttribute("orders", filtered);
-        req.setAttribute("status", status);
-        req.setAttribute("statusCounts", counts);
+        req.setAttribute("orders", orderPage.getItems());
+        req.setAttribute("orderPage", orderPage);
+        req.setAttribute("status", status == null ? "" : status.name());
+        req.setAttribute("statusCounts", orderService.countByStatusForUser(user.getId()));
+        req.setAttribute("baseUrl", status == null ? "/orders" : "/orders?status=" + status.name());
         req.getRequestDispatcher("/WEB-INF/views/order/orders.jsp").forward(req, resp);
     }
 
-    private static String parseStatus(String raw) {
+    private static OrderStatus parseStatus(String raw) {
         if (raw == null || raw.isBlank()) {
-            return "";
+            return null;
         }
         try {
-            return OrderStatus.valueOf(raw.trim().toUpperCase()).name();
+            return OrderStatus.valueOf(raw.trim().toUpperCase());
         } catch (IllegalArgumentException e) {
-            return "";
+            return null;
         }
     }
 }

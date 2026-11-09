@@ -141,14 +141,25 @@ public class OrderService {
      * Đơn của khách, lọc trạng thái (null = tất cả), mới nhất trước, kèm items.
      */
     public List<Order> findByUser(int userId, OrderStatus status) {
-        throw new UnsupportedOperationException("TODO OrderService.findByUser");
+        List<Order> orders = orderDAO.findByUser(userId, status);
+        orders.forEach(o -> o.setItems(orderDetailDAO.findByOrder(o.getId())));
+        return orders;
+    }
+
+    /**
+     * Một trang đơn của khách (trang "Đơn hàng của tôi"), mỗi đơn kèm items.
+     */
+    public Page<Order> findPageByUser(int userId, OrderStatus status, int page, int pageSize) {
+        Page<Order> p = orderDAO.findPageByUser(userId, status, page, pageSize);
+        p.getItems().forEach(o -> o.setItems(orderDetailDAO.findByOrder(o.getId())));
+        return p;
     }
 
     /**
      * Số đơn theo từng trạng thái và khóa ALL.
      */
     public Map<String, Integer> countByStatusForUser(int userId) {
-        throw new UnsupportedOperationException("TODO OrderService.countByStatusForUser");
+        return orderDAO.countByStatus(userId, null, null);
     }
 
     /**
@@ -184,7 +195,7 @@ public class OrderService {
      * Tổng số đơn của khách (trang hồ sơ).
      */
     public int countByUser(int userId) {
-        throw new UnsupportedOperationException("TODO OrderService.countByUser");
+        return orderDAO.countByUser(userId);
     }
 
     /**

@@ -4,9 +4,11 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="t" tagdir="/WEB-INF/tags" %>
 <%--
-  ĐƠN HÀNG CỦA TÔI  (GET /orders?status=... -> OrderServlet)  - khu vực tài khoản
+  ĐƠN HÀNG CỦA TÔI  (GET /orders?status=...&page=... -> OrderServlet)  - khu vực tài khoản
   Thuộc tính request:
-    orders       : List<Order>         - đơn đã lọc theo trạng thái, mới nhất trước (có items, itemCount, totalAmount)
+    orders       : List<Order>         - đơn của trang hiện tại, lọc theo trạng thái, mới nhất trước (có items, itemCount, totalAmount)
+    orderPage    : Page<Order>         - thông tin phân trang
+    baseUrl      : String              - "/orders?status=..." không có page (cho t:pagination)
     status       : String              - PENDING | SHIPPING | COMPLETED | CANCELLED, rỗng = tất cả
     statusCounts : Map<String,Integer> - số đơn theo trạng thái, khóa: ALL, PENDING, SHIPPING, COMPLETED, CANCELLED
   Form (đều gửi tới /order, xử lý ở OrderDetailServlet):
@@ -120,6 +122,7 @@
                 </article>
               </c:forEach>
             </div>
+            <t:pagination page="${orderPage.page}" totalPages="${orderPage.totalPages}" baseUrl="${baseUrl}"/>
           </c:otherwise>
         </c:choose>
       </div>

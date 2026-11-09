@@ -99,6 +99,25 @@ public class OrderDAO {
     }
 
     /**
+     * SELECT phân trang đơn của khách, lọc trạng thái (null = tất cả), mới nhất trước.
+     */
+    public Page<Order> findPageByUser(int userId, OrderStatus status, int page, int pageSize) {
+        String where = "WHERE o.user_id = ?" + (status == null ? " " : " AND o.status = ? ");
+        List<Object> params = new ArrayList<>(List.of(userId));
+        if (status != null) {
+            params.add(status.name());
+        }
+        long total = queryLong("SELECT COUNT(*) FROM orders o " + where, params);
+        int totalPages = (int) Math.max(1, (total + pageSize - 1) / pageSize);
+        int safePage = Math.min(Math.max(1, page), totalPages);
+        List<Object> pageParams = new ArrayList<>(params);
+        pageParams.add(pageSize);
+        pageParams.add((safePage - 1) * pageSize);
+        List<Order> items = queryList(SELECT + where + "ORDER BY o.created_at DESC, o.id DESC LIMIT ? OFFSET ?", pageParams);
+        return new Page<>(items, safePage, pageSize, total);
+    }
+
+    /**
      * SELECT theo order_code. null nếu không có.
      */
     public Order findByCode(String code) {
