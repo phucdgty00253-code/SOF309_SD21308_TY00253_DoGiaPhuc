@@ -1,23 +1,25 @@
 package com.fashionweb.filter;
 
 import com.fashionweb.constant.AppConstant;
+import com.fashionweb.constant.Role;
+import com.fashionweb.model.User;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
-import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 /**
- * Chỉ ADMIN được vào /admin/*.
- *
- * <p>Hiện chỉ là KHUNG: cho mọi request đi qua. Thành viên được giao viết điều kiện chặn.
+ * Chỉ ADMIN được vào /admin và /admin/*. Khai báo và thứ tự chạy nằm trong web.xml.
+ * Chưa đăng nhập: chuyển sang /login?redirect=...; đã đăng nhập nhưng không phải ADMIN: trang 403.
  */
-@WebFilter(urlPatterns = {"/admin", "/admin/*"})
 public class AdminFilter implements Filter {
 
     @Override
@@ -25,8 +27,17 @@ public class AdminFilter implements Filter {
             throws IOException, ServletException {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse resp = (HttpServletResponse) response;
-        // TODO AdminFilter: chưa đăng nhập thì redirect /login; đã đăng nhập nhưng role khác ADMIN thì resp.sendError(403).
-        // Gợi ý: Object user = req.getSession(false) == null ? null : req.getSession(false).getAttribute(AppConstant.SESSION_USER);
+        HttpSession session = req.getSession(false);
+        Object user = session == null ? null : session.getAttribute(AppConstant.SESSION_USER);
+        if (!(user instanceof User u)) {
+            resp.sendRedirect(req.getContextPath() + "/login?redirect="
+                    + URLEncoder.encode(AuthFilter.returnPath(req), StandardCharsets.UTF_8));
+            return;
+        }
+        if (u.getRole() != Role.ADMIN) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
         chain.doFilter(request, response);
     }
 }
