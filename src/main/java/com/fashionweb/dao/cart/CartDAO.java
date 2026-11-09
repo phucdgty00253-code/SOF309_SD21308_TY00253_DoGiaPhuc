@@ -109,6 +109,17 @@ public class CartDAO {
     }
 
     /**
+     * Xóa toàn bộ dòng trong giỏ của user, chạy trong transaction đặt hàng.
+     */
+    public void deleteAllItemsOfUser(Connection con, int userId) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement(
+                "DELETE ci FROM cart_items ci JOIN carts c ON c.id = ci.cart_id WHERE c.user_id = ?")) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
      * Một dòng trong giỏ của user (kèm tồn kho hiện tại). null nếu dòng không thuộc giỏ của user.
      */
     public CartItem findItemOfUser(int itemId, int userId) {

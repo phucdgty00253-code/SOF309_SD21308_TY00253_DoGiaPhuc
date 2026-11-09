@@ -73,7 +73,7 @@
 
     // Xóa dòng: ở chế độ giao diện thì thu gọn dòng ngay (hộp xác nhận của app.js chạy trước)
     $$('[data-cart-remove]', cart).forEach((form) => form.addEventListener('submit', () => {
-      if (!demo) return;
+      if (!demo || !form.hasAttribute('data-demo')) return;
       const row = form.closest('[data-cart-item]');
       if (!row) return;
       row.style.maxHeight = row.offsetHeight + 'px';
@@ -120,7 +120,7 @@
     }));
     // Chế độ giao diện: xem trạng thái đã áp dụng qua ?voucher=MÃ
     voucherForm.addEventListener('submit', (e) => {
-      if (!demo) return;
+      if (!demo || !voucherForm.hasAttribute('data-demo')) return;
       e.preventDefault();
       const input = $('input[name="voucherCode"]', voucherForm);
       const code = ((input && input.value) || '').trim();
@@ -132,7 +132,7 @@
   const placeOrder = $('[data-checkout-form]');
   if (placeOrder) {
     placeOrder.addEventListener('submit', (e) => {
-      if (!demo) return;
+      if (!demo || !placeOrder.hasAttribute('data-demo')) return;
       e.preventDefault();
       window.location.href = placeOrder.dataset.successUrl || '/';
     });

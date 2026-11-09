@@ -203,15 +203,25 @@ public class ProductDAO {
     /**
      * UPDATE stock = stock - ? WHERE id = ? AND stock >= ?. Trả false nếu không đủ hàng (dùng trong transaction đặt đơn).
      */
-    public boolean decreaseStock(int variantId, int quantity) {
-        throw new UnsupportedOperationException("TODO ProductDAO.decreaseStock");
+    public boolean decreaseStock(Connection con, int variantId, int quantity) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement(
+                "UPDATE product_variants SET stock = stock - ? WHERE id = ? AND stock >= ?")) {
+            ps.setInt(1, quantity);
+            ps.setInt(2, variantId);
+            ps.setInt(3, quantity);
+            return ps.executeUpdate() == 1;
+        }
     }
 
     /**
-     * Cộng trả tồn kho khi hủy đơn.
+     * Cộng trả tồn kho khi hủy đơn (chạy trong transaction hủy đơn).
      */
-    public void increaseStock(int variantId, int quantity) {
-        throw new UnsupportedOperationException("TODO ProductDAO.increaseStock");
+    public void increaseStock(Connection con, int variantId, int quantity) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement("UPDATE product_variants SET stock = stock + ? WHERE id = ?")) {
+            ps.setInt(1, quantity);
+            ps.setInt(2, variantId);
+            ps.executeUpdate();
+        }
     }
 
     // ----- Hàm phụ -----
