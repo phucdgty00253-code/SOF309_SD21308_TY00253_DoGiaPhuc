@@ -98,28 +98,56 @@ public class UserDAO {
      * UPDATE.
      */
     public void updateProfile(int id, String fullName, String phone) {
-        throw new UnsupportedOperationException("TODO UserDAO.updateProfile");
+        executeUpdate("UPDATE users SET full_name = ?, phone = ? WHERE id = ?", fullName, phone, id);
     }
 
     /**
      * UPDATE password_hash.
      */
     public void updatePassword(int id, String passwordHash) {
-        throw new UnsupportedOperationException("TODO UserDAO.updatePassword");
+        executeUpdate("UPDATE users SET password_hash = ? WHERE id = ?", passwordHash, id);
     }
 
     /**
      * UPDATE is_active.
      */
     public void setActive(int id, boolean active) {
-        throw new UnsupportedOperationException("TODO UserDAO.setActive");
+        executeUpdate("UPDATE users SET is_active = ? WHERE id = ?", active, id);
     }
 
     /**
      * UPDATE role.
      */
     public void setRole(int id, Role role) {
-        throw new UnsupportedOperationException("TODO UserDAO.setRole");
+        executeUpdate("UPDATE users SET role = ? WHERE id = ?", role.name(), id);
+    }
+
+    /**
+     * Số đơn hàng của user (mọi trạng thái).
+     */
+    public int countOrders(int userId) {
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM orders WHERE user_id = ?")) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi đếm đơn hàng của người dùng", e);
+        }
+    }
+
+    private void executeUpdate(String sql, Object... params) {
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            for (int i = 0; i < params.length; i++) {
+                ps.setObject(i + 1, params[i]);
+            }
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi cập nhật người dùng", e);
+        }
     }
 
     /**

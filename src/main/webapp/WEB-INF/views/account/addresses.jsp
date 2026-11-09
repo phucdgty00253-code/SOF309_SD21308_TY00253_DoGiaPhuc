@@ -66,13 +66,13 @@
                     <t:icon name="pencil"/> Sửa
                   </button>
                   <c:if test="${not a.defaultAddress}">
-                    <form method="post" action="${ctx}/addresses" data-demo>
+                    <form method="post" action="${ctx}/addresses">
                       <input type="hidden" name="action" value="setDefault">
                       <input type="hidden" name="id" value="${a.id}">
                       <button type="submit" class="btn btn--ghost btn--xs">Đặt làm mặc định</button>
                     </form>
                   </c:if>
-                  <form method="post" action="${ctx}/addresses" data-demo data-demo-remove=".address-card" data-confirm="Bạn có chắc muốn xóa địa chỉ này?">
+                  <form method="post" action="${ctx}/addresses" data-confirm="Bạn có chắc muốn xóa địa chỉ này?">
                     <input type="hidden" name="action" value="delete">
                     <input type="hidden" name="id" value="${a.id}">
                     <button type="submit" class="btn btn--danger btn--xs"><t:icon name="trash"/> Xóa</button>
@@ -94,7 +94,7 @@
 
     <%-- Hộp thoại thêm / sửa địa chỉ (dùng chung, điền sẵn bằng data-fill) --%>
     <dialog class="dialog" id="address-dialog" aria-labelledby="address-dialog-title"${not empty errors ? ' data-open' : ''}>
-      <form method="post" action="${ctx}/addresses" data-demo>
+      <form method="post" action="${ctx}/addresses">
         <input type="hidden" name="action" value="save">
         <input type="hidden" name="id" value="${empty param.id ? 0 : fn:escapeXml(param.id)}">
         <div class="dialog__head">

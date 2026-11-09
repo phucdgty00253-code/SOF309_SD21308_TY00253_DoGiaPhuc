@@ -114,7 +114,7 @@
                 <button type="submit" class="btn btn--primary" data-add-main><t:icon name="bag"/> <span data-add-label>Thêm vào giỏ</span></button>
               </c:otherwise>
             </c:choose>
-            <button type="button" class="heart-btn${inWishlist ? ' is-on' : ''}" data-wish data-product-id="${product.id}" aria-pressed="${inWishlist}" aria-label="Yêu thích"><t:icon name="heart" size="md"/></button>
+            <button type="button" class="heart-btn${inWishlist ? ' is-on' : ''}" data-wish data-wish-url="${ctx}/wishlist" data-product-id="${product.id}" aria-pressed="${inWishlist}" aria-label="Yêu thích"><t:icon name="heart" size="md"/></button>
           </div>
         </form>
 

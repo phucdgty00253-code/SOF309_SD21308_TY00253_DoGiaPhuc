@@ -65,7 +65,7 @@
             <h2 class="h-2" id="profile-info-title">Thông tin cá nhân</h2>
             <p class="t-small t-muted">Họ tên và số điện thoại dùng để liên hệ khi giao hàng.</p>
           </div>
-          <form method="post" action="${ctx}/profile" data-demo>
+          <form method="post" action="${ctx}/profile">
             <input type="hidden" name="action" value="updateProfile">
             <div class="form-grid">
               <div class="field">
@@ -98,7 +98,7 @@
             <h2 class="h-2" id="profile-password-title">Đổi mật khẩu</h2>
             <p class="t-small t-muted">Nên dùng mật khẩu khác với các dịch vụ khác. Tối thiểu 6 ký tự.</p>
           </div>
-          <form method="post" action="${ctx}/profile" data-demo>
+          <form method="post" action="${ctx}/profile">
             <input type="hidden" name="action" value="changePassword">
             <div class="form-grid">
               <div class="field span-2">
