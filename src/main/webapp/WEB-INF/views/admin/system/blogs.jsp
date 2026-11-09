@@ -71,12 +71,12 @@
                 <td>
                   <div class="cell-actions">
                     <a class="icon-btn" href="${ctx}/admin/blogs/form?id=${b.id}" aria-label="Sửa bài viết ${fn:escapeXml(b.title)}" title="Sửa"><t:icon name="pencil"/></a>
-                    <form method="post" action="${ctx}/admin/blogs" data-demo>
+                    <form method="post" action="${ctx}/admin/blogs">
                       <input type="hidden" name="action" value="togglePublish">
                       <input type="hidden" name="id" value="${b.id}">
                       <button class="icon-btn" type="submit" aria-label="${b.published ? 'Ẩn' : 'Đăng'} bài viết ${fn:escapeXml(b.title)}" title="${b.published ? 'Ẩn bài viết' : 'Đăng bài viết'}"><t:icon name="${b.published ? 'eye-off' : 'eye'}"/></button>
                     </form>
-                    <form method="post" action="${ctx}/admin/blogs" data-demo data-confirm="Xóa bài viết &quot;${fn:escapeXml(b.title)}&quot;? Thao tác này không thể hoàn tác.">
+                    <form method="post" action="${ctx}/admin/blogs" data-confirm="Xóa bài viết &quot;${fn:escapeXml(b.title)}&quot;? Thao tác này không thể hoàn tác.">
                       <input type="hidden" name="action" value="delete">
                       <input type="hidden" name="id" value="${b.id}">
                       <button class="icon-btn icon-btn--danger" type="submit" aria-label="Xóa bài viết ${fn:escapeXml(b.title)}" title="Xóa"><t:icon name="trash"/></button>

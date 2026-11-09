@@ -1,9 +1,8 @@
 package com.fashionweb.controller.admin.system;
 
 import com.fashionweb.controller.admin.AdminOpsParams;
-
 import com.fashionweb.model.Blog;
-import com.fashionweb.mock.AdminOpsMock;
+import com.fashionweb.service.shop.BlogService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -16,14 +15,14 @@ import java.io.IOException;
  * GET /admin/blogs/form?id= : form thêm (không có id) hoặc sửa (có id) bài viết.
  * JSP: /WEB-INF/views/admin/system/blog-form.jsp
  * Tham số: id (tùy chọn). id sai định dạng hoặc không tìm thấy thì trả 404.
- * AdminFilter phải bảo vệ /admin/*.
- * TODO(logic):
- * - doGet: thay AdminOpsMock.blogById bằng BlogService.findById(id).
- * - Form gửi POST /admin/blogs (AdminBlogServlet) với action=save, nên không có doPost ở servlet này.
- *   Khi lưu lỗi, AdminBlogServlet forward lại trang này kèm Map errors và giữ giá trị trong param.
+ * Form gửi POST /admin/blogs (AdminBlogServlet) với action=save; khi lỗi, AdminBlogServlet forward lại trang này.
  */
 @WebServlet("/admin/blogs/form")
 public class AdminBlogFormServlet extends HttpServlet {
+
+    static final String VIEW = "/WEB-INF/views/admin/system/blog-form.jsp";
+
+    private final BlogService blogService = new BlogService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -31,7 +30,7 @@ public class AdminBlogFormServlet extends HttpServlet {
         Blog blog = null;
         if (!rawId.isEmpty()) {
             Integer id = AdminOpsParams.positiveInt(rawId);
-            blog = id == null ? null : AdminOpsMock.blogById(id);
+            blog = id == null ? null : blogService.findById(id);
             if (blog == null) {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
@@ -39,6 +38,6 @@ public class AdminBlogFormServlet extends HttpServlet {
         }
         req.setAttribute("blog", blog);
         req.setAttribute("mode", blog == null ? "create" : "edit");
-        req.getRequestDispatcher("/WEB-INF/views/admin/system/blog-form.jsp").forward(req, resp);
+        req.getRequestDispatcher(VIEW).forward(req, resp);
     }
 }

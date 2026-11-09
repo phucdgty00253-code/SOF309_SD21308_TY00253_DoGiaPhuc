@@ -31,7 +31,7 @@
     <c:set var="vPublished" value="${submitted ? param.published == 'true' : (empty blog ? true : blog.published)}"/>
     <c:set var="vCover" value="${empty blog ? '' : blog.coverImage}"/>
 
-    <form class="ops-enter" id="blog-form" method="post" action="${ctx}/admin/blogs" enctype="multipart/form-data" data-demo>
+    <form class="ops-enter" id="blog-form" method="post" action="${ctx}/admin/blogs" enctype="multipart/form-data">
       <input type="hidden" name="action" value="save">
       <input type="hidden" name="id" value="${empty blog ? '' : blog.id}">
 
