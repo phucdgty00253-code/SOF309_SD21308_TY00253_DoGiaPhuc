@@ -18,8 +18,18 @@ public class CartItem {
     private long unitPrice;
     private long lineTotal;
     private int stock;
+    private int categoryId;
 
     public CartItem() {
+    }
+
+    /** Danh mục của sản phẩm (dùng khi kiểm tra voucher theo danh mục). */
+    public int getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(int categoryId) {
+        this.categoryId = categoryId;
     }
 
     public int getId() {

@@ -64,7 +64,7 @@
           </div>
         </div>
 
-        <form class="pdp__form" id="add-form" method="post" action="${ctx}/cart" data-variant-form data-demo data-demo-cart${soldOut ? ' data-sold-out' : ''}>
+        <form class="pdp__form" id="add-form" method="post" action="${ctx}/cart" data-variant-form${soldOut ? ' data-sold-out' : ''}>
           <input type="hidden" name="action" value="add">
           <input type="hidden" name="productId" value="${product.id}">
           <input type="hidden" name="variantId" value="">

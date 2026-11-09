@@ -52,7 +52,7 @@
                   <p class="t-small t-muted">Màu: <c:out value="${item.colorName}"/> · Size: <c:out value="${item.sizeName}"/></p>
                   <p class="t-small"><t:price value="${item.unitPrice}"/></p>
 
-                  <form class="sh-line__form" method="post" action="${ctx}/cart" data-demo data-cart-update>
+                  <form class="sh-line__form" method="post" action="${ctx}/cart" data-cart-update>
                     <input type="hidden" name="action" value="update">
                     <input type="hidden" name="itemId" value="${item.id}">
                     <div class="qty">
@@ -70,7 +70,7 @@
 
                 <div class="sh-line__side">
                   <span class="sh-line__total" data-line-total><t:price value="${item.lineTotal}"/></span>
-                  <form method="post" action="${ctx}/cart" data-demo data-cart-remove data-confirm="Xóa “${fn:escapeXml(item.productName)}” khỏi giỏ hàng?">
+                  <form method="post" action="${ctx}/cart" data-cart-remove data-confirm="Xóa “${fn:escapeXml(item.productName)}” khỏi giỏ hàng?">
                     <input type="hidden" name="action" value="remove">
                     <input type="hidden" name="itemId" value="${item.id}">
                     <button type="submit" class="icon-btn" aria-label="Xóa ${fn:escapeXml(item.productName)} khỏi giỏ hàng"><t:icon name="trash"/></button>
