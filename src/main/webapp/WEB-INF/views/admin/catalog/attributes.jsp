@@ -42,7 +42,7 @@
                   <td>
                     <div class="cell-actions">
                       <button type="button" class="icon-btn" data-dialog-open="color-dialog" data-dialog-title="Sửa màu" data-fill="{&quot;id&quot;:${col.id},&quot;name&quot;:&quot;${fn:escapeXml(fn:replace(col.name, '"', '\\"'))}&quot;,&quot;code&quot;:&quot;${fn:escapeXml(fn:replace(col.code, '"', '\\"'))}&quot;,&quot;hexCode&quot;:&quot;${fn:escapeXml(fn:replace(col.hexCode, '"', '\\"'))}&quot;}" aria-label="Sửa màu ${fn:escapeXml(col.name)}" title="Sửa"><t:icon name="pencil"/></button>
-                      <form class="inline-form" method="post" action="${ctx}/admin/attributes" data-demo data-confirm="Xóa màu “${fn:escapeXml(col.name)}”? Màu sẽ được chuyển vào Thùng rác (xóa mềm), không thể chọn cho sản phẩm mới và có thể khôi phục lại sau.">
+                      <form class="inline-form" method="post" action="${ctx}/admin/attributes" data-confirm="Xóa màu “${fn:escapeXml(col.name)}”? Màu sẽ được chuyển vào Thùng rác (xóa mềm), không thể chọn cho sản phẩm mới và có thể khôi phục lại sau.">
                         <input type="hidden" name="action" value="deleteColor">
                         <input type="hidden" name="id" value="${col.id}">
                         <button class="icon-btn icon-btn--danger" type="submit" aria-label="Xóa màu ${fn:escapeXml(col.name)}" title="Xóa"><t:icon name="trash"/></button>
@@ -74,7 +74,7 @@
                   <td>
                     <div class="cell-actions">
                       <button type="button" class="icon-btn" data-dialog-open="size-dialog" data-dialog-title="Sửa size" data-fill="{&quot;id&quot;:${sz.id},&quot;name&quot;:&quot;${fn:escapeXml(fn:replace(sz.name, '"', '\\"'))}&quot;,&quot;sortOrder&quot;:${sz.sortOrder}}" aria-label="Sửa size ${fn:escapeXml(sz.name)}" title="Sửa"><t:icon name="pencil"/></button>
-                      <form class="inline-form" method="post" action="${ctx}/admin/attributes" data-demo data-confirm="Xóa size “${fn:escapeXml(sz.name)}”? Size sẽ được chuyển vào Thùng rác (xóa mềm), không thể chọn cho sản phẩm mới và có thể khôi phục lại sau.">
+                      <form class="inline-form" method="post" action="${ctx}/admin/attributes" data-confirm="Xóa size “${fn:escapeXml(sz.name)}”? Size sẽ được chuyển vào Thùng rác (xóa mềm), không thể chọn cho sản phẩm mới và có thể khôi phục lại sau.">
                         <input type="hidden" name="action" value="deleteSize">
                         <input type="hidden" name="id" value="${sz.id}">
                         <button class="icon-btn icon-btn--danger" type="submit" aria-label="Xóa size ${fn:escapeXml(sz.name)}" title="Xóa"><t:icon name="trash"/></button>
@@ -93,7 +93,7 @@
     <%-- Hộp thoại màu --%>
     <c:set var="colorErr" value="${openDialog == 'color-dialog' ? errors : null}"/>
     <dialog class="dialog" id="color-dialog" aria-labelledby="color-dialog-title" data-reset-on-close${openDialog == 'color-dialog' ? ' data-open-on-load' : ''}>
-      <form method="post" action="${ctx}/admin/attributes" data-demo>
+      <form method="post" action="${ctx}/admin/attributes">
         <input type="hidden" name="action" value="saveColor">
         <input type="hidden" name="id" value="${openDialog == 'color-dialog' ? fn:escapeXml(param.id) : ''}">
         <div class="dialog__head">
@@ -128,7 +128,7 @@
     <%-- Hộp thoại size --%>
     <c:set var="sizeErr" value="${openDialog == 'size-dialog' ? errors : null}"/>
     <dialog class="dialog" id="size-dialog" aria-labelledby="size-dialog-title" data-reset-on-close${openDialog == 'size-dialog' ? ' data-open-on-load' : ''}>
-      <form method="post" action="${ctx}/admin/attributes" data-demo>
+      <form method="post" action="${ctx}/admin/attributes">
         <input type="hidden" name="action" value="saveSize">
         <input type="hidden" name="id" value="${openDialog == 'size-dialog' ? fn:escapeXml(param.id) : ''}">
         <div class="dialog__head">
