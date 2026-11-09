@@ -3,6 +3,9 @@ package com.fashionweb.service.cart;
 import com.fashionweb.constant.AppConstant;
 import com.fashionweb.constant.DiscountType;
 import com.fashionweb.dao.cart.VoucherDAO;
+import com.fashionweb.dao.shop.CategoryDAO;
+import com.fashionweb.exception.ValidationException;
+import com.fashionweb.model.Category;
 import com.fashionweb.exception.VoucherException;
 import com.fashionweb.model.Cart;
 import com.fashionweb.model.CartItem;
@@ -11,7 +14,10 @@ import com.fashionweb.model.Voucher;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Mã giảm giá: kiểm tra, tính giảm giá, quản lý của Admin.
@@ -20,7 +26,10 @@ import java.util.Locale;
  */
 public class VoucherService {
 
+    private static final Pattern CODE = Pattern.compile("[A-Z0-9]{4,20}");
+
     private final VoucherDAO voucherDAO = new VoucherDAO();
+    private final CategoryDAO categoryDAO = new CategoryDAO();
 
     /**
      * Kiểm tra theo đúng thứ tự 7 bước trong project.md. Hợp lệ trả Voucher; sai ném VoucherException
@@ -119,31 +128,137 @@ public class VoucherService {
     }
 
     /**
-     * Mọi voucher kèm usedCount, categoryName, statusLabel (Admin).
+     * Mọi voucher kèm usedCount, categoryName ("Tất cả danh mục" khi không giới hạn), statusLabel (Admin), mới tạo trước.
+     * Trạng thái: Tạm dừng | Chưa bắt đầu | Hết hạn | Hết lượt | Đang hoạt động (ưu tiên theo thứ tự này).
      */
     public List<Voucher> findAll() {
-        throw new UnsupportedOperationException("TODO VoucherService.findAll");
+        Date now = new Date();
+        List<Voucher> list = voucherDAO.findAll();
+        for (Voucher v : list) {
+            if (v.getCategoryName() == null) {
+                v.setCategoryName("Tất cả danh mục");
+            }
+            String label;
+            if (!v.isActive()) {
+                label = "Tạm dừng";
+            } else if (now.before(v.getStartDate())) {
+                label = "Chưa bắt đầu";
+            } else if (now.after(v.getEndDate())) {
+                label = "Hết hạn";
+            } else if (v.getUsedCount() >= v.getUsageLimit()) {
+                label = "Hết lượt";
+            } else {
+                label = "Đang hoạt động";
+            }
+            v.setStatusLabel(label);
+        }
+        return list;
     }
 
     /**
-     * id = 0 thêm, id > 0 sửa. code [A-Z0-9]{4,20} duy nhất, không sửa code; endDate không trước startDate; PERCENT 1 đến 100; usageLimit > 0.
+     * id = 0 thêm, id &gt; 0 sửa. code viết hoa không dấu [A-Z0-9]{4,20}, duy nhất, không sửa code khi đã tạo;
+     * endDate không trước startDate; PERCENT 1 đến 100, AMOUNT &gt; 0; maxDiscount chỉ dùng cho PERCENT;
+     * usageLimit &gt; 0 và không nhỏ hơn số lượt đã dùng; perUserLimit từ 1 đến usageLimit.
      */
     public void save(Voucher v) {
-        throw new UnsupportedOperationException("TODO VoucherService.save");
+        Map<String, String> errors = new LinkedHashMap<>();
+        Voucher existing = v.getId() > 0 ? voucherDAO.findById(v.getId()) : null;
+        if (v.getId() > 0 && existing == null) {
+            throw new ValidationException(null, "Voucher không tồn tại.");
+        }
+        if (existing != null) {
+            v.setCode(existing.getCode());
+        } else {
+            String code = v.getCode() == null ? "" : v.getCode().trim().toUpperCase(Locale.ROOT);
+            v.setCode(code);
+            if (!CODE.matcher(code).matches()) {
+                errors.put("code", "Mã gồm 4 đến 20 chữ in hoa không dấu hoặc số.");
+            } else if (voucherDAO.findByCode(code) != null) {
+                errors.put("code", "Mã đã tồn tại.");
+            }
+        }
+        if (v.getDescription() != null) {
+            String d = v.getDescription().trim();
+            v.setDescription(d.isEmpty() ? null : d);
+            if (d.length() > 255) {
+                errors.put("description", "Mô tả tối đa 255 ký tự.");
+            }
+        }
+        if (v.getDiscountType() == null) {
+            errors.put("discountType", "Chọn loại giảm giá.");
+        } else if (v.getDiscountType() == DiscountType.PERCENT) {
+            if (v.getDiscountValue() < 1 || v.getDiscountValue() > 100) {
+                errors.put("discountValue", "Phần trăm giảm từ 1 đến 100.");
+            }
+            if (v.getMaxDiscount() != null && v.getMaxDiscount() <= 0) {
+                errors.put("maxDiscount", "Giảm tối đa phải lớn hơn 0 (để trống nếu không giới hạn).");
+            }
+        } else {
+            if (v.getDiscountValue() <= 0) {
+                errors.put("discountValue", "Số tiền giảm phải lớn hơn 0.");
+            }
+            v.setMaxDiscount(null);
+        }
+        if (v.getMinOrderAmount() < 0) {
+            errors.put("minOrderAmount", "Đơn tối thiểu không được âm.");
+        }
+        if (v.getCategoryId() != null) {
+            Category c = categoryDAO.findById(v.getCategoryId());
+            if (c == null || c.isDeleted()) {
+                errors.put("categoryId", "Danh mục không hợp lệ.");
+            }
+        }
+        if (v.getStartDate() == null) {
+            errors.put("startDate", "Chọn ngày bắt đầu.");
+        }
+        if (v.getEndDate() == null) {
+            errors.put("endDate", "Chọn ngày kết thúc.");
+        } else if (v.getStartDate() != null && v.getEndDate().before(v.getStartDate())) {
+            errors.put("endDate", "Ngày kết thúc không được trước ngày bắt đầu.");
+        }
+        int used = existing == null ? 0 : existing.getUsedCount();
+        if (v.getUsageLimit() <= 0) {
+            errors.put("usageLimit", "Tổng lượt dùng phải lớn hơn 0.");
+        } else if (v.getUsageLimit() < used) {
+            errors.put("usageLimit", "Tổng lượt không được nhỏ hơn số lượt đã dùng (" + used + ").");
+        }
+        if (v.getPerUserLimit() < 1 || (v.getUsageLimit() > 0 && v.getPerUserLimit() > v.getUsageLimit())) {
+            errors.put("perUserLimit", "Lượt mỗi khách từ 1 đến tổng lượt dùng.");
+        }
+        if (!errors.isEmpty()) {
+            throw new ValidationException(errors);
+        }
+        if (existing == null) {
+            v.setId(voucherDAO.insert(v));
+        } else {
+            voucherDAO.update(v);
+        }
     }
 
     /**
-     * Bật hoặc vô hiệu hóa.
+     * Bật hoặc vô hiệu hóa. Trả trạng thái mới (true = đang bật).
      */
-    public void toggleActive(int id) {
-        throw new UnsupportedOperationException("TODO VoucherService.toggleActive");
+    public boolean toggleActive(int id) {
+        Voucher v = voucherDAO.findById(id);
+        if (v == null) {
+            throw new ValidationException(null, "Voucher không tồn tại.");
+        }
+        voucherDAO.setActive(id, !v.isActive());
+        return !v.isActive();
     }
 
     /**
-     * Chỉ xóa khi usedCount = 0.
+     * Chỉ xóa khi chưa có lượt dùng và chưa nằm trong đơn nào (kể cả đơn đã hủy); ngược lại chỉ được tạm dừng.
      */
     public void delete(int id) {
-        throw new UnsupportedOperationException("TODO VoucherService.delete");
+        Voucher v = voucherDAO.findById(id);
+        if (v == null) {
+            throw new ValidationException(null, "Voucher không tồn tại.");
+        }
+        if (v.getUsedCount() > 0 || voucherDAO.countOrders(id) > 0) {
+            throw new ValidationException(null, "Voucher " + v.getCode() + " đã có người dùng, chỉ có thể tạm dừng.");
+        }
+        voucherDAO.delete(id);
     }
 
     private static String money(long n) {

@@ -76,6 +76,22 @@ public class VoucherDAO {
     }
 
     /**
+     * Số đơn (mọi trạng thái) có dùng voucher này; còn đơn thì không xóa được vì khóa ngoại orders.voucher_id.
+     */
+    public int countOrders(int voucherId) {
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM orders WHERE voucher_id = ?")) {
+            ps.setInt(1, voucherId);
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi đếm đơn dùng voucher", e);
+        }
+    }
+
+    /**
      * INSERT, trả id.
      */
     public int insert(Voucher v) {
@@ -97,14 +113,15 @@ public class VoucherDAO {
     }
 
     /**
-     * UPDATE (không đổi code và số lượt đã dùng).
+     * UPDATE (không đổi code và số lượt đã dùng; có đổi is_active theo công tắc trong form).
      */
     public void update(Voucher v) {
         String sql = "UPDATE vouchers SET description = ?, discount_type = ?, discount_value = ?, max_discount = ?, "
-                + "min_order_amount = ?, category_id = ?, start_date = ?, end_date = ?, usage_limit = ?, per_user_limit = ? WHERE id = ?";
+                + "min_order_amount = ?, category_id = ?, start_date = ?, end_date = ?, usage_limit = ?, per_user_limit = ?, is_active = ? WHERE id = ?";
         try (Connection con = DBContext.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             int i = bindEditable(ps, v, 1);
+            ps.setBoolean(i++, v.isActive());
             ps.setInt(i, v.getId());
             ps.executeUpdate();
         } catch (SQLException e) {

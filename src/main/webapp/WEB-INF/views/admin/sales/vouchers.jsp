@@ -116,7 +116,7 @@
                             data-field-min-order-amount="${v.minOrderAmount}" data-field-category-id="${v.categoryId}"
                             data-field-start-date="${startFmt}" data-field-end-date="${endFmt}"
                             data-field-usage-limit="${v.usageLimit}" data-field-per-user-limit="${v.perUserLimit}" data-field-active="${v.active}"><t:icon name="pencil"/></button>
-                    <form method="post" action="${ctx}/admin/vouchers" data-demo>
+                    <form method="post" action="${ctx}/admin/vouchers">
                       <input type="hidden" name="action" value="toggleActive">
                       <input type="hidden" name="id" value="${v.id}">
                       <button class="btn btn--ghost btn--xs" type="submit" aria-label="${v.active ? 'Tạm dừng' : 'Kích hoạt'} voucher ${fn:escapeXml(v.code)}">${v.active ? 'Tạm dừng' : 'Kích hoạt'}</button>
@@ -128,7 +128,7 @@
                         </span>
                       </c:when>
                       <c:otherwise>
-                        <form method="post" action="${ctx}/admin/vouchers" data-demo data-confirm="Xóa voucher ${fn:escapeXml(v.code)}? Thao tác này không thể hoàn tác.">
+                        <form method="post" action="${ctx}/admin/vouchers" data-confirm="Xóa voucher ${fn:escapeXml(v.code)}? Thao tác này không thể hoàn tác.">
                           <input type="hidden" name="action" value="delete">
                           <input type="hidden" name="id" value="${v.id}">
                           <button class="icon-btn icon-btn--danger" type="submit" aria-label="Xóa voucher ${fn:escapeXml(v.code)}" title="Xóa"><t:icon name="trash"/></button>
@@ -149,7 +149,7 @@
 
     <%-- Hộp thoại thêm hoặc sửa voucher --%>
     <dialog class="dialog dialog--wide" id="voucher-dialog" aria-labelledby="voucher-dialog-title" data-auto-open="${not empty errors}">
-      <form method="post" action="${ctx}/admin/vouchers" data-demo data-voucher-form>
+      <form method="post" action="${ctx}/admin/vouchers" data-voucher-form>
         <input type="hidden" name="action" value="save">
         <input type="hidden" name="id" value="${fn:escapeXml(param.id)}">
         <div class="dialog__head">
