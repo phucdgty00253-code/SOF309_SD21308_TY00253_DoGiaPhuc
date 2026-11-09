@@ -3,10 +3,11 @@ package com.fashionweb.controller.shop;
 
 import com.fashionweb.constant.AppConstant;
 import com.fashionweb.constant.Role;
-import com.fashionweb.mock.MockData;
 import com.fashionweb.model.Product;
 import com.fashionweb.model.Review;
 import com.fashionweb.model.User;
+import com.fashionweb.service.order.ReviewService;
+import com.fashionweb.service.shop.ProductService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -16,7 +17,6 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -45,18 +45,20 @@ public class ProductDetailServlet extends HttpServlet {
 
     private static final int RELATED_LIMIT = 8;
 
+    private final ProductService productService = new ProductService();
+    private final ReviewService reviewService = new ReviewService();
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String slug = req.getParameter("slug");
-        Product product = (slug == null || slug.isBlank()) ? null : MockData.productBySlug(slug.trim());
+        Product product = productService.findBySlug(slug);
         if (product == null) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
         // Đánh giá: mới nhất trước; đếm theo số sao (chỉ số 1..5, phần tử 0 không dùng)
-        List<Review> reviews = new ArrayList<>(MockData.reviewsForProduct(product.getId()));
-        reviews.sort(Comparator.comparing(Review::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())));
+        List<Review> reviews = reviewService.listVisibleByProduct(product.getId());
         int[] breakdown = new int[6];
         int total = 0;
         int sum = 0;
@@ -74,21 +76,21 @@ public class ProductDetailServlet extends HttpServlet {
             galleryImages.add(product.getImage());
         }
 
-        // Người dùng hiện tại (mock): chỉ CUSTOMER mới được đánh giá
+        // Người dùng hiện tại. TODO(#18): canReview = ReviewService.canReview(userId, productId)
+        // (đơn hoàn thành chứa sản phẩm và chưa đánh giá); tạm thời chỉ cần là CUSTOMER.
         User user = null;
         HttpSession session = req.getSession(false);
         if (session != null && session.getAttribute(AppConstant.SESSION_USER) instanceof User u) {
             user = u;
         }
         boolean canReview = user != null && user.getRole() == Role.CUSTOMER;
-        final int productId = product.getId();
-        boolean inWishlist = user != null
-                && MockData.wishlistProducts().stream().anyMatch(p -> p.getId() == productId);
+        // TODO(#5): inWishlist = WishlistService kiểm tra sản phẩm đã có trong danh sách yêu thích của user
+        boolean inWishlist = false;
 
         req.setAttribute("product", product);
         req.setAttribute("galleryImages", galleryImages);
         req.setAttribute("reviews", reviews);
-        req.setAttribute("relatedProducts", MockData.relatedProducts(product, RELATED_LIMIT));
+        req.setAttribute("relatedProducts", productService.related(product, RELATED_LIMIT));
         req.setAttribute("canReview", canReview);
         req.setAttribute("inWishlist", inWishlist);
         req.setAttribute("ratingBreakdown", breakdown);

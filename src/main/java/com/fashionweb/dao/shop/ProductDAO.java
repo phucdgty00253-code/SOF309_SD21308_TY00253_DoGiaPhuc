@@ -112,7 +112,26 @@ public class ProductDAO {
      * SELECT một sản phẩm theo slug.
      */
     public Product findBySlug(String slug) {
-        throw new UnsupportedOperationException("TODO ProductDAO.findBySlug");
+        try (Connection con = DBContext.getConnection()) {
+            List<Product> list = queryList(con, SELECT_WITH_STATS + VISIBLE + "AND p.slug = ?", List.of(slug));
+            return list.isEmpty() ? null : list.get(0);
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi đọc sản phẩm theo slug", e);
+        }
+    }
+
+    /**
+     * n sản phẩm đang bán cùng danh mục, trừ sản phẩm excludeId, mới nhất trước.
+     */
+    public List<Product> findRelated(int categoryId, int excludeId, int n) {
+        try (Connection con = DBContext.getConnection()) {
+            List<Product> list = queryList(con, SELECT_WITH_STATS + VISIBLE + "AND p.category_id = ? AND p.id <> ? "
+                    + orderBy("newest") + "LIMIT ?", List.of(categoryId, excludeId, n));
+            loadColors(con, list);
+            return list;
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi đọc sản phẩm liên quan", e);
+        }
     }
 
     /**
@@ -126,7 +145,31 @@ public class ProductDAO {
      * SELECT biến thể kèm tên màu, mã màu hex, tên size.
      */
     public List<ProductVariant> findVariants(int productId) {
-        throw new UnsupportedOperationException("TODO ProductDAO.findVariants");
+        String sql = "SELECT v.*, co.name AS color_name, co.hex_code, s.name AS size_name "
+                + "FROM product_variants v JOIN colors co ON co.id = v.color_id JOIN sizes s ON s.id = v.size_id "
+                + "WHERE v.product_id = ? AND co.is_deleted = 0 AND s.is_deleted = 0 ORDER BY s.sort_order, s.id, co.id";
+        List<ProductVariant> list = new ArrayList<>();
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, productId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ProductVariant v = new ProductVariant();
+                    v.setId(rs.getInt("id"));
+                    v.setProductId(rs.getInt("product_id"));
+                    v.setColorId(rs.getInt("color_id"));
+                    v.setSizeId(rs.getInt("size_id"));
+                    v.setStock(rs.getInt("stock"));
+                    v.setColorName(rs.getString("color_name"));
+                    v.setColorHex(rs.getString("hex_code"));
+                    v.setSizeName(rs.getString("size_name"));
+                    list.add(v);
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi đọc biến thể sản phẩm", e);
+        }
+        return list;
     }
 
     /**
