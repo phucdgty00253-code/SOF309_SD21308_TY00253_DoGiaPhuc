@@ -1,5 +1,6 @@
 package com.fashionweb.service.shop;
 
+import com.fashionweb.dao.shop.ProductDAO;
 import com.fashionweb.model.Product;
 import com.fashionweb.model.ProductVariant;
 import com.fashionweb.util.Page;
@@ -13,12 +14,14 @@ import java.util.List;
  */
 public class ProductService {
 
+    private final ProductDAO productDAO = new ProductDAO();
+
     /**
      * Danh sách sản phẩm cho trang /products. Chỉ lấy sản phẩm chưa xóa mềm. sort: newest | price_asc | price_desc | bestseller | rating.
-     * Mỗi Product cần avgRating, reviewCount, soldCount, stockTotal, colors, sizes (view-only).
+     * Mỗi Product có avgRating, reviewCount, soldCount, stockTotal, colors (view-only).
      */
     public Page<Product> search(String q, String categorySlug, Long minPrice, Long maxPrice, String colorCode, String sizeName, String sort, int page, int pageSize) {
-        throw new UnsupportedOperationException("TODO ProductService.search");
+        return productDAO.findPage(q, categorySlug, minPrice, maxPrice, colorCode, sizeName, sort, page, pageSize);
     }
 
     /**
@@ -39,14 +42,14 @@ public class ProductService {
      * n sản phẩm mới nhất (ORDER BY created_at DESC).
      */
     public List<Product> newest(int n) {
-        throw new UnsupportedOperationException("TODO ProductService.newest");
+        return productDAO.findTop("newest", n);
     }
 
     /**
      * n sản phẩm bán chạy nhất: tổng quantity trong order_details của đơn không bị hủy.
      */
     public List<Product> bestSellers(int n) {
-        throw new UnsupportedOperationException("TODO ProductService.bestSellers");
+        return productDAO.findTop("bestseller", n);
     }
 
     /**
