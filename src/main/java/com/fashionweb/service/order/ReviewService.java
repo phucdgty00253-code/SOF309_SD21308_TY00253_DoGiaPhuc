@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * Đánh giá sản phẩm và quản lý bình luận.
  *
- * <p>Đã làm: phần của khách (#8, #18). latestVisible, overallStats (#9); search, toggleHidden thuộc #21.
+ * <p>Đã làm: phần của khách (#8, #18). latestVisible, overallStats (#9); search, toggleHidden (#21).
  * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL.
  */
 public class ReviewService {
@@ -118,13 +118,19 @@ public class ReviewService {
      * Admin: lọc theo sản phẩm và ẩn hoặc hiện (status = visible | hidden).
      */
     public Page<Review> search(Integer productId, String status, int page, int pageSize) {
-        throw new UnsupportedOperationException("TODO ReviewService.search");
+        Boolean hidden = "hidden".equals(status) ? Boolean.TRUE : "visible".equals(status) ? Boolean.FALSE : null;
+        return reviewDAO.findPage(productId, hidden, page, pageSize);
     }
 
     /**
-     * Admin: đảo hidden.
+     * Admin: đảo hidden. Trả trạng thái mới (true = đang ẩn). Bình luận ẩn không hiện ở trang sản phẩm và không tính điểm.
      */
-    public void toggleHidden(int id) {
-        throw new UnsupportedOperationException("TODO ReviewService.toggleHidden");
+    public boolean toggleHidden(int id) {
+        Boolean hidden = reviewDAO.findHidden(id);
+        if (hidden == null) {
+            throw new ValidationException(null, "Bình luận không tồn tại.");
+        }
+        reviewDAO.setHidden(id, !hidden);
+        return !hidden;
     }
 }

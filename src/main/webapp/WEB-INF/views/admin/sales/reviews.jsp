@@ -84,7 +84,7 @@
                 <td data-label="Hiển thị"><span class="badge ${r.hidden ? 'badge--muted' : 'badge--success'}">${r.hidden ? 'Đã ẩn' : 'Đang hiện'}</span></td>
                 <td>
                   <div class="cell-actions">
-                    <form method="post" action="${ctx}/admin/reviews" data-demo>
+                    <form method="post" action="${ctx}/admin/reviews">
                       <input type="hidden" name="action" value="toggleHidden">
                       <input type="hidden" name="id" value="${r.id}">
                       <button class="btn ${r.hidden ? 'btn--ghost' : 'btn--outline'} btn--xs" type="submit" aria-label="${r.hidden ? 'Hiện' : 'Ẩn'} bình luận của ${fn:escapeXml(r.userName)} về ${fn:escapeXml(r.productName)}"><t:icon name="${r.hidden ? 'eye' : 'eye-off'}" size="sm"/> ${r.hidden ? 'Hiện' : 'Ẩn'}</button>
