@@ -14,6 +14,9 @@ public final class AppConstant {
     /** Số dòng mỗi trang ở các bảng của Admin. */
     public static final int ADMIN_PAGE_SIZE = 10;
 
+    /** Số đơn mỗi trang ở trang "Đơn hàng của tôi". */
+    public static final int ORDER_PAGE_SIZE = 5;
+
     /** Tên thuộc tính Session lưu người dùng đăng nhập (đối tượng User). */
     public static final String SESSION_USER = "currentUser";
 
