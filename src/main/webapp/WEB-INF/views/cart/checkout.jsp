@@ -40,7 +40,7 @@
     <div class="sh-flash"><%@ include file="/WEB-INF/views/common/flash.jspf" %></div>
 
     <%-- Form đặt hàng (rỗng); các ô nhập bên dưới gắn vào bằng form="checkout-form" --%>
-    <form id="checkout-form" method="post" action="${ctx}/checkout" data-demo data-checkout-form data-success-url="${ctx}/order-success">
+    <form id="checkout-form" method="post" action="${ctx}/checkout" data-checkout-form data-success-url="${ctx}/order-success">
       <input type="hidden" name="action" value="placeOrder">
       <input type="hidden" name="paymentMethod" value="COD">
       <c:if test="${not empty appliedVoucher}"><input type="hidden" name="voucherCode" value="${fn:escapeXml(appliedVoucher.code)}"></c:if>
@@ -131,7 +131,7 @@
               </div>
             </c:when>
             <c:otherwise>
-              <form class="sh-voucher-form" method="post" action="${ctx}/checkout" data-demo data-voucher-form>
+              <form class="sh-voucher-form" method="post" action="${ctx}/checkout" data-voucher-form>
                 <input type="hidden" name="action" value="applyVoucher">
                 <div class="field">
                   <label class="sr-only" for="f-voucherCode">Mã giảm giá</label>
