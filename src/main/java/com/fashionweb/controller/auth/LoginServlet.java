@@ -5,6 +5,7 @@ import com.fashionweb.constant.Role;
 import com.fashionweb.exception.ValidationException;
 import com.fashionweb.model.User;
 import com.fashionweb.service.auth.AuthService;
+import com.fashionweb.service.cart.CartService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -29,6 +30,7 @@ public class LoginServlet extends HttpServlet {
     private static final String AUTH_IMAGE = "assets/images/banners/hero-01.jpg";
 
     private final AuthService authService = new AuthService();
+    private final CartService cartService = new CartService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -77,7 +79,7 @@ public class LoginServlet extends HttpServlet {
         }
         session = req.getSession(true);
         session.setAttribute(AppConstant.SESSION_USER, user);
-        session.setAttribute(AppConstant.SESSION_CART_COUNT, 0);
+        session.setAttribute(AppConstant.SESSION_CART_COUNT, cartService.countItems(user.getId()));
 
         String target = safeRedirect(req.getParameter("redirect"));
         if (target == null) {

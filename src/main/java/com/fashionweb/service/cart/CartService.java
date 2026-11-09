@@ -1,54 +1,107 @@
 package com.fashionweb.service.cart;
 
+import com.fashionweb.dao.cart.CartDAO;
+import com.fashionweb.exception.ValidationException;
 import com.fashionweb.model.Cart;
+import com.fashionweb.model.CartItem;
+
+import java.util.ArrayList;
 
 /**
- * Giỏ hàng của khách.
+ * Giỏ hàng của khách (lưu trong DB, mỗi người một giỏ).
  *
- * <p>Hiện chỉ là KHUNG: mỗi phương thức ném UnsupportedOperationException. Thành viên được giao viết thân hàm.
  * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL.
  */
 public class CartService {
+
+    /** Số lượng tối đa của một dòng mỗi lần thêm (khớp ô số lượng ở trang sản phẩm). */
+    public static final int MAX_ADD = 10;
+
+    private final CartDAO cartDAO = new CartDAO();
 
     /**
      * Giỏ kèm items (tên, ảnh, màu, size, đơn giá, tồn kho, lineTotal), subtotal, itemCount. Tạo giỏ nếu chưa có.
      */
     public Cart getCart(int userId) {
-        throw new UnsupportedOperationException("TODO CartService.getCart");
+        Cart cart = cartDAO.findByUser(userId);
+        if (cart == null) {
+            cartDAO.create(userId);
+            cart = cartDAO.findByUser(userId);
+        }
+        if (cart.getItems() == null) {
+            cart.setItems(new ArrayList<>());
+        }
+        long subtotal = 0;
+        for (CartItem it : cart.getItems()) {
+            subtotal += it.getLineTotal();
+        }
+        cart.setSubtotal(subtotal);
+        cart.setItemCount(cart.getItems().size());
+        return cart;
     }
 
     /**
-     * Thêm hoặc cộng dồn số lượng, không vượt tồn kho.
+     * Thêm hoặc cộng dồn số lượng, không vượt tồn kho. Sai thì ném ValidationException kèm thông báo.
      */
     public void addItem(int userId, int variantId, int quantity) {
-        throw new UnsupportedOperationException("TODO CartService.addItem");
+        if (quantity < 1 || quantity > MAX_ADD) {
+            throw new ValidationException(null, "Số lượng mỗi lần thêm từ 1 đến " + MAX_ADD + ".");
+        }
+        Integer stock = cartDAO.findSellableStock(variantId);
+        if (stock == null) {
+            throw new ValidationException(null, "Sản phẩm không tồn tại hoặc đã ngừng bán. Vui lòng chọn lại màu và size.");
+        }
+        Cart cart = getCart(userId);
+        int inCart = cartDAO.quantityInCart(cart.getId(), variantId);
+        if (inCart + quantity > stock) {
+            String msg = stock == 0 ? "Phân loại này đã hết hàng."
+                    : "Chỉ còn " + stock + " sản phẩm trong kho" + (inCart > 0 ? " (giỏ của bạn đã có " + inCart + ")" : "") + ".";
+            throw new ValidationException(null, msg);
+        }
+        cartDAO.upsertItem(cart.getId(), variantId, quantity);
     }
 
     /**
-     * Đổi số lượng của dòng thuộc giỏ của user, không vượt tồn kho, tối thiểu 1.
+     * Đổi số lượng của dòng thuộc giỏ của user, không vượt tồn kho. quantity &lt;= 0 thì xóa dòng.
      */
     public void updateQuantity(int userId, int itemId, int quantity) {
-        throw new UnsupportedOperationException("TODO CartService.updateQuantity");
+        CartItem item = cartDAO.findItemOfUser(itemId, userId);
+        if (item == null) {
+            throw new ValidationException(null, "Sản phẩm không còn trong giỏ hàng.");
+        }
+        if (quantity <= 0) {
+            cartDAO.deleteItem(itemId);
+            return;
+        }
+        if (quantity > item.getStock()) {
+            throw new ValidationException(null, "\"" + item.getProductName() + "\" chỉ còn " + item.getStock() + " sản phẩm trong kho.");
+        }
+        cartDAO.setQuantity(itemId, quantity);
     }
 
     /**
-     * Xóa dòng khỏi giỏ.
+     * Xóa dòng khỏi giỏ (chỉ dòng thuộc giỏ của user).
      */
     public void removeItem(int userId, int itemId) {
-        throw new UnsupportedOperationException("TODO CartService.removeItem");
+        if (cartDAO.findItemOfUser(itemId, userId) != null) {
+            cartDAO.deleteItem(itemId);
+        }
     }
 
     /**
      * Số dòng trong giỏ (hiện trên icon giỏ).
      */
     public int countItems(int userId) {
-        throw new UnsupportedOperationException("TODO CartService.countItems");
+        return cartDAO.countItems(userId);
     }
 
     /**
      * Xóa toàn bộ giỏ (sau khi đặt hàng).
      */
     public void clear(int userId) {
-        throw new UnsupportedOperationException("TODO CartService.clear");
+        Cart cart = cartDAO.findByUser(userId);
+        if (cart != null) {
+            cartDAO.deleteAllItems(cart.getId());
+        }
     }
 }
