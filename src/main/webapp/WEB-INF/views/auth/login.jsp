@@ -35,7 +35,7 @@
 
           <div class="acc-enter" style="--d:1">
             <%@ include file="/WEB-INF/views/common/flash.jspf" %>
-            <form class="auth-form" method="post" action="${ctx}/login" data-demo>
+            <form class="auth-form" method="post" action="${ctx}/login">
               <input type="hidden" name="action" value="login">
               <input type="hidden" name="redirect" value="${fn:escapeXml(param.redirect)}">
 
