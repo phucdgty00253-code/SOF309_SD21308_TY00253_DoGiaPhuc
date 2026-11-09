@@ -57,7 +57,7 @@
                         <td class="nowrap"><fmt:formatDate value="${it.deletedAt}" pattern="dd/MM/yyyy HH:mm"/></td>
                         <td>
                           <div class="cell-actions">
-                            <form class="inline-form" method="post" action="${ctx}/admin/trash" data-demo data-confirm="Khôi phục sản phẩm “${fn:escapeXml(it.name)}”? Sản phẩm sẽ hiển thị lại trên cửa hàng.">
+                            <form class="inline-form" method="post" action="${ctx}/admin/trash" data-confirm="Khôi phục sản phẩm “${fn:escapeXml(it.name)}”? Sản phẩm sẽ hiển thị lại trên cửa hàng.">
                               <input type="hidden" name="action" value="restore">
                               <input type="hidden" name="type" value="products">
                               <input type="hidden" name="id" value="${it.id}">
@@ -97,7 +97,7 @@
                         <td class="nowrap"><fmt:formatDate value="${it.deletedAt}" pattern="dd/MM/yyyy HH:mm"/></td>
                         <td>
                           <div class="cell-actions">
-                            <form class="inline-form" method="post" action="${ctx}/admin/trash" data-demo data-confirm="Khôi phục danh mục “${fn:escapeXml(it.name)}”? Danh mục sẽ hiển thị lại trên cửa hàng.">
+                            <form class="inline-form" method="post" action="${ctx}/admin/trash" data-confirm="Khôi phục danh mục “${fn:escapeXml(it.name)}”? Danh mục sẽ hiển thị lại trên cửa hàng.">
                               <input type="hidden" name="action" value="restore">
                               <input type="hidden" name="type" value="categories">
                               <input type="hidden" name="id" value="${it.id}">
@@ -133,7 +133,7 @@
                         <td class="nowrap"><fmt:formatDate value="${it.deletedAt}" pattern="dd/MM/yyyy HH:mm"/></td>
                         <td>
                           <div class="cell-actions">
-                            <form class="inline-form" method="post" action="${ctx}/admin/trash" data-demo data-confirm="Khôi phục màu “${fn:escapeXml(it.name)}”? Màu sẽ có thể chọn lại cho sản phẩm.">
+                            <form class="inline-form" method="post" action="${ctx}/admin/trash" data-confirm="Khôi phục màu “${fn:escapeXml(it.name)}”? Màu sẽ có thể chọn lại cho sản phẩm.">
                               <input type="hidden" name="action" value="restore">
                               <input type="hidden" name="type" value="colors">
                               <input type="hidden" name="id" value="${it.id}">
@@ -168,7 +168,7 @@
                         <td class="nowrap"><fmt:formatDate value="${it.deletedAt}" pattern="dd/MM/yyyy HH:mm"/></td>
                         <td>
                           <div class="cell-actions">
-                            <form class="inline-form" method="post" action="${ctx}/admin/trash" data-demo data-confirm="Khôi phục size “${fn:escapeXml(it.name)}”? Size sẽ có thể chọn lại cho sản phẩm.">
+                            <form class="inline-form" method="post" action="${ctx}/admin/trash" data-confirm="Khôi phục size “${fn:escapeXml(it.name)}”? Size sẽ có thể chọn lại cho sản phẩm.">
                               <input type="hidden" name="action" value="restore">
                               <input type="hidden" name="type" value="sizes">
                               <input type="hidden" name="id" value="${it.id}">

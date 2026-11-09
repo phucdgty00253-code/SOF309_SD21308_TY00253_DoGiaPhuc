@@ -173,6 +173,27 @@ public class ProductService {
         }
     }
 
+    /**
+     * Sản phẩm đã xóa mềm (Thùng rác).
+     */
+    public List<Product> findDeleted() {
+        return productDAO.findDeleted();
+    }
+
+    /**
+     * Khôi phục sản phẩm. Danh mục của nó đang bị xóa mềm thì báo rõ, cần khôi phục danh mục trước.
+     */
+    public void restore(int id) {
+        Boolean categoryDeleted = productDAO.isCategoryDeletedOfDeletedProduct(id);
+        if (categoryDeleted == null) {
+            throw new ValidationException(null, "Sản phẩm không có trong Thùng rác.");
+        }
+        if (categoryDeleted) {
+            throw new ValidationException(null, "Danh mục của sản phẩm này đang nằm trong Thùng rác. Hãy khôi phục danh mục trước.");
+        }
+        productDAO.setDeleted(id, false);
+    }
+
     // ----- Hàm phụ -----
 
     private void save(Product p, List<ProductVariant> variants) {
