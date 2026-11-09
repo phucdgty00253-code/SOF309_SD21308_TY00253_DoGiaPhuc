@@ -81,7 +81,7 @@
                 <td>
                   <div class="cell-actions">
                     <a class="icon-btn" href="${ctx}/admin/products/form?id=${p.id}" aria-label="Sửa ${fn:escapeXml(p.name)}" title="Sửa"><t:icon name="pencil"/></a>
-                    <form class="inline-form" method="post" action="${ctx}/admin/products" data-demo data-confirm="Xóa sản phẩm “${fn:escapeXml(p.name)}”? Sản phẩm sẽ được chuyển vào Thùng rác (xóa mềm), ẩn khỏi cửa hàng và có thể khôi phục lại sau.">
+                    <form class="inline-form" method="post" action="${ctx}/admin/products" data-confirm="Xóa sản phẩm “${fn:escapeXml(p.name)}”? Sản phẩm sẽ được chuyển vào Thùng rác (xóa mềm), ẩn khỏi cửa hàng và có thể khôi phục lại sau.">
                       <input type="hidden" name="action" value="delete">
                       <input type="hidden" name="id" value="${p.id}">
                       <button class="icon-btn icon-btn--danger" type="submit" aria-label="Xóa ${fn:escapeXml(p.name)}" title="Xóa"><t:icon name="trash"/></button>

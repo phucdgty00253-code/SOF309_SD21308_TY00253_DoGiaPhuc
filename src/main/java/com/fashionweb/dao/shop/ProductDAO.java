@@ -11,6 +11,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -135,10 +136,15 @@ public class ProductDAO {
     }
 
     /**
-     * SELECT một sản phẩm theo id.
+     * SELECT một sản phẩm chưa xóa mềm theo id (form sửa của Admin). null nếu không có.
      */
     public Product findById(int id) {
-        throw new UnsupportedOperationException("TODO ProductDAO.findById");
+        try (Connection con = DBContext.getConnection()) {
+            List<Product> list = queryList(con, SELECT_WITH_STATS + "WHERE p.is_deleted = 0 AND p.id = ?", List.of(id));
+            return list.isEmpty() ? null : list.get(0);
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi đọc sản phẩm theo id", e);
+        }
     }
 
     /**
@@ -173,31 +179,142 @@ public class ProductDAO {
     }
 
     /**
-     * INSERT, trả id mới.
+     * Admin: sản phẩm chưa xóa mềm, tìm theo tên, lọc danh mục, mới nhất trước, phân trang.
+     * Trang vượt quá trang cuối thì lấy trang cuối.
      */
-    public int insert(Product p) {
-        throw new UnsupportedOperationException("TODO ProductDAO.insert");
+    public Page<Product> findPageForAdmin(String q, String categorySlug, int page, int pageSize) {
+        StringBuilder where = new StringBuilder("WHERE p.is_deleted = 0 ");
+        List<Object> params = new ArrayList<>();
+        if (q != null && !q.isBlank()) {
+            where.append("AND p.name LIKE ? ESCAPE '!' ");
+            params.add("%" + q.trim().replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%");
+        }
+        if (categorySlug != null && !categorySlug.isBlank()) {
+            where.append("AND c.slug = ? ");
+            params.add(categorySlug);
+        }
+        try (Connection con = DBContext.getConnection()) {
+            long total;
+            try (PreparedStatement ps = con.prepareStatement(
+                    "SELECT COUNT(*) FROM products p JOIN categories c ON c.id = p.category_id " + where)) {
+                bind(ps, params);
+                try (ResultSet rs = ps.executeQuery()) {
+                    rs.next();
+                    total = rs.getLong(1);
+                }
+            }
+            int totalPages = (int) Math.max(1, (total + pageSize - 1) / pageSize);
+            int safePage = Math.min(Math.max(1, page), totalPages);
+            List<Object> pageParams = new ArrayList<>(params);
+            pageParams.add(pageSize);
+            pageParams.add((safePage - 1) * pageSize);
+            List<Product> items = queryList(con, SELECT_WITH_STATS + where + orderBy("newest") + "LIMIT ? OFFSET ?", pageParams);
+            return new Page<>(items, safePage, pageSize, total);
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi tìm sản phẩm (Admin)", e);
+        }
     }
 
     /**
-     * UPDATE các cột của sản phẩm.
+     * Slug đã có ở sản phẩm khác chưa (kể cả sản phẩm trong Thùng rác, vì cột slug là UNIQUE).
      */
-    public void update(Product p) {
-        throw new UnsupportedOperationException("TODO ProductDAO.update");
+    public boolean existsSlug(String slug, int excludeId) {
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement("SELECT 1 FROM products WHERE slug = ? AND id <> ? LIMIT 1")) {
+            ps.setString(1, slug);
+            ps.setInt(2, excludeId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi kiểm tra slug sản phẩm", e);
+        }
     }
 
     /**
-     * INSERT ... ON DUPLICATE KEY UPDATE stock theo UNIQUE (product_id, color_id, size_id).
+     * INSERT (chạy trong transaction), trả id mới.
      */
-    public void upsertVariants(int productId, List<ProductVariant> variants) {
-        throw new UnsupportedOperationException("TODO ProductDAO.upsertVariants");
+    public int insert(Connection con, Product p) throws SQLException {
+        String sql = "INSERT INTO products (category_id, name, slug, description, price, image, image_thumb, is_featured) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            bindProduct(ps, p);
+            ps.executeUpdate();
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                keys.next();
+                return keys.getInt(1);
+            }
+        }
     }
 
     /**
-     * Cập nhật is_deleted và deleted_at (xóa mềm hoặc khôi phục).
+     * UPDATE các cột của sản phẩm (chạy trong transaction).
      */
-    public void setDeleted(int id, boolean deleted) {
-        throw new UnsupportedOperationException("TODO ProductDAO.setDeleted");
+    public void update(Connection con, Product p) throws SQLException {
+        String sql = "UPDATE products SET category_id = ?, name = ?, slug = ?, description = ?, price = ?, image = ?, "
+                + "image_thumb = ?, is_featured = ? WHERE id = ? AND is_deleted = 0";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            bindProduct(ps, p);
+            ps.setInt(9, p.getId());
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * INSERT ... ON DUPLICATE KEY UPDATE stock theo UNIQUE (product_id, color_id, size_id), nên mỗi cặp màu x size
+     * chỉ có một biến thể. Biến thể không còn trong danh sách gửi lên: xóa nếu chưa nằm trong đơn hay giỏ nào,
+     * ngược lại đặt tồn = 0 (giữ dòng để đơn cũ còn tham chiếu được).
+     */
+    public void upsertVariants(Connection con, int productId, List<ProductVariant> variants) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement(
+                "INSERT INTO product_variants (product_id, color_id, size_id, stock) VALUES (?, ?, ?, ?) "
+                        + "ON DUPLICATE KEY UPDATE stock = VALUES(stock)")) {
+            for (ProductVariant v : variants) {
+                ps.setInt(1, productId);
+                ps.setInt(2, v.getColorId());
+                ps.setInt(3, v.getSizeId());
+                ps.setInt(4, v.getStock());
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        }
+        StringBuilder keep = new StringBuilder();
+        for (ProductVariant v : variants) {
+            keep.append(keep.length() == 0 ? "(?, ?)" : ", (?, ?)");
+        }
+        String notKept = variants.isEmpty() ? "" : " AND (color_id, size_id) NOT IN (" + keep + ")";
+        String used = "(EXISTS (SELECT 1 FROM order_details d WHERE d.variant_id = product_variants.id) "
+                + "OR EXISTS (SELECT 1 FROM cart_items ci WHERE ci.variant_id = product_variants.id))";
+        try (PreparedStatement del = con.prepareStatement(
+                     "DELETE FROM product_variants WHERE product_id = ?" + notKept + " AND NOT " + used);
+             PreparedStatement zero = con.prepareStatement(
+                     "UPDATE product_variants SET stock = 0 WHERE product_id = ?" + notKept)) {
+            for (PreparedStatement ps : List.of(del, zero)) {
+                int i = 1;
+                ps.setInt(i++, productId);
+                for (ProductVariant v : variants) {
+                    ps.setInt(i++, v.getColorId());
+                    ps.setInt(i++, v.getSizeId());
+                }
+                ps.executeUpdate();
+            }
+        }
+    }
+
+    /**
+     * Cập nhật is_deleted và deleted_at (xóa mềm hoặc khôi phục). Trả false nếu không có dòng nào đổi.
+     */
+    public boolean setDeleted(int id, boolean deleted) {
+        String sql = deleted
+                ? "UPDATE products SET is_deleted = 1, deleted_at = NOW() WHERE id = ? AND is_deleted = 0"
+                : "UPDATE products SET is_deleted = 0, deleted_at = NULL WHERE id = ? AND is_deleted = 1";
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate() == 1;
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi cập nhật trạng thái xóa sản phẩm", e);
+        }
     }
 
     /**
@@ -247,6 +364,17 @@ public class ProductDAO {
                 ps.setString(i + 1, (String) v);
             }
         }
+    }
+
+    private static void bindProduct(PreparedStatement ps, Product p) throws SQLException {
+        ps.setInt(1, p.getCategoryId());
+        ps.setString(2, p.getName());
+        ps.setString(3, p.getSlug());
+        ps.setString(4, p.getDescription());
+        ps.setLong(5, p.getPrice());
+        ps.setString(6, p.getImage());
+        ps.setString(7, p.getImageThumb());
+        ps.setBoolean(8, p.isFeatured());
     }
 
     private List<Product> queryList(Connection con, String sql, List<Object> params) throws SQLException {

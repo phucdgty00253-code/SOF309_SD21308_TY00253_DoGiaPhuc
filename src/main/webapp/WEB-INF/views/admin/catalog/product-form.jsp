@@ -32,7 +32,7 @@
     <c:set var="vDesc" value="${not empty param.description ? param.description : product.description}"/>
     <c:set var="vFeatured" value="${not empty param.name ? param.featured == 'true' : product.featured}"/>
 
-    <form class="ac-form" id="product-form" method="post" action="${ctx}/admin/products" enctype="multipart/form-data" data-demo>
+    <form class="ac-form" id="product-form" method="post" action="${ctx}/admin/products" enctype="multipart/form-data">
       <input type="hidden" name="action" value="save">
       <input type="hidden" name="id" value="${empty product ? '' : product.id}">
 
