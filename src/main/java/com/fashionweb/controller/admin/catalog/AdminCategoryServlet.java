@@ -4,6 +4,7 @@ import com.fashionweb.exception.ValidationException;
 import com.fashionweb.listener.AppStartupListener;
 import com.fashionweb.model.Category;
 import com.fashionweb.service.shop.CategoryService;
+import com.fashionweb.util.ImageUploadUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -12,12 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Map;
 
 /**
@@ -27,7 +23,7 @@ import java.util.Map;
  * AdminFilter bảo vệ /admin/*.
  * <p>POST (multipart vì có imageFile):
  * <ul>
- *   <li>action=save: id rỗng = thêm, có id = sửa. Slug để trống thì tự sinh từ tên. imageFile JPG/PNG tối đa 2MB,
+ *   <li>action=save: id rỗng = thêm, có id = sửa. Slug để trống thì tự sinh từ tên. imageFile JPG/PNG/WebP tối đa 2MB (Cloudinary khi có cloudinary.properties, xem ImageUploadUtil),
  *       không chọn thì giữ ảnh cũ. Ảnh lưu vào assets/images/categories/ của ứng dụng đang chạy.</li>
  *   <li>action=delete: xóa mềm. Danh mục còn sản phẩm đang bán thì bị chặn (xem CategoryService).</li>
  * </ul>
@@ -36,7 +32,6 @@ import java.util.Map;
 @MultipartConfig(maxFileSize = 5 * 1024 * 1024, maxRequestSize = 6 * 1024 * 1024)
 public class AdminCategoryServlet extends HttpServlet {
 
-    private static final long MAX_IMAGE_BYTES = 2L * 1024 * 1024;
     private static final String IMAGE_DIR = "assets/images/categories";
 
     private final CategoryService categoryService = new CategoryService();
@@ -80,60 +75,22 @@ public class AdminCategoryServlet extends HttpServlet {
         c.setSlug(req.getParameter("slug"));
 
         Part image = req.getPart("imageFile");
-        boolean hasImage = image != null && image.getSize() > 0;
-        String ext = null;
-        if (hasImage) {
-            ext = imageExtension(image.getContentType());
-            if (ext == null) {
-                showWithErrors(req, resp, Map.of("imageFile", "Chỉ nhận ảnh JPG hoặc PNG."));
-                return;
-            }
-            if (image.getSize() > MAX_IMAGE_BYTES) {
-                showWithErrors(req, resp, Map.of("imageFile", "Ảnh tối đa 2MB."));
-                return;
-            }
-        }
-
+        String stored = null;
         try {
             boolean isNew = c.getId() == 0;
-            categoryService.save(c);
-            if (hasImage) {
-                c.setImage(storeImage(image, c.getSlug(), ext));
-                categoryService.save(c);
+            if (ImageUploadUtil.hasFile(image)) {
+                String base = c.getSlug() == null || c.getSlug().isBlank() ? c.getName() : c.getSlug();
+                stored = ImageUploadUtil.store(getServletContext(), image, "imageFile", IMAGE_DIR, base);
+                c.setImage(stored);
             }
+            categoryService.save(c);
             AppStartupListener.refreshNavCategories(getServletContext());
             flash(req, isNew ? "Đã thêm danh mục \"" + c.getName() + "\"." : "Đã lưu danh mục \"" + c.getName() + "\".", "success");
             redirect(req, resp);
         } catch (ValidationException e) {
+            ImageUploadUtil.deleteQuietly(getServletContext(), stored);
             showWithErrors(req, resp, e.getErrors());
         }
-    }
-
-    /** Ghi ảnh vào thư mục assets của ứng dụng đang chạy, trả đường dẫn tương đối để lưu DB. */
-    private String storeImage(Part image, String slug, String ext) throws IOException {
-        String realDir = getServletContext().getRealPath("/" + IMAGE_DIR);
-        if (realDir == null) {
-            throw new IOException("Không xác định được thư mục lưu ảnh");
-        }
-        File dir = new File(realDir);
-        if (!dir.exists() && !dir.mkdirs()) {
-            throw new IOException("Không tạo được thư mục lưu ảnh: " + realDir);
-        }
-        String fileName = slug + "-" + System.currentTimeMillis() + ext;
-        try (InputStream in = image.getInputStream()) {
-            Files.copy(in, Path.of(realDir, fileName), StandardCopyOption.REPLACE_EXISTING);
-        }
-        return IMAGE_DIR + "/" + fileName;
-    }
-
-    private static String imageExtension(String contentType) {
-        if ("image/jpeg".equals(contentType)) {
-            return ".jpg";
-        }
-        if ("image/png".equals(contentType)) {
-            return ".png";
-        }
-        return null;
     }
 
     private void show(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
