@@ -21,7 +21,7 @@
           <div class="hero__content">
             <p class="hero__label entrance">Bộ sưu tập mới</p>
             <c:choose><c:when test="${s.first}"><h1 class="h-1 hero__title entrance"><c:out value="${b.title}"/></h1></c:when><c:otherwise><p class="h-1 hero__title entrance"><c:out value="${b.title}"/></p></c:otherwise></c:choose>
-            <div class="hero__cta entrance"><a class="btn btn--white" href="${ctx}${b.linkUrl}">Mua ngay</a></div>
+            <div class="hero__cta entrance"><c:set var="bLink" value="${empty b.linkUrl ? '/products' : b.linkUrl}"/><a class="btn btn--white" href="${fn:escapeXml(fn:startsWith(bLink, 'http') ? bLink : ctx.concat(bLink))}">Mua ngay</a></div>
           </div>
         </div>
       </c:forEach>

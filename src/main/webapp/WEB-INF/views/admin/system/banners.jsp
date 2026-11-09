@@ -51,7 +51,7 @@
                 <td data-label="Liên kết"><span class="t-muted cell-clamp"><c:out value="${b.linkUrl}"/></span></td>
                 <td data-label="Thứ tự" class="num">${b.sortOrder}</td>
                 <td data-label="Hiển thị">
-                  <form class="switch-form" method="post" action="${ctx}/admin/banners" data-demo>
+                  <form class="switch-form" method="post" action="${ctx}/admin/banners">
                     <input type="hidden" name="action" value="toggle">
                     <input type="hidden" name="id" value="${b.id}">
                     <label class="switch">
@@ -65,7 +65,7 @@
                             data-dialog-open="banner-dialog" data-dialog-title="Sửa banner"
                             data-field-id="${b.id}" data-field-title="${fn:escapeXml(b.title)}" data-field-link-url="${fn:escapeXml(b.linkUrl)}"
                             data-field-sort-order="${b.sortOrder}" data-field-active="${b.active}" data-field-image="${fn:escapeXml(imgUrl)}"><t:icon name="pencil"/></button>
-                    <form method="post" action="${ctx}/admin/banners" data-demo data-confirm="Xóa banner &quot;${fn:escapeXml(b.title)}&quot;? Thao tác này không thể hoàn tác.">
+                    <form method="post" action="${ctx}/admin/banners" data-confirm="Xóa banner &quot;${fn:escapeXml(b.title)}&quot;? Thao tác này không thể hoàn tác.">
                       <input type="hidden" name="action" value="delete">
                       <input type="hidden" name="id" value="${b.id}">
                       <button class="icon-btn icon-btn--danger" type="submit" aria-label="Xóa banner ${fn:escapeXml(b.title)}" title="Xóa"><t:icon name="trash"/></button>
@@ -84,7 +84,7 @@
 
     <%-- Hộp thoại thêm hoặc sửa banner --%>
     <dialog class="dialog" id="banner-dialog" aria-labelledby="banner-dialog-title" data-auto-open="${not empty errors}">
-      <form method="post" action="${ctx}/admin/banners" enctype="multipart/form-data" data-demo>
+      <form method="post" action="${ctx}/admin/banners" enctype="multipart/form-data">
         <input type="hidden" name="action" value="save">
         <input type="hidden" name="id" value="${fn:escapeXml(param.id)}">
         <div class="dialog__head">
