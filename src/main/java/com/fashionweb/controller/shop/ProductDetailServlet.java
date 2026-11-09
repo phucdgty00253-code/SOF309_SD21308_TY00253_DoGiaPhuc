@@ -6,6 +6,7 @@ import com.fashionweb.constant.Role;
 import com.fashionweb.model.Product;
 import com.fashionweb.model.Review;
 import com.fashionweb.model.User;
+import com.fashionweb.service.account.AccountService;
 import com.fashionweb.service.order.ReviewService;
 import com.fashionweb.service.shop.ProductService;
 import jakarta.servlet.ServletException;
@@ -47,6 +48,7 @@ public class ProductDetailServlet extends HttpServlet {
 
     private final ProductService productService = new ProductService();
     private final ReviewService reviewService = new ReviewService();
+    private final AccountService accountService = new AccountService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -84,8 +86,7 @@ public class ProductDetailServlet extends HttpServlet {
             user = u;
         }
         boolean canReview = user != null && user.getRole() == Role.CUSTOMER;
-        // TODO(#5): inWishlist = WishlistService kiểm tra sản phẩm đã có trong danh sách yêu thích của user
-        boolean inWishlist = false;
+        boolean inWishlist = user != null && accountService.isInWishlist(user.getId(), product.getId());
 
         req.setAttribute("product", product);
         req.setAttribute("galleryImages", galleryImages);

@@ -256,10 +256,34 @@
   $$('[data-wish]').forEach((b) => b.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const on = b.classList.toggle('is-on');
-    b.classList.remove('is-pop'); void b.offsetWidth; b.classList.add('is-pop');
-    b.setAttribute('aria-pressed', String(on));
-    if (DEMO) toast(on ? 'Đã thêm vào yêu thích (chế độ giao diện)' : 'Đã bỏ khỏi yêu thích (chế độ giao diện)');
+    const paint = (on) => {
+      b.classList.toggle('is-on', on);
+      b.classList.remove('is-pop'); void b.offsetWidth; b.classList.add('is-pop');
+      b.setAttribute('aria-pressed', String(on));
+    };
+    const url = b.dataset.wishUrl;
+    if (!url || !b.dataset.productId) { // nút chưa nối server: chỉ đổi giao diện
+      const on = !b.classList.contains('is-on');
+      paint(on);
+      if (DEMO) toast(on ? 'Đã thêm vào yêu thích (chế độ giao diện)' : 'Đã bỏ khỏi yêu thích (chế độ giao diện)');
+      return;
+    }
+    // Gửi lên WishlistServlet (action=toggle). Chưa đăng nhập thì AuthFilter chuyển sang trang đăng nhập.
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+      body: 'action=toggle&productId=' + encodeURIComponent(b.dataset.productId)
+    }).then((res) => {
+      if (res.redirected || !(res.headers.get('Content-Type') || '').includes('json')) {
+        window.location.href = res.redirected ? res.url : url;
+        return null;
+      }
+      return res.json();
+    }).then((data) => {
+      if (!data) return;
+      paint(data.inWishlist);
+      toast(data.inWishlist ? 'Đã thêm vào yêu thích' : 'Đã bỏ khỏi yêu thích');
+    }).catch(() => toast('Không cập nhật được yêu thích, vui lòng thử lại.'));
   }));
 
   /* ---------- Chế độ giao diện: chặn form/nút chưa có logic ---------- */

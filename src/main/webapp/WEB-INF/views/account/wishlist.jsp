@@ -36,7 +36,7 @@
             <c:forEach items="${wishlistProducts}" var="p" varStatus="s">
               <div class="wish-item ${s.index < 3 ? 'acc-enter' : 'reveal'}" style="--d:${s.index + 1}">
                 <t:product-card product="${p}"/>
-                <form class="product-card__wish" method="post" action="${ctx}/wishlist" data-demo data-demo-remove=".wish-item">
+                <form class="product-card__wish" method="post" action="${ctx}/wishlist">
                   <input type="hidden" name="action" value="remove">
                   <input type="hidden" name="productId" value="${p.id}">
                   <button type="submit" class="icon-btn wish-item__btn" aria-label="Bỏ khỏi yêu thích: ${fn:escapeXml(p.name)}"><t:icon name="heart"/></button>
