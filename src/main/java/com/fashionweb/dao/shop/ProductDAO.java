@@ -110,6 +110,27 @@ public class ProductDAO {
     }
 
     /**
+     * Mọi sản phẩm chưa xóa mềm (id, tên), sắp theo tên, cho ô lọc của Admin.
+     */
+    public List<Product> findAllNames() {
+        List<Product> list = new ArrayList<>();
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement("SELECT id, name, slug FROM products WHERE is_deleted = 0 ORDER BY name");
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Product p = new Product();
+                p.setId(rs.getInt("id"));
+                p.setName(rs.getString("name"));
+                p.setSlug(rs.getString("slug"));
+                list.add(p);
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi đọc tên sản phẩm", e);
+        }
+        return list;
+    }
+
+    /**
      * n sản phẩm nổi bật (is_featured = 1) đang bán, mới nhất trước.
      */
     public List<Product> findFeatured(int n) {

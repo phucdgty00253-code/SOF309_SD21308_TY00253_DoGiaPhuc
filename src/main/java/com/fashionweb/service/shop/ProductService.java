@@ -25,7 +25,7 @@ import java.util.TreeMap;
 /**
  * Sản phẩm phía khách và dùng lại ở trang Admin.
  *
- * <p>Đã làm: phía khách (#7, #8); Admin thêm, sửa, xóa mềm (#24). findAllForFilter thuộc #21, lowestStock thuộc #26.
+ * <p>Đã làm: phía khách (#7, #8); Admin thêm, sửa, xóa mềm (#24). findAllForFilter (#21). lowestStock thuộc #26.
  * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL.
  */
 public class ProductService {
@@ -133,7 +133,7 @@ public class ProductService {
      * Mọi sản phẩm (id, name) cho ô chọn lọc ở /admin/reviews.
      */
     public List<Product> findAllForFilter() {
-        throw new UnsupportedOperationException("TODO ProductService.findAllForFilter");
+        return productDAO.findAllNames();
     }
 
     /**

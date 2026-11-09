@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * Truy vấn bảng reviews.
  *
- * <p>Đã làm: phần của khách (#8, #18). findPage, setHidden thuộc #21 (Admin).
+ * <p>Đã làm: phần của khách (#8, #18), trang chủ (#9), Admin ẩn/hiện (#21).
  * <p>Chỉ chứa SQL (PreparedStatement) và chuyển ResultSet thành entity. Kết nối lấy từ DBContext.getConnection().
  */
 public class ReviewDAO {
@@ -139,14 +139,75 @@ public class ReviewDAO {
      * SELECT phân trang cho Admin.
      */
     public Page<Review> findPage(Integer productId, Boolean hidden, int page, int pageSize) {
-        throw new UnsupportedOperationException("TODO ReviewDAO.findPage");
+        StringBuilder where = new StringBuilder("WHERE 1 = 1 ");
+        List<Object> params = new ArrayList<>();
+        if (productId != null) {
+            where.append("AND r.product_id = ? ");
+            params.add(productId);
+        }
+        if (hidden != null) {
+            where.append("AND r.is_hidden = ? ");
+            params.add(hidden);
+        }
+        String from = "FROM reviews r JOIN users u ON u.id = r.user_id JOIN products p ON p.id = r.product_id ";
+        try (Connection con = DBContext.getConnection()) {
+            long total;
+            try (PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) " + from + where)) {
+                for (int i = 0; i < params.size(); i++) {
+                    ps.setObject(i + 1, params.get(i));
+                }
+                try (ResultSet rs = ps.executeQuery()) {
+                    rs.next();
+                    total = rs.getLong(1);
+                }
+            }
+            int totalPages = (int) Math.max(1, (total + pageSize - 1) / pageSize);
+            int safePage = Math.min(Math.max(1, page), totalPages);
+            List<Review> items = new ArrayList<>();
+            try (PreparedStatement ps = con.prepareStatement("SELECT r.*, u.full_name, p.name AS product_name, p.slug AS product_slug, "
+                    + "p.image AS product_image " + from + where + "ORDER BY r.created_at DESC, r.id DESC LIMIT ? OFFSET ?")) {
+                int i = 1;
+                for (Object v : params) {
+                    ps.setObject(i++, v);
+                }
+                ps.setInt(i++, pageSize);
+                ps.setInt(i, (safePage - 1) * pageSize);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Review r = map(rs);
+                        r.setProductName(rs.getString("product_name"));
+                        r.setProductSlug(rs.getString("product_slug"));
+                        r.setProductImage(rs.getString("product_image"));
+                        items.add(r);
+                    }
+                }
+            }
+            return new Page<>(items, safePage, pageSize, total);
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi đọc danh sách bình luận", e);
+        }
+    }
+
+    /**
+     * Trạng thái ẩn hiện tại của bình luận; null nếu không có.
+     */
+    public Boolean findHidden(int id) {
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement("SELECT is_hidden FROM reviews WHERE id = ?")) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getBoolean(1) : null;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi đọc bình luận", e);
+        }
     }
 
     /**
      * UPDATE hidden.
      */
     public void setHidden(int id, boolean hidden) {
-        throw new UnsupportedOperationException("TODO ReviewDAO.setHidden");
+        executeUpdate("UPDATE reviews SET is_hidden = ? WHERE id = ?", hidden, id);
     }
 
     // ----- Hàm phụ -----
