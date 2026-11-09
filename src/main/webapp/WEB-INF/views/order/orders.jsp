@@ -100,7 +100,7 @@
                     </c:if>
 
                     <c:if test="${o.status == 'SHIPPING'}">
-                      <form class="sh-inline-form" method="post" action="${ctx}/order" data-demo data-confirm="Bạn đã nhận được đơn hàng ${fn:escapeXml(o.orderCode)}?">
+                      <form class="sh-inline-form" method="post" action="${ctx}/order" data-confirm="Bạn đã nhận được đơn hàng ${fn:escapeXml(o.orderCode)}?">
                         <input type="hidden" name="action" value="confirmReceived">
                         <input type="hidden" name="orderCode" value="${fn:escapeXml(o.orderCode)}">
                         <input type="hidden" name="returnTo" value="orders">

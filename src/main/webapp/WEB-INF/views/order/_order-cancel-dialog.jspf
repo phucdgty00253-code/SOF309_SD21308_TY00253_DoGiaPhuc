@@ -9,7 +9,7 @@
     <h2 class="h-2" id="cancel-dialog-title" data-dialog-title>Hủy đơn hàng</h2>
     <button type="button" class="icon-btn" data-dialog-close aria-label="Đóng"><t:icon name="x" size="md"/></button>
   </div>
-  <form method="post" action="${ctx}/order" data-demo>
+  <form method="post" action="${ctx}/order">
     <input type="hidden" name="action" value="cancel">
     <input type="hidden" name="orderCode" value="">
     <input type="hidden" name="returnTo" value="${fn:escapeXml(dialogReturn)}">

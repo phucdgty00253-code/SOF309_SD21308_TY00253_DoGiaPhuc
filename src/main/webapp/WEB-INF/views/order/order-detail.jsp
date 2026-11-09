@@ -40,7 +40,7 @@
               <button type="button" class="btn btn--outline" data-dialog-open="cancel-dialog" data-dialog-title="Hủy đơn ${fn:escapeXml(order.orderCode)}" data-fill='{"orderCode":"${fn:escapeXml(order.orderCode)}"}'>Hủy đơn</button>
             </c:if>
             <c:if test="${st == 'SHIPPING'}">
-              <form class="sh-inline-form" method="post" action="${ctx}/order" data-demo data-confirm="Bạn đã nhận được đơn hàng ${fn:escapeXml(order.orderCode)}?">
+              <form class="sh-inline-form" method="post" action="${ctx}/order" data-confirm="Bạn đã nhận được đơn hàng ${fn:escapeXml(order.orderCode)}?">
                 <input type="hidden" name="action" value="confirmReceived">
                 <input type="hidden" name="orderCode" value="${fn:escapeXml(order.orderCode)}">
                 <input type="hidden" name="returnTo" value="detail">
