@@ -19,7 +19,7 @@
     shippingFee      long               phí ship cố định
     errors           Map<String,String> (tùy chọn) lỗi form đánh giá: rating, comment
   Form:
-    POST ${ctx}/cart    action=add     productId, variantId, quantity (data-demo data-demo-cart)
+    POST ${ctx}/cart    action=add     productId, variantId, quantity
     POST ${ctx}/product action=review        productId, slug, rating, comment (thêm hoặc sửa)
     POST ${ctx}/product action=deleteReview  productId, slug
 --%>

@@ -69,18 +69,11 @@ Trình duyệt → Servlet → Service → DAO → MySQL
 
 ## 5. Hiện đang ở đâu
 
-- Giao diện toàn bộ các trang đã làm xong. Mỗi Servlet hiện lấy **dữ liệu giả** từ `MockData`.
-- Việc của nhóm: viết logic thật cho Service và DAO, rồi thay `MockData` bằng Service. Làm xong hết thì xóa package `mock`.
+- Mọi chức năng (giai đoạn 1 đến 3) đã chạy bằng dữ liệu thật trong MySQL. Package `mock` và `DevPreviewFilter` đã xóa, `demoMode = false`.
 - Database có 17 bảng (`database/schema.sql`) và dữ liệu mẫu (`database/data.sql`).
 
 ## 6. Cách xem thử website
 
-Chạy dự án rồi mở `http://localhost:8080/saltair/home`. Thêm tham số vào URL để xem bằng vai trò khác nhau:
-
-| Muốn xem | Thêm vào URL |
-|---|---|
-| Khách chưa đăng nhập | `?as=guest` |
-| Khách hàng | `?as=customer` |
-| Quản trị | `?as=admin` |
+Chạy dự án rồi mở `http://localhost:8080/saltair/home`. Đăng nhập bằng tài khoản demo để xem theo vai trò khách hàng hoặc quản trị.
 
 Tài khoản demo trong `data.sql` (cùng một mật khẩu, xem đầu file `data.sql`): `admin@saltair.vn`, `khach@saltair.vn`.

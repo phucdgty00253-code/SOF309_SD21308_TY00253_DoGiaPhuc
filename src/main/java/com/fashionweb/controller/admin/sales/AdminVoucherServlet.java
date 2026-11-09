@@ -3,6 +3,7 @@ package com.fashionweb.controller.admin.sales;
 import com.fashionweb.constant.DiscountType;
 import com.fashionweb.controller.admin.AdminOpsParams;
 import com.fashionweb.exception.ValidationException;
+import com.fashionweb.listener.AppStartupListener;
 import com.fashionweb.model.Voucher;
 import com.fashionweb.service.cart.VoucherService;
 import com.fashionweb.service.shop.CategoryService;
@@ -64,6 +65,7 @@ public class AdminVoucherServlet extends HttpServlet {
                     return;
                 }
             }
+            AppStartupListener.refreshAnnouncements(getServletContext());
         } catch (ValidationException e) {
             if ("save".equals(action) && !e.getErrors().isEmpty()) {
                 req.setAttribute("errors", e.getErrors());

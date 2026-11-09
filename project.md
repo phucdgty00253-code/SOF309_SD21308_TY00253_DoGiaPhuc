@@ -70,14 +70,12 @@ Tham khảo phong cách của template A-dam (light, airy, flat). **Chỉ mượ
 
 File CSS dùng chung: `webapp/assets/css/style.css` (khách hàng) và `admin.css` (quản trị); CSS riêng từng nhóm trang nằm ở `assets/css/pages/`. JS dùng chung: `assets/js/app.js` (kích hoạt bằng thuộc tính `data-*`).
 
-## Chạy xem giao diện (khi chưa có backend)
+## Trạng thái code
 
-- Mọi trang JSP đã có Servlet khung chỉ có `doGet`, lấy dữ liệu giả từ `com.fashionweb.mock.MockData`. Khi làm logic thật: thay `MockData.xxx()` bằng Service/DAO, thêm `doPost`, rồi xóa package `mock`.
-- **Ảnh rỗng**: `MockData.SAMPLE_IMAGES = false` nên mọi ô ảnh hiện khung xám (chờ Admin tải ảnh lên). Đặt `true` để xem bằng ảnh mẫu trong `assets/images`.
-- Giả lập đăng nhập bằng tham số URL (`DevPreviewFilter`, xóa khi làm xong đăng nhập thật): `?as=customer`, `?as=admin`, `?as=guest`.
-- `demoMode` trong `web.xml` (mặc định `true`): form chưa có logic chỉ hiện thông báo. Đổi `false` khi nhóm làm xong logic.
-- Trang nào cần dữ liệu gì: đọc comment đầu mỗi file JSP (route, thuộc tính request, kiểu dữ liệu) và Javadoc `TODO(logic)` trong Servlet tương ứng (việc cần làm, các `action` của form).
-- Khung file cho thành viên: Servlet (đang dùng `MockData`), Service, DAO, Filter đã tạo sẵn trong từng tầng (`controller`, `service`, `dao`, `filter`), mỗi tầng chia thư mục con theo chức năng. Service và DAO chỉ có chữ ký phương thức, thân hàm ném `UnsupportedOperationException("TODO ...")`; `AuthFilter` và `AdminFilter` đang cho mọi request đi qua. Làm xong mục nào thì thay `MockData` ở Servlet bằng Service tương ứng; khi hết chỗ dùng thì xóa package `mock`.
+- Mọi Servlet lấy dữ liệu thật qua Service -> DAO -> MySQL. Package `mock` và `DevPreviewFilter` đã xóa (#27).
+- `demoMode` trong `web.xml` = `false`. Đặt `true` chỉ khi dựng giao diện mới: form còn gắn `data-demo` sẽ chỉ hiện thông báo.
+- Trang nào cần dữ liệu gì: đọc comment đầu mỗi file JSP (route, thuộc tính request) và Javadoc của Servlet tương ứng (các `action` của form).
+- Ảnh do Admin tải lên (danh mục, sản phẩm, banner, ảnh bìa blog) lưu trong thư mục `assets/images/...` của bản đang chạy; deploy lại sạch thì mất ảnh đã tải lên.
 - Cách chạy: Java 17, Tomcat 11 (Jakarta). Build bằng Maven (`mvn package`), deploy `target/saltair.war`, mở `/saltair/home`.
 
 ## Phân quyền (Roles)
@@ -256,9 +254,8 @@ src/main/java/com/fashionweb/
   model/                 16 lớp ánh xạ bảng (User, Product, Order...), dùng chung
   dto/                   đối tượng truyền dữ liệu (DashboardStats)
   exception/             lỗi nghiệp vụ (VoucherException)
-  filter/                AuthFilter, AdminFilter, EncodingFilter, DevPreviewFilter
+  filter/                AuthFilter, AdminFilter, EncodingFilter
   listener/  constant/  util/    dùng chung (AppStartupListener; Role, OrderStatus, AppConstant; Page, DBContext, MailUtil)
-  mock/                  DỮ LIỆU GIẢ chỉ để xem giao diện, xóa khi làm logic thật
 
 src/main/webapp/
   assets/            css (style.css, admin.css, pages/), js (app.js, pages/), images, brand
