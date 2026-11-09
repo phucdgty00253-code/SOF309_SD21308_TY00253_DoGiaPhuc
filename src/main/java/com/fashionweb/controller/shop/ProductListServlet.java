@@ -1,11 +1,13 @@
 package com.fashionweb.controller.shop;
 
 import com.fashionweb.constant.AppConstant;
-import com.fashionweb.mock.MockData;
 import com.fashionweb.model.Category;
 import com.fashionweb.model.Color;
 import com.fashionweb.model.Product;
 import com.fashionweb.model.Size;
+import com.fashionweb.service.shop.AttributeService;
+import com.fashionweb.service.shop.CategoryService;
+import com.fashionweb.service.shop.ProductService;
 import com.fashionweb.util.Page;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -31,15 +33,18 @@ import java.util.Map;
  * q (tìm theo tên), category (slug), minPrice, maxPrice (VNĐ), color (mã màu), size (tên size),
  * sort (newest | price_asc | price_desc | bestseller | rating), page (từ 1).
  * <p>
- * TODO(logic): thay MockData.searchProducts bằng ProductService.search(...) (ProductDAO dùng PreparedStatement,
- * chỉ lấy sản phẩm chưa xóa mềm, tính avgRating/reviewCount/stockTotal bằng JOIN hoặc subquery),
- * lấy categories/colors/sizes từ CategoryService và AttributeService.
+ * Dữ liệu: ProductService.search (chỉ sản phẩm chưa xóa mềm, kèm avgRating/reviewCount/soldCount/stockTotal),
+ * categories từ CategoryService, colors/sizes từ AttributeService.
  */
 @WebServlet("/products")
 public class ProductListServlet extends HttpServlet {
 
     private static final List<String> SORTS = List.of("newest", "price_asc", "price_desc", "bestseller", "rating");
     private static final int MAX_QUERY_LENGTH = 100;
+
+    private final ProductService productService = new ProductService();
+    private final CategoryService categoryService = new CategoryService();
+    private final AttributeService attributeService = new AttributeService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -50,10 +55,12 @@ public class ProductListServlet extends HttpServlet {
         }
 
         String categorySlug = clean(req.getParameter("category"));
-        Category currentCategory = categorySlug.isEmpty() ? null : MockData.categoryBySlug(categorySlug);
+        Category currentCategory = categorySlug.isEmpty() ? null : categoryService.findBySlug(categorySlug);
         if (currentCategory == null) {
             categorySlug = "";
         }
+        List<Color> colors = attributeService.findColors();
+        List<Size> sizes = attributeService.findSizes();
 
         Long minPrice = parsePrice(req.getParameter("minPrice"));
         Long maxPrice = parsePrice(req.getParameter("maxPrice"));
@@ -64,14 +71,20 @@ public class ProductListServlet extends HttpServlet {
         }
 
         String colorCode = clean(req.getParameter("color"));
-        Color selectedColorObj = colorCode.isEmpty() ? null : MockData.colorByCode(colorCode);
+        Color selectedColorObj = null;
+        for (Color c : colors) {
+            if (c.getCode().equals(colorCode)) {
+                selectedColorObj = c;
+                break;
+            }
+        }
         if (selectedColorObj == null) {
             colorCode = "";
         }
 
         String sizeName = clean(req.getParameter("size")).toUpperCase(Locale.ROOT);
         String validSize = "";
-        for (Size s : MockData.sizes()) {
+        for (Size s : sizes) {
             if (s.getName().equals(sizeName)) {
                 validSize = s.getName();
                 break;
@@ -153,9 +166,9 @@ public class ProductListServlet extends HttpServlet {
 
         // 4. Gửi sang JSP
         req.setAttribute("productPage", productPage);
-        req.setAttribute("categories", MockData.categories());
-        req.setAttribute("colors", MockData.colors());
-        req.setAttribute("sizes", MockData.sizes());
+        req.setAttribute("categories", categoryService.findAll());
+        req.setAttribute("colors", colors);
+        req.setAttribute("sizes", sizes);
         req.setAttribute("currentCategory", currentCategory);
         req.setAttribute("q", q);
         req.setAttribute("sort", sort);
@@ -168,9 +181,9 @@ public class ProductListServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/shop/product-list.jsp").forward(req, resp);
     }
 
-    private static Page<Product> search(String q, String categorySlug, Long minPrice, Long maxPrice,
-                                        String colorCode, String sizeName, String sort, int page) {
-        return MockData.searchProducts(
+    private Page<Product> search(String q, String categorySlug, Long minPrice, Long maxPrice,
+                                 String colorCode, String sizeName, String sort, int page) {
+        return productService.search(
                 q.isEmpty() ? null : q,
                 categorySlug.isEmpty() ? null : categorySlug,
                 minPrice, maxPrice,
