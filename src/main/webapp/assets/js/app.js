@@ -187,6 +187,16 @@
     track.addEventListener('click', (e) => { if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; } }, true);
   });
 
+  /* ---------- Nút size trên thẻ sản phẩm: sang trang chi tiết với size đó chọn sẵn ----------
+     Thẻ đã là thẻ <a> nên nút size là span có data-size-href; chặn liên kết của thẻ và chuyển trang theo nút. */
+  document.addEventListener('click', (e) => {
+    const size = e.target.closest('[data-size-href]');
+    if (!size) return;
+    e.preventDefault();
+    e.stopPropagation();
+    window.location.href = size.dataset.sizeHref;
+  });
+
   /* ---------- Hero nhiều ảnh ---------- */
   $$('[data-hero-slider]').forEach((root) => {
     const slides = $$('.hero__slide', root);
