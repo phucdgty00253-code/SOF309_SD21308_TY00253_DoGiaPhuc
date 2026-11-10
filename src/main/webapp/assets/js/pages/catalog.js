@@ -182,6 +182,25 @@
 
     colorInputs.forEach((i) => i.addEventListener('change', refresh));
     sizeInputs.forEach((i) => i.addEventListener('change', refresh));
+
+    // Đến từ thẻ sản phẩm (bấm nút size, như a-dam): ?size=M thì chọn sẵn size đó.
+    // Màu đang chọn hết size này thì chuyển sang màu đầu tiên còn size đó.
+    const wantedSize = new URLSearchParams(window.location.search).get('size');
+    const sizeEl = wantedSize && sizeInputs.find((i) => i.dataset.name === wantedSize);
+    if (sizeEl && !soldOutProduct) {
+      const sizeId = Number(sizeEl.value);
+      const checkedColor = colorInputs.find((i) => i.checked);
+      const has = (c) => { const v = find(Number(c.value), sizeId); return !!v && v.stock > 0; };
+      if (!checkedColor || !has(checkedColor)) {
+        const other = colorInputs.find(has);
+        if (other) {
+          other.checked = true;
+          other.dispatchEvent(new Event('change', { bubbles: true })); // cập nhật nhãn màu
+        }
+      }
+      refresh();
+      if (!sizeEl.disabled) sizeEl.checked = true;
+    }
     refresh();
 
     // Phản hồi sau khi thêm vào giỏ (chế độ giao diện: app.js chặn gửi form và hiện toast)

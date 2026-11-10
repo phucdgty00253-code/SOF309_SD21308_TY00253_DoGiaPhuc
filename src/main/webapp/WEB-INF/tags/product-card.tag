@@ -9,11 +9,14 @@
   <div class="product-card__media">
     <c:if test="${product.stockTotal == 0}"><span class="product-card__badge product-card__badge--sold">Hết hàng</span></c:if>
     <t:img src="${product.imageThumb}" alt="${product.name}" eager="${eager}"/>
-    <%-- Thanh size nổi (chỉ để xem nhanh, bấm vào thẻ để chọn màu và size ở trang chi tiết) --%>
+    <%-- Nút size nổi như a-dam: mỗi size còn hàng là một nút trắng; bấm thì sang trang chi tiết với size đó chọn sẵn
+         (app.js bắt sự kiện data-size-href vì thẻ đã là liên kết, không lồng thẻ a). Bàn phím dùng liên kết của cả thẻ. --%>
     <c:if test="${not empty product.sizes}">
       <span class="product-card__sizes" aria-hidden="true">
-        <span class="product-card__sizes-label">Size</span>
-        <c:forEach items="${product.sizes}" var="sz"><span class="product-card__size"><c:out value="${sz.name}"/></span></c:forEach>
+        <c:forEach items="${product.sizes}" var="sz">
+          <c:url var="sizeHref" value="/product"><c:param name="slug" value="${product.slug}"/><c:param name="size" value="${sz.name}"/></c:url>
+          <span class="product-card__size" data-size-href="${fn:escapeXml(sizeHref)}"><c:out value="${sz.name}"/></span>
+        </c:forEach>
       </span>
     </c:if>
   </div>
