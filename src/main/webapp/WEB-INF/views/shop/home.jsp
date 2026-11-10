@@ -5,7 +5,7 @@
 <%@ taglib prefix="t" tagdir="/WEB-INF/tags" %>
 <%--
   TRANG CHỦ  (GET /home -> HomeServlet)
-  Dữ liệu: banners (đang bật, theo sort_order), newProducts, featuredProducts, bestSellers, categories, latestReviews,
+  Dữ liệu: banners (đang bật, theo sort_order), newProducts, featuredProducts, bestSellers, tileGroups, latestReviews,
            reviewAvg, reviewTotal, latestBlogs, splitImage1, splitImage2
   Mục nào không có dữ liệu thì ẩn.
 --%>
@@ -89,18 +89,19 @@
     </a>
   </section>
 
-  <%-- 6. Danh mục --%>
-  <c:if test="${not empty categories}">
-  <h2 class="h-1 section-title reveal">Danh mục</h2>
-  <section class="tile-row" data-stagger>
-    <c:forEach items="${categories}" var="c">
-      <a class="tile reveal${empty c.image ? ' tile--empty' : ''}" href="${ctx}/products?category=${fn:escapeXml(c.slug)}">
-        <div class="tile__media"><t:img src="${c.image}" alt="${c.name}"/></div>
-        <span class="tile__title"><c:out value="${c.name}"/></span>
-      </a>
-    </c:forEach>
-  </section>
-  </c:if>
+  <%-- 6. Danh mục: 2 nhóm, mỗi nhóm có tiêu đề và 3 ô vuông chữ trắng (như khối "Underwear / Socks" của a-dam).
+       tileGroups: List<Map> mỗi nhóm có title và tiles (name, image, href). Điện thoại: cuộn ngang. --%>
+  <c:forEach items="${tileGroups}" var="g">
+    <h2 class="h-1 section-title section-title--group reveal"><c:out value="${g.title}"/></h2>
+    <section class="tile-row tile-row--square" data-stagger aria-label="${fn:escapeXml(g.title)}">
+      <c:forEach items="${g.tiles}" var="tl">
+        <a class="tile reveal${empty tl.image ? ' tile--empty' : ''}" href="${fn:escapeXml(ctx.concat(tl.href))}">
+          <div class="tile__media"><t:img src="${tl.image}" alt="${tl.name}"/></div>
+          <span class="tile__title"><c:out value="${tl.name}"/></span>
+        </a>
+      </c:forEach>
+    </section>
+  </c:forEach>
 
   <%-- 7a. Nổi bật (sản phẩm Admin bật "Hiển thị nổi bật") --%>
   <c:if test="${not empty featuredProducts}">

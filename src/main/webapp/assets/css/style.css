@@ -314,6 +314,10 @@ table { border-collapse: collapse; width: 100%; }
 .tile--empty { color: var(--navy); }
 .tile--empty::after { content: ""; position: absolute; inset: 0; }
 .section-title { padding: 80px var(--gutter) 32px; }
+/* Khối danh mục 2 nhóm (a-dam "Underwear / Socks"): ô vuông, 3 ô mỗi hàng, tiêu đề nhóm sát hơn ở nhóm sau */
+.tile-row--square { --cols: 3; }
+.tile-row--square .tile { aspect-ratio: 1 / 1; }
+.section-title--group + .tile-row--square + .section-title--group { padding-top: 48px; }
 
 /* ---------- Đánh giá ---------- */
 .review-card { border: 1px solid var(--line); padding: 24px; display: flex; flex-direction: column; gap: 10px; }
@@ -643,6 +647,7 @@ dialog.dialog::backdrop { background: rgba(0, 14, 31, .45); }
   .split-card__body { padding: 0 var(--gutter) 40px; }
   .tile-row { --cols: 2; }
   .tile-row--blog { --cols: 2; }
+  .tile-row--square { --cols: 3; }
   .review-grid { grid-template-columns: minmax(0, 1fr); }
   .reviews-strip { grid-template-columns: minmax(0, 1fr); }
   .cta-band { grid-template-columns: 1fr; gap: 24px; padding: 56px var(--gutter); }
@@ -675,6 +680,10 @@ dialog.dialog::backdrop { background: rgba(0, 14, 31, .45); }
   .product-grid, .product-grid--5 { grid-template-columns: repeat(2, 1fr); gap: 8px; padding-inline: 8px; }
   .carousel__item { flex-basis: 62%; min-width: 0; }
   .tile__title { font-size: 32px; line-height: 36px; letter-spacing: -1px; }
+  /* Điện thoại: khối danh mục cuộn ngang, ô rộng 78% (như a-dam scroll-area snap-x) */
+  .tile-row--square { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding-inline: var(--gutter); }
+  .tile-row--square::-webkit-scrollbar { display: none; }
+  .tile-row--square .tile { flex: 0 0 78%; scroll-snap-align: center; }
   .tile-row--blog { --cols: 1; }
   .dark-text { padding: 48px var(--gutter); }
   .page-head { padding: 40px var(--gutter) 24px; }
