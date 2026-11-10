@@ -1,4 +1,4 @@
-<%@ tag description="Thẻ sản phẩm (ô ảnh xám, hãng, tên, giá, sao)" pageEncoding="UTF-8" body-content="empty" %>
+<%@ tag description="Thẻ sản phẩm (ô ảnh xám, hãng, tên, giá, sao). Rê chuột: ảnh phóng nhẹ, thanh size còn hàng trượt lên ở đáy ảnh." pageEncoding="UTF-8" body-content="empty" %>
 <%@ attribute name="product" required="true" type="com.fashionweb.model.Product" %>
 <%@ attribute name="eager" required="false" type="java.lang.Boolean" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
@@ -9,6 +9,13 @@
   <div class="product-card__media">
     <c:if test="${product.stockTotal == 0}"><span class="product-card__badge product-card__badge--sold">Hết hàng</span></c:if>
     <t:img src="${product.imageThumb}" alt="${product.name}" eager="${eager}"/>
+    <%-- Thanh size nổi (chỉ để xem nhanh, bấm vào thẻ để chọn màu và size ở trang chi tiết) --%>
+    <c:if test="${not empty product.sizes}">
+      <span class="product-card__sizes" aria-hidden="true">
+        <span class="product-card__sizes-label">Size</span>
+        <c:forEach items="${product.sizes}" var="sz"><span class="product-card__size"><c:out value="${sz.name}"/></span></c:forEach>
+      </span>
+    </c:if>
   </div>
   <div class="product-card__body">
     <span class="product-card__brand">Saltair</span>

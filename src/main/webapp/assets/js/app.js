@@ -65,12 +65,43 @@
     start();
   });
 
-  /* ---------- Header: sticky, thu nhỏ khi cuộn ---------- */
+  /* ---------- Header: sticky; như a-dam: cuộn xuống thì ẩn, cuộn lên thì hiện; có nền khi đã cuộn ---------- */
   const header = $('.header');
   if (header) {
-    const onScroll = () => header.classList.toggle('is-scrolled', window.scrollY > 8);
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      header.classList.toggle('is-scrolled', y > 8);
+      const menuOpen = header.matches(':focus-within') || $('.has-dropdown.is-open', header);
+      const hide = y > header.offsetHeight + 120 && y > lastY + 4 && !menuOpen;
+      const show = y < lastY - 4 || y <= header.offsetHeight;
+      if (hide) header.classList.add('is-hidden');
+      else if (show) header.classList.toggle('is-hidden', false);
+      lastY = y;
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
+  }
+
+  /* ---------- Nút: bọc chữ để có hiệu ứng chữ cuộn lên khi rê chuột (như a-dam) ----------
+     Chỉ bọc nút mà chữ nằm trực tiếp trong nút (có thể kèm .icon); nút có phần tử khác (ví dụ span đổi chữ bằng JS) thì bỏ qua. */
+  if (canHover && !reduceMotion) {
+    $$('.btn').forEach((b) => {
+      if (b.querySelector('.btn__roll')) return;
+      const others = Array.from(b.children).filter((el) => !el.classList.contains('icon'));
+      if (others.length) return;
+      Array.from(b.childNodes).forEach((n) => {
+        if (n.nodeType !== Node.TEXT_NODE || !n.textContent.trim()) return;
+        const text = n.textContent.trim();
+        const wrap = document.createElement('span');
+        wrap.className = 'btn__roll';
+        wrap.dataset.text = text;
+        const inner = document.createElement('span');
+        inner.textContent = text;
+        wrap.appendChild(inner);
+        n.replaceWith(wrap);
+      });
+    });
   }
 
   /* ---------- Menu thả xuống (cảm ứng: bấm để mở) ---------- */
@@ -161,17 +192,22 @@
     const slides = $$('.hero__slide', root);
     const dots = $$('.hero__dot', root);
     if (slides.length < 2) return;
+    const DELAY = 6500;
+    root.style.setProperty('--hero-delay', DELAY + 'ms');
     let i = 0, timer;
     const show = (n) => {
       i = (n + slides.length) % slides.length;
       slides.forEach((s, k) => s.classList.toggle('is-active', k === i));
-      dots.forEach((d, k) => d.classList.toggle('is-active', k === i));
+      dots.forEach((d, k) => {
+        d.classList.toggle('is-active', false);
+        if (k === i) { void d.offsetWidth; d.classList.toggle('is-active', true); } // chạy lại thanh thời gian
+      });
     };
-    const start = () => { if (!reduceMotion) timer = setInterval(() => show(i + 1), 6500); };
+    const start = () => { if (!reduceMotion) timer = setInterval(() => show(i + 1), DELAY); };
     const stop = () => clearInterval(timer);
     dots.forEach((d, k) => d.addEventListener('click', () => { stop(); show(k); start(); }));
     root.addEventListener('mouseenter', stop);
-    root.addEventListener('mouseleave', start);
+    root.addEventListener('mouseleave', () => { show(i); start(); });
     show(0);
     start();
   });

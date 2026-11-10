@@ -4,6 +4,7 @@ import com.fashionweb.exception.DataAccessException;
 import com.fashionweb.model.Color;
 import com.fashionweb.model.Product;
 import com.fashionweb.model.ProductVariant;
+import com.fashionweb.model.Size;
 import com.fashionweb.util.DBContext;
 import com.fashionweb.util.Page;
 
@@ -90,6 +91,7 @@ public class ProductDAO {
             pageParams.add((safePage - 1) * pageSize);
             items = queryList(con, SELECT_WITH_STATS + where + orderBy(sort) + "LIMIT ? OFFSET ?", pageParams);
             loadColors(con, items);
+            loadSizes(con, items);
         } catch (SQLException e) {
             throw new DataAccessException("Lỗi tìm sản phẩm", e);
         }
@@ -103,6 +105,7 @@ public class ProductDAO {
         try (Connection con = DBContext.getConnection()) {
             List<Product> list = queryList(con, SELECT_WITH_STATS + VISIBLE + orderBy(sort) + "LIMIT ?", List.of(n));
             loadColors(con, list);
+            loadSizes(con, list);
             return list;
         } catch (SQLException e) {
             throw new DataAccessException("Lỗi đọc danh sách sản phẩm", e);
@@ -175,6 +178,7 @@ public class ProductDAO {
         try (Connection con = DBContext.getConnection()) {
             List<Product> list = queryList(con, SELECT_WITH_STATS + VISIBLE + "AND p.is_featured = 1 " + orderBy("newest") + "LIMIT ?", List.of(n));
             loadColors(con, list);
+            loadSizes(con, list);
             return list;
         } catch (SQLException e) {
             throw new DataAccessException("Lỗi đọc sản phẩm nổi bật", e);
@@ -201,6 +205,7 @@ public class ProductDAO {
             List<Product> list = queryList(con, SELECT_WITH_STATS + VISIBLE + "AND p.category_id = ? AND p.id <> ? "
                     + orderBy("newest") + "LIMIT ?", List.of(categoryId, excludeId, n));
             loadColors(con, list);
+            loadSizes(con, list);
             return list;
         } catch (SQLException e) {
             throw new DataAccessException("Lỗi đọc sản phẩm liên quan", e);
@@ -460,6 +465,38 @@ public class ProductDAO {
             }
         }
         return list;
+    }
+
+    /** Gắn các size còn hàng (stock &gt; 0) cho từng sản phẩm, theo sort_order; thẻ sản phẩm hiện khi rê chuột. */
+    private void loadSizes(Connection con, List<Product> products) throws SQLException {
+        if (products.isEmpty()) {
+            return;
+        }
+        Map<Integer, Product> byId = new LinkedHashMap<>();
+        StringBuilder in = new StringBuilder();
+        for (Product p : products) {
+            p.setSizes(new ArrayList<>());
+            byId.put(p.getId(), p);
+            in.append(in.length() == 0 ? "?" : ", ?");
+        }
+        String sql = "SELECT v.product_id, s.id, s.name, s.sort_order FROM product_variants v JOIN sizes s ON s.id = v.size_id "
+                + "WHERE s.is_deleted = 0 AND v.stock > 0 AND v.product_id IN (" + in + ") "
+                + "GROUP BY v.product_id, s.id, s.name, s.sort_order ORDER BY v.product_id, s.sort_order, s.id";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            int i = 1;
+            for (Integer id : byId.keySet()) {
+                ps.setInt(i++, id);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Size sz = new Size();
+                    sz.setId(rs.getInt("id"));
+                    sz.setName(rs.getString("name"));
+                    sz.setSortOrder(rs.getInt("sort_order"));
+                    byId.get(rs.getInt("product_id")).getSizes().add(sz);
+                }
+            }
+        }
     }
 
     /** Gắn danh sách màu (swatch) cho từng sản phẩm bằng một câu truy vấn cho cả trang. */

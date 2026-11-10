@@ -42,41 +42,19 @@
     <div class="usp__item reveal"><t:icon name="tag"/><p class="usp__title">Ưu đãi đơn đầu tiên</p><p class="usp__text">Nhập WELCOME10 giảm 10%, tối đa 50.000đ.</p></div>
   </section>
 
-  <%-- 3. Hàng mới về --%>
+  <%-- 3. Hàng mới về (giống khối "Must-haves" của a-dam) --%>
   <c:if test="${not empty newProducts}">
-  <section class="section--lg" data-carousel>
+  <section class="section--lg carousel--floating" data-carousel>
     <div class="container section__head reveal">
       <h2 class="h-1">Hàng mới về</h2>
-      <div class="row">
-        <div class="carousel__nav hide-mobile">
-          <button type="button" class="carousel__btn" data-carousel-prev aria-label="Trước"><t:icon name="chevron-left"/></button>
-          <button type="button" class="carousel__btn" data-carousel-next aria-label="Sau"><t:icon name="chevron-right"/></button>
-        </div>
-        <a class="btn btn--outline" href="${ctx}/products?sort=newest">Xem tất cả</a>
+      <a class="btn btn--outline btn--sm hide-mobile" href="${ctx}/products?sort=newest">Xem tất cả <t:icon name="arrow-right"/></a>
+    </div>
+    <div class="carousel__viewport">
+      <button type="button" class="carousel__float carousel__float--prev" data-carousel-prev aria-label="Sản phẩm trước"><t:icon name="chevron-left"/></button>
+      <div class="carousel__track">
+        <c:forEach items="${newProducts}" var="p"><div class="carousel__item"><t:product-card product="${p}"/></div></c:forEach>
       </div>
-    </div>
-    <div class="carousel__track">
-      <c:forEach items="${newProducts}" var="p" varStatus="s"><div class="carousel__item"><t:product-card product="${p}"/></div></c:forEach>
-    </div>
-    <div class="carousel__progress"><div class="carousel__bar"></div></div>
-  </section>
-  </c:if>
-
-  <%-- 3b. Nổi bật (sản phẩm Admin bật "Hiển thị nổi bật") --%>
-  <c:if test="${not empty featuredProducts}">
-  <section class="section--lg" data-carousel>
-    <div class="container section__head reveal">
-      <h2 class="h-1">Nổi bật</h2>
-      <div class="row">
-        <div class="carousel__nav hide-mobile">
-          <button type="button" class="carousel__btn" data-carousel-prev aria-label="Trước"><t:icon name="chevron-left"/></button>
-          <button type="button" class="carousel__btn" data-carousel-next aria-label="Sau"><t:icon name="chevron-right"/></button>
-        </div>
-        <a class="btn btn--outline" href="${ctx}/products">Xem tất cả</a>
-      </div>
-    </div>
-    <div class="carousel__track">
-      <c:forEach items="${featuredProducts}" var="p"><div class="carousel__item"><t:product-card product="${p}"/></div></c:forEach>
+      <button type="button" class="carousel__float carousel__float--next" data-carousel-next aria-label="Sản phẩm sau"><t:icon name="chevron-right"/></button>
     </div>
     <div class="carousel__progress"><div class="carousel__bar"></div></div>
   </section>
@@ -124,21 +102,37 @@
   </section>
   </c:if>
 
-  <%-- 7. Bán chạy --%>
+  <%-- 7a. Nổi bật (sản phẩm Admin bật "Hiển thị nổi bật") --%>
+  <c:if test="${not empty featuredProducts}">
+  <section class="section--lg carousel--floating" data-carousel>
+    <div class="container section__head reveal">
+      <h2 class="h-1">Nổi bật</h2>
+      <a class="btn btn--outline btn--sm hide-mobile" href="${ctx}/products">Xem tất cả <t:icon name="arrow-right"/></a>
+    </div>
+    <div class="carousel__viewport">
+      <button type="button" class="carousel__float carousel__float--prev" data-carousel-prev aria-label="Sản phẩm trước"><t:icon name="chevron-left"/></button>
+      <div class="carousel__track">
+        <c:forEach items="${featuredProducts}" var="p"><div class="carousel__item"><t:product-card product="${p}"/></div></c:forEach>
+      </div>
+      <button type="button" class="carousel__float carousel__float--next" data-carousel-next aria-label="Sản phẩm sau"><t:icon name="chevron-right"/></button>
+    </div>
+    <div class="carousel__progress"><div class="carousel__bar"></div></div>
+  </section>
+  </c:if>
+
+  <%-- 7b. Bán chạy --%>
   <c:if test="${not empty bestSellers}">
-  <section class="section--lg" data-carousel>
+  <section class="section--lg carousel--floating" data-carousel>
     <div class="container section__head reveal">
       <h2 class="h-1">Bán chạy</h2>
-      <div class="row">
-        <div class="carousel__nav hide-mobile">
-          <button type="button" class="carousel__btn" data-carousel-prev aria-label="Trước"><t:icon name="chevron-left"/></button>
-          <button type="button" class="carousel__btn" data-carousel-next aria-label="Sau"><t:icon name="chevron-right"/></button>
-        </div>
-        <a class="btn btn--outline" href="${ctx}/products?sort=bestseller">Xem tất cả</a>
-      </div>
+      <a class="btn btn--outline btn--sm hide-mobile" href="${ctx}/products?sort=bestseller">Xem tất cả <t:icon name="arrow-right"/></a>
     </div>
-    <div class="carousel__track">
-      <c:forEach items="${bestSellers}" var="p"><div class="carousel__item"><t:product-card product="${p}"/></div></c:forEach>
+    <div class="carousel__viewport">
+      <button type="button" class="carousel__float carousel__float--prev" data-carousel-prev aria-label="Sản phẩm trước"><t:icon name="chevron-left"/></button>
+      <div class="carousel__track">
+        <c:forEach items="${bestSellers}" var="p"><div class="carousel__item"><t:product-card product="${p}"/></div></c:forEach>
+      </div>
+      <button type="button" class="carousel__float carousel__float--next" data-carousel-next aria-label="Sản phẩm sau"><t:icon name="chevron-right"/></button>
     </div>
     <div class="carousel__progress"><div class="carousel__bar"></div></div>
   </section>
@@ -167,43 +161,39 @@
   </section>
   </c:if>
 
-  <%-- 9. Khám phá thêm (Blog) --%>
+  <%-- 9. Khám phá thêm (Blog), bố cục như khối "More to explore" của a-dam --%>
   <c:if test="${not empty latestBlogs}">
-  <section class="section--lg">
-    <div class="container section__head reveal">
-      <div>
-        <span class="t-label">Khám phá thêm</span>
-        <h2 class="h-1 mt-8">Không chỉ là đồ basic</h2>
-      </div>
-      <a class="btn btn--outline" href="${ctx}/blog">Đọc blog</a>
+  <section class="explore section--lg">
+    <div class="container explore__head reveal">
+      <span class="t-label">Khám phá thêm</span>
+      <h2 class="h-1">Không chỉ là đồ basic</h2>
+      <p>Cách phối đồ cho ngày nắng, chọn size cho vừa vặn, giữ áo thun luôn như mới và câu chuyện phía sau Saltair. Đọc thêm trên blog của chúng tôi.</p>
     </div>
     <div class="tile-row tile-row--blog" data-stagger>
       <c:forEach items="${latestBlogs}" var="b">
-        <a class="reveal" href="${ctx}/blog/detail?slug=${fn:escapeXml(b.slug)}">
+        <a class="explore__card reveal" href="${ctx}/blog/detail?slug=${fn:escapeXml(b.slug)}">
           <div class="media media--4x5"><t:img src="${b.coverImage}" alt="${b.title}"/></div>
-          <div class="stack--sm" style="padding:16px 4px 0;display:grid;gap:6px">
-            <span class="t-small t-muted"><fmt:formatDate value="${b.createdAt}" pattern="dd/MM/yyyy"/></span>
-            <span class="h-2"><c:out value="${b.title}"/></span>
-            <span class="t-muted"><c:out value="${b.summary}"/></span>
-          </div>
+          <span class="explore__title link-reverse"><c:out value="${b.title}"/></span>
         </a>
       </c:forEach>
     </div>
   </section>
   </c:if>
 
-  <%-- 10. Ưu đãi --%>
-  <section class="cta-band reveal">
+  <%-- 10. Ưu đãi: hộp lùi vào, chữ lớn, ô email kèm nút mũi tên (như khối "Good mail" của a-dam).
+       Ô email chuyển sang trang Đăng ký và điền sẵn email (register.jsp đọc param.email). --%>
+  <section class="newsletter reveal">
     <div>
-      <p class="cta-band__label">Tham gia cùng Saltair</p>
-      <h2 class="h-display mt-16">Mã ưu đãi.<br>Đơn đầu tiên.</h2>
+      <p class="newsletter__label">Tham gia cùng Saltair</p>
+      <h2 class="h-display newsletter__title">Mã ưu đãi.<br>Đơn đầu tiên.</h2>
     </div>
-    <div class="stack">
-      <p>Đăng ký tài khoản và nhập mã <strong>WELCOME10</strong> ở bước thanh toán để giảm 10% (tối đa 50.000đ) cho đơn từ 200.000đ. Dùng mã còn được miễn phí ship.</p>
-      <div class="cta-band__form">
-        <a class="btn btn--primary" href="${ctx}/register">Đăng ký ngay</a>
-        <button type="button" class="btn btn--outline" data-copy="WELCOME10"><t:icon name="copy"/> Sao chép mã</button>
-      </div>
+    <div class="newsletter__side">
+      <form class="newsletter__form" action="${ctx}/register" method="get">
+        <label class="sr-only" for="newsletter-email">Email</label>
+        <input class="newsletter__input" id="newsletter-email" type="email" name="email" placeholder="Email của bạn" autocomplete="email" required>
+        <button class="newsletter__submit" type="submit" aria-label="Đăng ký"><t:icon name="arrow-right" size="md"/></button>
+      </form>
+      <p class="t-small t-muted">Tạo tài khoản rồi nhập <button type="button" class="link-reverse newsletter__code" data-copy="WELCOME10">WELCOME10</button> khi thanh toán: giảm 10% (tối đa 50.000đ) cho đơn từ 200.000đ và miễn phí ship.</p>
     </div>
   </section>
 </t:layout>
