@@ -75,7 +75,9 @@ File CSS dùng chung: `webapp/assets/css/style.css` (khách hàng) và `admin.cs
 - Mọi Servlet lấy dữ liệu thật qua Service -> DAO -> MySQL. Package `mock` và `DevPreviewFilter` đã xóa (#27).
 - `demoMode` trong `web.xml` = `false`. Đặt `true` chỉ khi dựng giao diện mới: form còn gắn `data-demo` sẽ chỉ hiện thông báo.
 - Trang nào cần dữ liệu gì: đọc comment đầu mỗi file JSP (route, thuộc tính request) và Javadoc của Servlet tương ứng (các `action` của form).
-- Ảnh do Admin tải lên (danh mục, sản phẩm, banner, ảnh bìa blog) lưu trong thư mục `assets/images/...` của bản đang chạy; deploy lại sạch thì mất ảnh đã tải lên.
+- Ảnh do Admin tải lên (danh mục, sản phẩm, banner, ảnh bìa blog) đi qua `util/ImageUploadUtil`:
+  - Có `src/main/resources/cloudinary.properties` (sao chép từ `cloudinary.properties.example`, điền `cloud_name`, `api_key`, `api_secret`; file này không commit): ảnh lên Cloudinary, DB lưu URL https đã kèm thu nhỏ và nén, ảnh thumb sản phẩm 600px.
+  - Không có: ảnh lưu vào `assets/images/...` của bản đang chạy, deploy lại sạch thì mất ảnh đã tải lên.
 - Cách chạy: Java 17, Tomcat 11 (Jakarta). Build bằng Maven (`mvn package`), deploy `target/saltair.war`, mở `/saltair/home`.
 
 ## Phân quyền (Roles)

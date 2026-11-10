@@ -9,8 +9,8 @@ import com.fashionweb.model.Size;
 import com.fashionweb.service.shop.AttributeService;
 import com.fashionweb.service.shop.CategoryService;
 import com.fashionweb.service.shop.ProductService;
+import com.fashionweb.util.ImageUploadUtil;
 import com.fashionweb.util.Page;
-import com.fashionweb.util.SlugUtil;
 import com.fashionweb.util.WebUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -20,14 +20,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -44,8 +39,8 @@ import java.util.Set;
  * POST /admin/products (multipart):
  * <ul>
  *   <li>action=save: id rỗng = thêm, có id = sửa. Trường: name, slug (trống = tự sinh), categoryId, price, description,
- *       featured, imageFile (JPG/PNG tối đa 2MB, không chọn thì giữ ảnh cũ; lưu vào assets/images/products của ứng dụng
- *       đang chạy), colorIds, stock_{colorId}_{sizeId}. Sản phẩm và biến thể lưu trong một transaction.
+ *       featured, imageFile (JPG/PNG/WebP tối đa 2MB, không chọn thì giữ ảnh cũ; lưu qua ImageUploadUtil: Cloudinary
+ *       khi có cloudinary.properties, ngược lại assets/images/products; ảnh thumb 600px cho lưới sản phẩm), colorIds, stock_{colorId}_{sizeId}. Sản phẩm và biến thể lưu trong một transaction.
  *       Lỗi thì hiện lại form kèm errors; thành công thì flash rồi redirect /admin/products.</li>
  *   <li>action=delete (id): xóa mềm, sản phẩm vào Thùng rác; đơn cũ giữ nguyên.</li>
  * </ul>
@@ -55,7 +50,6 @@ import java.util.Set;
 @MultipartConfig(maxFileSize = 5 * 1024 * 1024, maxRequestSize = 6 * 1024 * 1024)
 public class AdminProductServlet extends HttpServlet {
 
-    private static final long MAX_IMAGE_BYTES = 2L * 1024 * 1024;
     private static final String IMAGE_DIR = "assets/images/products";
 
     private final ProductService productService = new ProductService();
@@ -169,23 +163,16 @@ public class AdminProductServlet extends HttpServlet {
         }
 
         Part image = req.getPart("imageFile");
-        Path stored = null;
+        String stored = null;
         try {
             if (badStock) {
                 throw new ValidationException("stock", "Tồn kho phải là số nguyên từ 0 đến 99.999.");
             }
-            if (image != null && image.getSize() > 0) {
-                String ext = imageExtension(image.getContentType());
-                if (ext == null) {
-                    throw new ValidationException("imageFile", "Chỉ nhận ảnh JPG hoặc PNG.");
-                }
-                if (image.getSize() > MAX_IMAGE_BYTES) {
-                    throw new ValidationException("imageFile", "Ảnh tối đa 2MB.");
-                }
-                String fileSlug = SlugUtil.toSlug(p.getSlug() == null || p.getSlug().isBlank() ? p.getName() : p.getSlug());
-                stored = storeImage(image, fileSlug.isEmpty() ? "product" : fileSlug, ext);
-                p.setImage(IMAGE_DIR + "/" + stored.getFileName());
-                p.setImageThumb(p.getImage());
+            if (ImageUploadUtil.hasFile(image)) {
+                String base = p.getSlug() == null || p.getSlug().isBlank() ? p.getName() : p.getSlug();
+                stored = ImageUploadUtil.store(getServletContext(), image, "imageFile", IMAGE_DIR, base);
+                p.setImage(stored);
+                p.setImageThumb(ImageUploadUtil.thumbOf(stored));
             }
             if (id == 0) {
                 productService.create(p, variants);
@@ -195,40 +182,11 @@ public class AdminProductServlet extends HttpServlet {
             WebUtil.flash(req, (id == 0 ? "Đã thêm sản phẩm \"" : "Đã lưu sản phẩm \"") + p.getName() + "\".", "success");
             redirect(req, resp);
         } catch (ValidationException e) {
-            if (stored != null) {
-                Files.deleteIfExists(stored);
-            }
+            ImageUploadUtil.deleteQuietly(getServletContext(), stored);
             req.setAttribute("errors", e.getErrors().isEmpty() ? Map.of("name", e.getMessage()) : e.getErrors());
             AdminProductFormServlet.prepareForm(req, existing, stockMap, colorIds);
             req.getRequestDispatcher(AdminProductFormServlet.VIEW).forward(req, resp);
         }
-    }
-
-    /** Ghi ảnh vào thư mục assets của ứng dụng đang chạy, trả đường dẫn file đã ghi. */
-    private Path storeImage(Part image, String slug, String ext) throws IOException {
-        String realDir = getServletContext().getRealPath("/" + IMAGE_DIR);
-        if (realDir == null) {
-            throw new IOException("Không xác định được thư mục lưu ảnh");
-        }
-        File dir = new File(realDir);
-        if (!dir.exists() && !dir.mkdirs()) {
-            throw new IOException("Không tạo được thư mục lưu ảnh: " + realDir);
-        }
-        Path target = Path.of(realDir, slug + "-" + System.currentTimeMillis() + ext);
-        try (InputStream in = image.getInputStream()) {
-            Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
-        }
-        return target;
-    }
-
-    private static String imageExtension(String contentType) {
-        if ("image/jpeg".equals(contentType)) {
-            return ".jpg";
-        }
-        if ("image/png".equals(contentType)) {
-            return ".png";
-        }
-        return null;
     }
 
     private static long parseLong(String s) {

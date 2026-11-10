@@ -18,6 +18,9 @@ src/main/resources/db.properties
 # Cấu hình gửi mail (chứa mật khẩu ứng dụng, tuyệt đối không commit)
 src/main/resources/mail.properties
 
+# Khóa Cloudinary để lưu ảnh lên mây (chứa api_secret, tuyệt đối không commit)
+src/main/resources/cloudinary.properties
+
 # Ảnh upload lúc chạy thử
 uploads/
 
