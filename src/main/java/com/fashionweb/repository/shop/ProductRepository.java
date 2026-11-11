@@ -251,6 +251,26 @@ public class ProductRepository {
     }
 
     /**
+     * Ảnh của khung ảnh trang chi tiết (bảng product_images), theo sort_order. Rỗng nếu sản phẩm chưa có ảnh phụ.
+     */
+    public List<String> findImages(int productId) {
+        List<String> list = new ArrayList<>();
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement(
+                     "SELECT image FROM product_images WHERE product_id = ? ORDER BY sort_order, id")) {
+            ps.setInt(1, productId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(rs.getString("image"));
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi đọc ảnh sản phẩm", e);
+        }
+        return list;
+    }
+
+    /**
      * SELECT biến thể kèm tên màu, mã màu hex, tên size.
      */
     public List<ProductVariant> findVariants(int productId) {

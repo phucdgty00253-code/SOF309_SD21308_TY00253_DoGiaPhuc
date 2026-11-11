@@ -7,7 +7,7 @@
   CHI TIẾT SẢN PHẨM  (GET /product?slug=... -> ProductDetailServlet; POST /product action=review | deleteReview cũng do Servlet này xử lý)
   Thuộc tính request:
     product          Product            sản phẩm kèm colors, sizes, variants (không tìm thấy thì Servlet trả 404)
-    galleryImages    List<String>       danh sách ảnh (hiện 0 hoặc 1 phần tử; nhiều ảnh thì tự thêm ô)
+    galleryImages    List<String>       ảnh khung ảnh, tối đa 4: 2 ảnh sản phẩm rồi 2 ảnh người mẫu mặc (chưa có ảnh phụ thì 0 hoặc 1 phần tử)
     reviews          List<Review>       đánh giá hiển thị, mới nhất trước
     relatedProducts  List<Product>      sản phẩm cùng danh mục
     canReview        boolean            true khi được viết đánh giá (khách có đơn Hoàn thành chứa sản phẩm)
@@ -25,7 +25,7 @@
 --%>
 <c:set var="soldOut" value="${product.stockTotal == 0}"/>
 <t:layout title="${product.name}" nav="shop" bodyClass="pdp-page" description="${product.description}">
-  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/catalog.css"></jsp:attribute>
+  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/catalog.css?v=2"></jsp:attribute>
   <jsp:attribute name="scripts"><script src="${ctx}/assets/js/pages/catalog.js" defer></script></jsp:attribute>
   <jsp:body>
 
@@ -37,7 +37,7 @@
 
     <div class="pdp">
       <%-- Cột trái: ảnh --%>
-      <div class="pdp__gallery cat-enter">
+      <div class="pdp__gallery${fn:length(galleryImages) > 1 ? ' pdp__gallery--grid' : ''} cat-enter">
         <c:choose>
           <c:when test="${not empty galleryImages}">
             <c:forEach items="${galleryImages}" var="img" varStatus="s">
