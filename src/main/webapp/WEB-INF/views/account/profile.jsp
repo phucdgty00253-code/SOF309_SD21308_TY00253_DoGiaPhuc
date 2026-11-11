@@ -15,7 +15,7 @@
     POST /profile  action=updateProfile   fields=fullName,phone (email chỉ đọc)
 --%>
 <t:layout title="Tài khoản của tôi" description="Xem và cập nhật thông tin cá nhân, đổi mật khẩu tài khoản Saltair.">
-  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/account.css"></jsp:attribute>
+  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/account.css?v=3"></jsp:attribute>
   <jsp:attribute name="scripts"><script src="${ctx}/assets/js/pages/account.js" defer></script></jsp:attribute>
   <jsp:body>
     <c:set var="accountActive" value="profile"/>

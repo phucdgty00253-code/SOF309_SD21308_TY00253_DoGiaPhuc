@@ -13,7 +13,7 @@
     POST /wishlist  action=remove  fields=productId
 --%>
 <t:layout title="Yêu thích" description="Những sản phẩm Saltair bạn đã lưu lại.">
-  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/account.css"></jsp:attribute>
+  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/account.css?v=3"></jsp:attribute>
   <jsp:attribute name="scripts"><script src="${ctx}/assets/js/pages/account.js" defer></script></jsp:attribute>
   <jsp:body>
     <c:set var="accountActive" value="wishlist"/>

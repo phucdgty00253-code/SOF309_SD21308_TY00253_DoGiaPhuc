@@ -15,7 +15,7 @@
     POST /addresses  action=delete      fields=id
 --%>
 <t:layout title="Sổ địa chỉ" description="Quản lý địa chỉ giao hàng của bạn tại Saltair.">
-  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/account.css"></jsp:attribute>
+  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/account.css?v=3"></jsp:attribute>
   <jsp:attribute name="scripts"><script src="${ctx}/assets/js/pages/account.js" defer></script></jsp:attribute>
   <jsp:body>
     <c:set var="accountActive" value="addresses"/>
