@@ -89,6 +89,36 @@
 .swatch.is-soldout span { opacity: .45; }
 .swatch.is-soldout span::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: linear-gradient(to top right, transparent calc(50% - 1px), var(--navy-50) 50%, transparent calc(50% + 1px)); }
 .pdp-info-note { display: grid; gap: 6px; }
+/* Cột thông tin (#90, đo trên trang tham chiếu ở 1440x900): các khối cách nhau 28px, tên và giá cách 13px */
+.pdp__head { gap: 13px; }
+.pdp__rating { margin-top: 15px; font-size: 15px; line-height: 21px; }
+.pdp__rating a { color: var(--navy); }
+.pdp__label { margin-bottom: 8px; font-size: 15px; line-height: 21px; color: var(--navy); }
+.pdp__label b { font-weight: 400; margin-left: 4px; }
+.pdp__buy .btn { height: 53px; font-size: 16px; }
+.pdp__meta { display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 15px; line-height: 21px; }
+.pdp__wish { flex: none; display: inline-flex; align-items: center; gap: 6px; color: var(--navy); transition: opacity .2s ease-in-out; }
+.pdp__wish:hover { opacity: .6; }
+.pdp__wish span { text-decoration: underline; text-underline-offset: 3px; }
+.pdp__wish.is-on .icon { fill: currentColor; }
+.pdp__wish.is-pop .icon { animation: pop .35s ease; }
+.size-guide { padding: 14px 0; }
+.size-guide > summary { list-style: none; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 15px; line-height: 21px; color: #000; }
+.size-guide > summary::-webkit-details-marker { display: none; }
+.size-guide__link { text-decoration: underline; text-underline-offset: 3px; transition: opacity .2s ease-in-out; }
+.size-guide > summary:hover .size-guide__link { opacity: .6; }
+.size-guide__content { margin-top: 14px; animation: acc-in .3s ease-out both; }
+.size-guide__note { margin-bottom: 10px; font-size: 13px; color: var(--navy-60); }
+.size-guide__table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.size-guide__table th, .size-guide__table td { padding: 8px 10px; border: 1px solid var(--line); text-align: center; }
+.size-guide__table th { background: var(--bg); font-weight: 700; }
+.size-guide__table td:first-child, .size-guide__table th:first-child { text-align: left; font-weight: 700; white-space: nowrap; }
+.pdp__accordions .accordion > summary { gap: 12px; height: 60px; font-size: 15px; line-height: 21px; font-weight: 400; }
+.pdp__accordions .accordion__arrow { flex: none; transition: transform .3s ease-in-out; }
+.pdp__accordions .accordion[open] .accordion__arrow { transform: rotate(180deg); }
+.pdp__accordions .accordion__body { padding: 0 0 20px; color: var(--navy); animation: acc-in .3s ease-out both; }
+@keyframes acc-in { from { opacity: 0; } to { opacity: 1; } }
+
 .accordion__body p + p { margin-top: 10px; }
 
 /* Thanh thêm vào giỏ cố định (chỉ điện thoại) */
