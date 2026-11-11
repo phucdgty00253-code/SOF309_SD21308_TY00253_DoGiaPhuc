@@ -75,7 +75,7 @@
     </a>
 
     <div class="header__actions">
-      <button type="button" class="icon-btn" data-search-open aria-label="Tìm kiếm"><t:icon name="search" size="md"/></button>
+      <button type="button" class="icon-btn" data-search-open aria-label="Tìm kiếm" aria-expanded="false" aria-controls="search-drawer"><t:icon name="search" size="md"/></button>
       <c:choose>
         <c:when test="${empty sessionScope.currentUser}">
           <a class="icon-btn" href="${ctx}/login" aria-label="Đăng nhập"><t:icon name="user" size="md"/></a>
@@ -104,19 +104,17 @@
 
 <%-- Lớp phủ, tìm kiếm, menu điện thoại --%>
 <div class="overlay" id="overlay"></div>
-<div class="search-panel" id="search-panel" role="dialog" aria-label="Tìm kiếm">
-  <form class="search-panel__row" action="${ctx}/products" method="get">
-    <input class="input" type="search" name="q" placeholder="Tìm sản phẩm..." aria-label="Từ khóa" autocomplete="off">
-    <button class="btn btn--primary" type="submit">Tìm</button>
-    <button class="icon-btn" type="button" data-panel-close aria-label="Đóng"><t:icon name="x" size="md"/></button>
+<aside class="search-drawer" id="search-drawer" role="dialog" aria-modal="true" aria-label="Tìm kiếm" aria-hidden="true" data-quick-url="${ctx}/search/quick">
+  <form class="search-drawer__head" action="${ctx}/products" method="get" role="search">
+    <t:icon name="search" size="md"/>
+    <input class="search-drawer__input" type="search" name="q" placeholder="Tìm sản phẩm..." aria-label="Từ khóa tìm kiếm" autocomplete="off" data-search-input>
+    <button class="icon-btn search-drawer__close" type="button" data-panel-close aria-label="Đóng tìm kiếm"><t:icon name="x" size="md"/></button>
+    <span class="search-drawer__progress" data-search-progress aria-hidden="true"></span>
   </form>
-  <div class="search-panel__hints">
-    <span class="t-small t-muted">Gợi ý:</span>
-    <c:forEach items="${applicationScope.navCategories}" var="c">
-      <a class="chip" href="${ctx}/products?category=${fn:escapeXml(c.slug)}"><c:out value="${c.name}"/></a>
-    </c:forEach>
+  <div class="search-drawer__body">
+    <div class="search-drawer__results" data-search-results aria-live="polite"></div>
   </div>
-</div>
+</aside>
 <aside class="drawer drawer--left" id="mobile-nav" aria-label="Menu">
   <div class="drawer__head">
     <img src="${ctx}/assets/brand/saltair-logo.png" alt="Saltair" height="36" style="height:36px;width:auto">

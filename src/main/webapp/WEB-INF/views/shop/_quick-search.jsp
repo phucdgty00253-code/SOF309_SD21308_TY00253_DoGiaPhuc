@@ -39,7 +39,7 @@
         <button type="button" class="quick-search__tab${defaultTab == 'categories' ? ' is-active' : ''}" role="tab" aria-selected="${defaultTab == 'categories'}" data-search-tab="categories">Danh mục (${fn:length(categories)})</button>
       </div>
 
-      <div class="quick-search__panel" role="tabpanel" data-search-panel="products"${defaultTab == 'products' ? '' : ' hidden'}>
+      <div class="quick-search__panel" role="tabpanel" data-quick-panel="products"${defaultTab == 'products' ? '' : ' hidden'}>
         <c:choose>
           <c:when test="${not empty productPage.items}">
             <div class="quick-search__grid">
@@ -49,7 +49,7 @@
             </div>
             <c:url var="allHref" value="/products"><c:param name="q" value="${q}"/></c:url>
             <div class="quick-search__more">
-              <a class="btn btn--ghost btn--full" href="${fn:escapeXml(allHref)}">Xem tất cả ${productPage.totalItems} kết quả</a>
+              <a class="btn btn--ghost btn--block" href="${fn:escapeXml(allHref)}">Xem tất cả ${productPage.totalItems} kết quả</a>
             </div>
           </c:when>
           <c:otherwise>
@@ -61,7 +61,7 @@
         </c:choose>
       </div>
 
-      <div class="quick-search__panel" role="tabpanel" data-search-panel="categories"${defaultTab == 'categories' ? '' : ' hidden'}>
+      <div class="quick-search__panel" role="tabpanel" data-quick-panel="categories"${defaultTab == 'categories' ? '' : ' hidden'}>
         <c:choose>
           <c:when test="${not empty categories}">
             <ul class="quick-search__categories">

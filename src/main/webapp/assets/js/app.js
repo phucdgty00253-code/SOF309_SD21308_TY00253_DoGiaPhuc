@@ -85,8 +85,9 @@
 
   /* ---------- Nút: bọc chữ để có hiệu ứng chữ cuộn lên khi rê chuột (như a-dam) ----------
      Chỉ bọc nút mà chữ nằm trực tiếp trong nút (có thể kèm .icon); nút có phần tử khác (ví dụ span đổi chữ bằng JS) thì bỏ qua. */
-  if (canHover && !reduceMotion) {
-    $$('.btn').forEach((b) => {
+  function wrapRollButtons(root = document) {
+    if (!canHover || reduceMotion) return;
+    $$('.btn', root).forEach((b) => {
       if (b.querySelector('.btn__roll')) return;
       const others = Array.from(b.children).filter((el) => !el.classList.contains('icon'));
       if (others.length) return;
@@ -103,6 +104,7 @@
       });
     });
   }
+  wrapRollButtons();
 
   /* ---------- Menu thả xuống (cảm ứng: bấm để mở) ---------- */
   $$('.has-dropdown').forEach((item) => {
@@ -119,29 +121,216 @@
     if (!e.target.closest('.has-dropdown')) $$('.has-dropdown.is-open').forEach((o) => o.classList.remove('is-open'));
   });
 
-  /* ---------- Lớp phủ, tìm kiếm, ngăn kéo ---------- */
+  /* ---------- Lớp phủ, khung tìm kiếm trượt từ phải, ngăn kéo ---------- */
   const overlay = $('#overlay');
+  const searchDrawer = $('#search-drawer');
+  const searchOpenBtns = $$('[data-search-open]');
   const lockScroll = (lock) => { document.body.style.overflow = lock ? 'hidden' : ''; };
+  let lastTrigger = null;
+  let willChangeTimer = null;
+
+  function markDrawerAnimating(el) {
+    if (!el) return;
+    el.classList.add('is-animating');
+    clearTimeout(willChangeTimer);
+    const cleanup = () => {
+      el.classList.remove('is-animating');
+      el.removeEventListener('transitionend', cleanup);
+    };
+    el.addEventListener('transitionend', cleanup);
+    willChangeTimer = setTimeout(cleanup, 600);
+  }
 
   function closeAllPanels() {
-    $$('.drawer.is-open, .search-panel.is-open').forEach((p) => p.classList.remove('is-open'));
+    const wasSearchOpen = searchDrawer?.classList.contains('is-open');
+    const anyOpen = wasSearchOpen || $$('.drawer.is-open').length > 0;
+    if (!anyOpen) return;
+
+    if (wasSearchOpen) {
+      markDrawerAnimating(searchDrawer);
+      searchDrawer.classList.remove('is-open');
+      searchDrawer.setAttribute('aria-hidden', 'true');
+      searchOpenBtns.forEach((b) => b.setAttribute('aria-expanded', 'false'));
+    }
+    $$('.drawer.is-open').forEach((p) => p.classList.remove('is-open'));
     overlay?.classList.remove('is-open');
     lockScroll(false);
+
+    if (wasSearchOpen) {
+      const target = lastTrigger || searchOpenBtns[0];
+      target?.focus();
+      lastTrigger = null;
+    }
   }
-  function openPanel(panel, focusSelector) {
+
+  function openPanel(panel, focusSelector, triggerEl) {
     if (!panel) return;
     closeAllPanels();
+    lastTrigger = triggerEl || null;
+    if (panel === searchDrawer) {
+      markDrawerAnimating(searchDrawer);
+      searchDrawer.setAttribute('aria-hidden', 'false');
+      searchOpenBtns.forEach((b) => b.setAttribute('aria-expanded', 'true'));
+    }
     panel.classList.add('is-open');
     overlay?.classList.add('is-open');
     lockScroll(true);
-    if (focusSelector) setTimeout(() => $(focusSelector, panel)?.focus(), 150);
+    if (focusSelector) {
+      setTimeout(() => $(focusSelector, panel)?.focus(), reduceMotion ? 20 : 120);
+    }
   }
 
-  $$('[data-search-open]').forEach((b) => b.addEventListener('click', () => openPanel($('#search-panel'), 'input')));
-  $$('[data-drawer-open]').forEach((b) => b.addEventListener('click', () => openPanel(document.getElementById(b.dataset.drawerOpen))));
+  searchOpenBtns.forEach((b) => b.addEventListener('click', () => openPanel(searchDrawer, '[data-search-input]', b)));
+  $$('[data-drawer-open]').forEach((b) => b.addEventListener('click', () => openPanel(document.getElementById(b.dataset.drawerOpen), null, b)));
   $$('[data-panel-close]').forEach((b) => b.addEventListener('click', closeAllPanels));
   overlay?.addEventListener('click', closeAllPanels);
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAllPanels(); });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeAllPanels();
+      return;
+    }
+    // Focus trap trong khung tìm kiếm khi đang mở
+    if (e.key === 'Tab' && searchDrawer?.classList.contains('is-open')) {
+      const focusables = $$(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        searchDrawer
+      ).filter((el) => !el.closest('[hidden]') && el.offsetParent !== null);
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && (document.activeElement === first || !searchDrawer.contains(document.activeElement))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && (document.activeElement === last || !searchDrawer.contains(document.activeElement))) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  });
+
+  /* ---------- Tìm kiếm nhanh khi đang gõ (debounce 250ms + AbortController) ---------- */
+  if (searchDrawer) {
+    const searchInput = $('[data-search-input]', searchDrawer);
+    const resultsBox = $('[data-search-results]', searchDrawer);
+    const progressBar = $('[data-search-progress]', searchDrawer);
+    const quickUrl = searchDrawer.dataset.quickUrl || '/search/quick';
+    let debounceTimer = null;
+    let activeController = null;
+
+    const animateProgress = () => {
+      if (!progressBar || typeof progressBar.animate !== 'function') return;
+      progressBar.getAnimations().forEach((a) => a.cancel());
+      if (reduceMotion) {
+        progressBar.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150, easing: 'ease-in-out' });
+      } else {
+        progressBar.animate(
+          [
+            { transform: 'scaleX(0)', opacity: 1 },
+            { transform: 'scaleX(1)', opacity: 1, offset: 0.85 },
+            { transform: 'scaleX(1)', opacity: 0 }
+          ],
+          { duration: 250, easing: 'linear', fill: 'forwards' }
+        );
+      }
+    };
+
+    const animateResultsOut = () => {
+      if (!resultsBox || !resultsBox.children.length || typeof resultsBox.animate !== 'function') {
+        return Promise.resolve();
+      }
+      resultsBox.getAnimations().forEach((a) => a.cancel());
+      if (reduceMotion) {
+        return resultsBox.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150, easing: 'ease-in-out', fill: 'forwards' })
+          .finished.catch(() => {});
+      }
+      return resultsBox.animate(
+        [
+          { opacity: 1, transform: 'translateY(0)' },
+          { opacity: 0, transform: 'translateY(-10px)' }
+        ],
+        { duration: 250, easing: 'cubic-bezier(0.55, 0.055, 0.675, 0.19)', fill: 'forwards' }
+      ).finished.catch(() => {});
+    };
+
+    const animateResultsIn = () => {
+      if (!resultsBox || typeof resultsBox.animate !== 'function') return;
+      resultsBox.getAnimations().forEach((a) => a.cancel());
+      if (reduceMotion) {
+        resultsBox.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: 'ease-in-out', fill: 'forwards' });
+      } else {
+        resultsBox.animate(
+          [
+            { opacity: 0, transform: 'translateY(10px)' },
+            { opacity: 1, transform: 'translateY(0)' }
+          ],
+          { duration: 400, easing: 'ease', fill: 'forwards' }
+        );
+      }
+    };
+
+    const fetchQuickResults = async (q) => {
+      if (activeController) activeController.abort();
+      const controller = new AbortController();
+      activeController = controller;
+
+      animateProgress();
+      const outPromise = animateResultsOut();
+
+      try {
+        const res = await fetch(quickUrl + '?q=' + encodeURIComponent(q), {
+          signal: controller.signal,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const html = await res.text();
+        await outPromise;
+        if (controller.signal.aborted || !resultsBox) return;
+        resultsBox.innerHTML = html;
+        wrapRollButtons(resultsBox);
+        animateResultsIn();
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
+      }
+    };
+
+    searchInput?.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      if (activeController) {
+        activeController.abort();
+        activeController = null;
+      }
+      const q = searchInput.value.trim();
+      if (q.length < 2) {
+        if (resultsBox && resultsBox.innerHTML.trim() !== '') {
+          const currentController = new AbortController();
+          activeController = currentController;
+          animateResultsOut().then(() => {
+            if (!currentController.signal.aborted && searchInput.value.trim().length < 2) {
+              resultsBox.innerHTML = '';
+              resultsBox.getAnimations?.().forEach((a) => a.cancel());
+            }
+          });
+        }
+        return;
+      }
+      debounceTimer = setTimeout(() => fetchQuickResults(q), 250);
+    });
+
+    // Chuyển tab "Sản phẩm" | "Danh mục" trong kết quả tìm kiếm nhanh
+    searchDrawer.addEventListener('click', (e) => {
+      const tab = e.target.closest('[data-search-tab]');
+      if (!tab) return;
+      const targetPanel = tab.dataset.searchTab;
+      $$('[data-search-tab]', searchDrawer).forEach((t) => {
+        const active = t === tab;
+        t.classList.toggle('is-active', active);
+        t.setAttribute('aria-selected', String(active));
+      });
+      $$('[data-quick-panel]', searchDrawer).forEach((p) => {
+        p.hidden = p.dataset.quickPanel !== targetPanel;
+      });
+    });
+  }
 
   /* ---------- Băng chuyền ---------- */
   $$('[data-carousel]').forEach((root) => {
