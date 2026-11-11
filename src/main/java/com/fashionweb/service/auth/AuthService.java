@@ -1,10 +1,10 @@
 package com.fashionweb.service.auth;
 
 import com.fashionweb.constant.Role;
-import com.fashionweb.dao.auth.LoginCodeDAO;
-import com.fashionweb.dao.auth.LoginCodeDAO.RecentStats;
-import com.fashionweb.dao.auth.LoginCodeDAO.VerifyResult;
-import com.fashionweb.dao.auth.UserDAO;
+import com.fashionweb.repository.auth.LoginCodeRepository;
+import com.fashionweb.repository.auth.LoginCodeRepository.RecentStats;
+import com.fashionweb.repository.auth.LoginCodeRepository.VerifyResult;
+import com.fashionweb.repository.auth.UserRepository;
 import com.fashionweb.exception.ValidationException;
 import com.fashionweb.model.User;
 import com.fashionweb.util.MailUtil;
@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  *
  * <p>Khách: email chưa có tài khoản thì tự tạo CUSTOMER khi nhập đúng mã. Admin: luồng riêng /admin/login,
  * hạn mã ngắn hơn, không bao giờ tự tạo tài khoản và không cho biết email có phải admin hay không.
- * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL.
+ * <p>Luồng gọi: Servlet -> Service -> Repository -> MySQL.
  */
 public class AuthService {
 
@@ -59,8 +59,8 @@ public class AuthService {
         }
     }
 
-    private final UserDAO userDAO = new UserDAO();
-    private final LoginCodeDAO codeDAO = new LoginCodeDAO();
+    private final UserRepository userRepository = new UserRepository();
+    private final LoginCodeRepository codeRepository = new LoginCodeRepository();
 
     /** Chuẩn hóa email (trim, chữ thường). Sai định dạng thì ném ValidationException field "email". */
     public String normalizeEmail(String email) {
@@ -83,7 +83,7 @@ public class AuthService {
      * @return mã gốc chỉ khi auth.devCode bật (để hiện trên trang), ngược lại null
      */
     public String requestCode(String email, Flow flow) {
-        User u = userDAO.findByEmail(email);
+        User u = userRepository.findByEmail(email);
         if (flow == Flow.ADMIN) {
             if (u == null || u.getRole() != Role.ADMIN || !u.isActive()) {
                 return null;
@@ -97,14 +97,14 @@ public class AuthService {
             }
         }
 
-        RecentStats stats = codeDAO.recentStats(email);
+        RecentStats stats = codeRepository.recentStats(email);
         if (stats.countLastHour() >= flow.maxPerHour
                 || (stats.secondsSinceLast() >= 0 && stats.secondsSinceLast() < RESEND_SECONDS)) {
             throw new ValidationException("email", "Bạn thử lại sau ít phút.");
         }
 
         String code = String.format("%06d", RANDOM.nextInt(1_000_000));
-        codeDAO.replace(email, hash(email, code), flow.minutes);
+        codeRepository.replace(email, hash(email, code), flow.minutes);
 
         if (MailUtil.isDevCode()) {
             LOG.info("[DEV] Mã đăng nhập cho " + email + ": " + code);
@@ -121,7 +121,7 @@ public class AuthService {
 
     /** Số giây còn phải chờ trước khi được gửi lại mã (0 nếu gửi được ngay). */
     public int resendWaitSeconds(String email) {
-        int since = codeDAO.recentStats(email).secondsSinceLast();
+        int since = codeRepository.recentStats(email).secondsSinceLast();
         return since < 0 ? 0 : Math.max(0, RESEND_SECONDS - since);
     }
 
@@ -133,7 +133,7 @@ public class AuthService {
         if (!CODE.matcher(c).matches()) {
             throw new ValidationException("code", "Mã gồm 6 chữ số.");
         }
-        VerifyResult r = codeDAO.verify(email, hash(email, c), flow.maxAttempts);
+        VerifyResult r = codeRepository.verify(email, hash(email, c), flow.maxAttempts);
         switch (r.status()) {
             case WRONG -> throw new ValidationException("code", "Mã không đúng, bạn còn " + r.remaining() + " lần thử.");
             case LOCKED -> throw new ValidationException("code", "Bạn đã nhập sai quá số lần cho phép. Vui lòng gửi lại mã mới.");
@@ -143,7 +143,7 @@ public class AuthService {
             }
         }
 
-        User u = userDAO.findByEmail(email);
+        User u = userRepository.findByEmail(email);
         if (flow == Flow.ADMIN) {
             if (u == null || u.getRole() != Role.ADMIN || !u.isActive()) {
                 throw new ValidationException("code", "Mã đã hết hạn hoặc không còn hiệu lực. Vui lòng gửi lại mã mới.");
@@ -157,8 +157,8 @@ public class AuthService {
             u.setFullName(name.length() > 100 ? name.substring(0, 100) : name);
             u.setRole(Role.CUSTOMER);
             u.setActive(true);
-            u.setId(userDAO.insert(u));
-            return userDAO.findById(u.getId());
+            u.setId(userRepository.insert(u));
+            return userRepository.findById(u.getId());
         }
         if (u.getRole() == Role.ADMIN) {
             throw new ValidationException(ERROR_ADMIN, "Tài khoản quản trị vui lòng đăng nhập tại trang quản trị.");

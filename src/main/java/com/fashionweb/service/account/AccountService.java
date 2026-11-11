@@ -1,8 +1,8 @@
 package com.fashionweb.service.account;
 
-import com.fashionweb.dao.account.AddressDAO;
-import com.fashionweb.dao.account.WishlistDAO;
-import com.fashionweb.dao.auth.UserDAO;
+import com.fashionweb.repository.account.AddressRepository;
+import com.fashionweb.repository.account.WishlistRepository;
+import com.fashionweb.repository.auth.UserRepository;
 import com.fashionweb.exception.ValidationException;
 import com.fashionweb.model.Address;
 import com.fashionweb.model.Product;
@@ -16,15 +16,15 @@ import java.util.regex.Pattern;
 /**
  * Hồ sơ, đổi mật khẩu, sổ địa chỉ, yêu thích của khách hàng.
  *
- * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL. Mọi thao tác đều kiểm tra dữ liệu thuộc đúng user đang đăng nhập.
+ * <p>Luồng gọi: Servlet -> Service -> Repository -> MySQL. Mọi thao tác đều kiểm tra dữ liệu thuộc đúng user đang đăng nhập.
  */
 public class AccountService {
 
     private static final Pattern PHONE = Pattern.compile("0[0-9]{9}");
 
-    private final UserDAO userDAO = new UserDAO();
-    private final AddressDAO addressDAO = new AddressDAO();
-    private final WishlistDAO wishlistDAO = new WishlistDAO();
+    private final UserRepository userRepository = new UserRepository();
+    private final AddressRepository addressRepository = new AddressRepository();
+    private final WishlistRepository wishlistRepository = new WishlistRepository();
 
     // ----- Hồ sơ (#4) -----
 
@@ -44,21 +44,21 @@ public class AccountService {
         if (!errors.isEmpty()) {
             throw new ValidationException(errors);
         }
-        userDAO.updateProfile(userId, name, ph);
+        userRepository.updateProfile(userId, name, ph);
     }
 
     /**
      * Thông tin user mới nhất từ DB.
      */
     public User findUser(int userId) {
-        return userDAO.findById(userId);
+        return userRepository.findById(userId);
     }
 
     /**
      * Số đơn hàng của user.
      */
     public int countOrders(int userId) {
-        return userDAO.countOrders(userId);
+        return userRepository.countOrders(userId);
     }
 
     // ----- Sổ địa chỉ (#5) -----
@@ -67,14 +67,14 @@ public class AccountService {
      * Sổ địa chỉ, địa chỉ mặc định đứng đầu.
      */
     public List<Address> findAddresses(int userId) {
-        return addressDAO.findByUser(userId);
+        return addressRepository.findByUser(userId);
     }
 
     /**
      * Một địa chỉ của user. null nếu không có hoặc thuộc người khác.
      */
     public Address findAddress(int userId, int addressId) {
-        Address a = addressDAO.findById(addressId);
+        Address a = addressRepository.findById(addressId);
         return a != null && a.getUserId() == userId ? a : null;
     }
 
@@ -114,20 +114,20 @@ public class AccountService {
             throw new ValidationException(errors);
         }
 
-        List<Address> existing = addressDAO.findByUser(a.getUserId());
+        List<Address> existing = addressRepository.findByUser(a.getUserId());
         boolean onlyThis = existing.isEmpty() || (existing.size() == 1 && existing.get(0).getId() == a.getId());
         if (onlyThis) {
             a.setDefaultAddress(true); // địa chỉ duy nhất luôn là mặc định
         }
         if (a.isDefaultAddress()) {
-            addressDAO.clearDefault(a.getUserId());
+            addressRepository.clearDefault(a.getUserId());
         } else if (a.getId() > 0 && findAddress(a.getUserId(), a.getId()).isDefaultAddress()) {
             a.setDefaultAddress(true); // không cho bỏ mặc định bằng cách bỏ tick; hãy đặt địa chỉ khác làm mặc định
         }
         if (a.getId() > 0) {
-            addressDAO.update(a);
+            addressRepository.update(a);
         } else {
-            a.setId(addressDAO.insert(a));
+            a.setId(addressRepository.insert(a));
         }
     }
 
@@ -139,11 +139,11 @@ public class AccountService {
         if (a == null) {
             throw new ValidationException(null, "Địa chỉ không tồn tại hoặc không thuộc tài khoản của bạn.");
         }
-        addressDAO.delete(addressId);
+        addressRepository.delete(addressId);
         if (a.isDefaultAddress()) {
-            List<Address> rest = addressDAO.findByUser(userId);
+            List<Address> rest = addressRepository.findByUser(userId);
             if (!rest.isEmpty()) {
-                addressDAO.setDefault(rest.get(0).getId());
+                addressRepository.setDefault(rest.get(0).getId());
             }
         }
     }
@@ -155,8 +155,8 @@ public class AccountService {
         if (findAddress(userId, addressId) == null) {
             throw new ValidationException(null, "Địa chỉ không tồn tại hoặc không thuộc tài khoản của bạn.");
         }
-        addressDAO.clearDefault(userId);
-        addressDAO.setDefault(addressId);
+        addressRepository.clearDefault(userId);
+        addressRepository.setDefault(addressId);
     }
 
     // ----- Yêu thích (#5) -----
@@ -165,35 +165,35 @@ public class AccountService {
      * Sản phẩm yêu thích (chưa xóa mềm), mới thêm trước.
      */
     public List<Product> findWishlist(int userId) {
-        return wishlistDAO.findProductsByUser(userId);
+        return wishlistRepository.findProductsByUser(userId);
     }
 
     /**
      * Đã yêu thích chưa.
      */
     public boolean isInWishlist(int userId, int productId) {
-        return wishlistDAO.exists(userId, productId);
+        return wishlistRepository.exists(userId, productId);
     }
 
     /**
      * Thêm vào yêu thích (bỏ qua nếu đã có).
      */
     public void addWishlist(int userId, int productId) {
-        wishlistDAO.insert(userId, productId);
+        wishlistRepository.insert(userId, productId);
     }
 
     /**
      * Bỏ khỏi yêu thích.
      */
     public void removeWishlist(int userId, int productId) {
-        wishlistDAO.delete(userId, productId);
+        wishlistRepository.delete(userId, productId);
     }
 
     /**
      * Số sản phẩm yêu thích.
      */
     public int countWishlist(int userId) {
-        return wishlistDAO.count(userId);
+        return wishlistRepository.count(userId);
     }
 
     private static String trim(String s) {

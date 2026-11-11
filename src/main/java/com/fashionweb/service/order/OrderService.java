@@ -4,11 +4,11 @@ import com.fashionweb.constant.CancelledBy;
 import com.fashionweb.constant.OrderStatus;
 import com.fashionweb.constant.PaymentMethod;
 import com.fashionweb.constant.PaymentStatus;
-import com.fashionweb.dao.cart.CartDAO;
-import com.fashionweb.dao.cart.VoucherDAO;
-import com.fashionweb.dao.order.OrderDAO;
-import com.fashionweb.dao.order.OrderDetailDAO;
-import com.fashionweb.dao.shop.ProductDAO;
+import com.fashionweb.repository.cart.CartRepository;
+import com.fashionweb.repository.cart.VoucherRepository;
+import com.fashionweb.repository.order.OrderRepository;
+import com.fashionweb.repository.order.OrderDetailRepository;
+import com.fashionweb.repository.shop.ProductRepository;
 import com.fashionweb.exception.DataAccessException;
 import com.fashionweb.exception.ValidationException;
 import com.fashionweb.exception.VoucherException;
@@ -36,18 +36,18 @@ import java.util.Set;
 /**
  * Đặt hàng, đơn của khách và quản lý đơn của Admin.
  *
- * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL. Thao tác nhiều bảng (đặt hàng, hủy đơn) chạy trong một
- * transaction do Service mở; DAO nhận Connection của transaction đó.
+ * <p>Luồng gọi: Servlet -> Service -> Repository -> MySQL. Thao tác nhiều bảng (đặt hàng, hủy đơn) chạy trong một
+ * transaction do Service mở; Repository nhận Connection của transaction đó.
  * <p>Đã làm: placeOrder (#14); findByUser, findPageByUser, countByStatusForUser, findByCodeAndUser, countByUser (#16);
  * cancelByCustomer, confirmReceived, cancelByAdmin (#17, hàm hủy dùng chung). search, countByStatus, findByCode, latest (#19, #26). updateStatus, cancelByAdmin (#20).
  */
 public class OrderService {
 
-    private final OrderDAO orderDAO = new OrderDAO();
-    private final OrderDetailDAO orderDetailDAO = new OrderDetailDAO();
-    private final ProductDAO productDAO = new ProductDAO();
-    private final VoucherDAO voucherDAO = new VoucherDAO();
-    private final CartDAO cartDAO = new CartDAO();
+    private final OrderRepository orderRepository = new OrderRepository();
+    private final OrderDetailRepository orderDetailRepository = new OrderDetailRepository();
+    private final ProductRepository productRepository = new ProductRepository();
+    private final VoucherRepository voucherRepository = new VoucherRepository();
+    private final CartRepository cartRepository = new CartRepository();
     private final CartService cartService = new CartService();
     private final VoucherService voucherService = new VoucherService();
 
@@ -115,20 +115,20 @@ public class OrderService {
             con.setAutoCommit(false);
             try {
                 String prefix = "SA" + new SimpleDateFormat("yyyyMMdd").format(new Date());
-                o.setOrderCode(orderDAO.nextOrderCode(con, prefix));
-                o.setId(orderDAO.insert(con, o));
-                orderDetailDAO.insertAll(con, o.getId(), details);
+                o.setOrderCode(orderRepository.nextOrderCode(con, prefix));
+                o.setId(orderRepository.insert(con, o));
+                orderDetailRepository.insertAll(con, o.getId(), details);
                 for (OrderDetail d : details) {
                     // Kiểm tra lại tồn kho ngay trong transaction (chống hai người cùng mua món cuối)
-                    if (!productDAO.decreaseStock(con, d.getVariantId(), d.getQuantity())) {
+                    if (!productRepository.decreaseStock(con, d.getVariantId(), d.getQuantity())) {
                         throw new ValidationException(null, "\"" + d.getProductName() + "\" (" + d.getColorName() + ", "
                                 + d.getSizeName() + ") vừa hết hàng. Hãy chỉnh lại giỏ hàng.");
                     }
                 }
-                if (voucher != null && !voucherDAO.increaseUsed(con, voucher.getId())) {
+                if (voucher != null && !voucherRepository.increaseUsed(con, voucher.getId())) {
                     throw new ValidationException("voucherCode", "Mã giảm giá " + voucher.getCode() + " vừa hết lượt sử dụng.");
                 }
-                cartDAO.deleteAllItemsOfUser(con, userId);
+                cartRepository.deleteAllItemsOfUser(con, userId);
                 con.commit();
             } catch (SQLException | RuntimeException e) {
                 con.rollback();
@@ -145,8 +145,8 @@ public class OrderService {
      * Đơn của khách, lọc trạng thái (null = tất cả), mới nhất trước, kèm items.
      */
     public List<Order> findByUser(int userId, OrderStatus status) {
-        List<Order> orders = orderDAO.findByUser(userId, status);
-        orders.forEach(o -> o.setItems(orderDetailDAO.findByOrder(o.getId())));
+        List<Order> orders = orderRepository.findByUser(userId, status);
+        orders.forEach(o -> o.setItems(orderDetailRepository.findByOrder(o.getId())));
         return orders;
     }
 
@@ -154,8 +154,8 @@ public class OrderService {
      * Một trang đơn của khách (trang "Đơn hàng của tôi"), mỗi đơn kèm items.
      */
     public Page<Order> findPageByUser(int userId, OrderStatus status, int page, int pageSize) {
-        Page<Order> p = orderDAO.findPageByUser(userId, status, page, pageSize);
-        p.getItems().forEach(o -> o.setItems(orderDetailDAO.findByOrder(o.getId())));
+        Page<Order> p = orderRepository.findPageByUser(userId, status, page, pageSize);
+        p.getItems().forEach(o -> o.setItems(orderDetailRepository.findByOrder(o.getId())));
         return p;
     }
 
@@ -163,7 +163,7 @@ public class OrderService {
      * Số đơn theo từng trạng thái và khóa ALL.
      */
     public Map<String, Integer> countByStatusForUser(int userId) {
-        return orderDAO.countByStatus(userId, null, null);
+        return orderRepository.countByStatus(userId, null, null);
     }
 
     /**
@@ -173,11 +173,11 @@ public class OrderService {
         if (code == null || code.isBlank()) {
             return null;
         }
-        Order o = orderDAO.findByCode(code.trim());
+        Order o = orderRepository.findByCode(code.trim());
         if (o == null || o.getUserId() != userId) {
             return null;
         }
-        o.setItems(orderDetailDAO.findByOrder(o.getId()));
+        o.setItems(orderDetailRepository.findByOrder(o.getId()));
         return o;
     }
 
@@ -200,7 +200,7 @@ public class OrderService {
                 if (o.getStatus() != OrderStatus.SHIPPING) {
                     throw new ValidationException(null, "Chỉ xác nhận đã nhận hàng khi đơn đang giao.");
                 }
-                orderDAO.updateStatus(con, o.getId(), OrderStatus.COMPLETED, PaymentStatus.PAID, new Date());
+                orderRepository.updateStatus(con, o.getId(), OrderStatus.COMPLETED, PaymentStatus.PAID, new Date());
                 con.commit();
             } catch (SQLException | RuntimeException e) {
                 con.rollback();
@@ -231,13 +231,13 @@ public class OrderService {
                 if (!allowed.contains(o.getStatus())) {
                     throw new ValidationException(null, notAllowedMessage);
                 }
-                for (OrderDetail d : orderDetailDAO.findByOrder(o.getId())) {
-                    productDAO.increaseStock(con, d.getVariantId(), d.getQuantity());
+                for (OrderDetail d : orderDetailRepository.findByOrder(o.getId())) {
+                    productRepository.increaseStock(con, d.getVariantId(), d.getQuantity());
                 }
                 if (o.getVoucherId() != null) {
-                    voucherDAO.decreaseUsed(con, o.getVoucherId());
+                    voucherRepository.decreaseUsed(con, o.getVoucherId());
                 }
-                orderDAO.cancel(con, o.getId(), r, by);
+                orderRepository.cancel(con, o.getId(), r, by);
                 con.commit();
             } catch (SQLException | RuntimeException e) {
                 con.rollback();
@@ -252,7 +252,7 @@ public class OrderService {
      * Khóa đơn theo mã trong transaction. Không có, hoặc không phải đơn của ownerId (khi khác null), thì báo không tìm thấy.
      */
     private Order lockOrder(Connection con, String code, Integer ownerId) throws SQLException {
-        Order o = code == null || code.isBlank() ? null : orderDAO.lockByCode(con, code.trim());
+        Order o = code == null || code.isBlank() ? null : orderRepository.lockByCode(con, code.trim());
         if (o == null || (ownerId != null && o.getUserId() != ownerId)) {
             throw new ValidationException(null, "Không tìm thấy đơn hàng.");
         }
@@ -263,16 +263,16 @@ public class OrderService {
      * Tổng số đơn của khách (trang hồ sơ).
      */
     public int countByUser(int userId) {
-        return orderDAO.countByUser(userId);
+        return orderRepository.countByUser(userId);
     }
 
     /**
      * Admin: tìm theo mã đơn hoặc tên khách, lọc trạng thái và thanh toán.
      */
     public Page<Order> search(String q, OrderStatus status, PaymentStatus payment, int page, int pageSize) {
-        Page<Order> p = orderDAO.findPage(q, status, payment, page, pageSize);
+        Page<Order> p = orderRepository.findPage(q, status, payment, page, pageSize);
         if (p.getPage() > p.getTotalPages() && p.getTotalPages() > 0) {
-            p = orderDAO.findPage(q, status, payment, p.getTotalPages(), pageSize);
+            p = orderRepository.findPage(q, status, payment, p.getTotalPages(), pageSize);
         }
         return p;
     }
@@ -281,7 +281,7 @@ public class OrderService {
      * Admin: số đơn theo trạng thái cho các chip lọc.
      */
     public Map<String, Integer> countByStatus(String q, PaymentStatus payment) {
-        return orderDAO.countByStatus(null, q, payment);
+        return orderRepository.countByStatus(null, q, payment);
     }
 
     /**
@@ -291,9 +291,9 @@ public class OrderService {
         if (code == null || code.isBlank()) {
             return null;
         }
-        Order o = orderDAO.findByCode(code.trim());
+        Order o = orderRepository.findByCode(code.trim());
         if (o != null) {
-            o.setItems(orderDetailDAO.findByOrder(o.getId()));
+            o.setItems(orderDetailRepository.findByOrder(o.getId()));
         }
         return o;
     }
@@ -317,7 +317,7 @@ public class OrderService {
                             : "Chỉ chuyển được theo thứ tự Chờ xác nhận → Đang giao → Hoàn thành.");
                 }
                 boolean done = next == OrderStatus.COMPLETED;
-                orderDAO.updateStatus(con, o.getId(), next, done ? PaymentStatus.PAID : o.getPaymentStatus(), done ? new Date() : null);
+                orderRepository.updateStatus(con, o.getId(), next, done ? PaymentStatus.PAID : o.getPaymentStatus(), done ? new Date() : null);
                 con.commit();
             } catch (SQLException | RuntimeException e) {
                 con.rollback();
@@ -340,6 +340,6 @@ public class OrderService {
      * n đơn mới nhất (dashboard).
      */
     public List<Order> latest(int n) {
-        return orderDAO.findLatest(n);
+        return orderRepository.findLatest(n);
     }
 }

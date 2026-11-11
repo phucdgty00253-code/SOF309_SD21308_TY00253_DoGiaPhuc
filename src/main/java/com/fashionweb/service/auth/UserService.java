@@ -1,7 +1,7 @@
 package com.fashionweb.service.auth;
 
 import com.fashionweb.constant.Role;
-import com.fashionweb.dao.auth.UserDAO;
+import com.fashionweb.repository.auth.UserRepository;
 import com.fashionweb.exception.ValidationException;
 import com.fashionweb.model.User;
 import com.fashionweb.util.Page;
@@ -9,24 +9,24 @@ import com.fashionweb.util.Page;
 /**
  * Quản lý người dùng cho Admin.
  *
- * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL.
+ * <p>Luồng gọi: Servlet -> Service -> Repository -> MySQL.
  */
 public class UserService {
 
-    private final UserDAO userDAO = new UserDAO();
+    private final UserRepository userRepository = new UserRepository();
 
     /**
      * Tìm theo email hoặc tên, lọc role, mới tạo trước. Mỗi User có orderCount (view-only), không kèm mật khẩu băm.
      */
     public Page<User> search(String q, Role role, int page, int pageSize) {
-        return userDAO.findPage(q, role, page, pageSize);
+        return userRepository.findPage(q, role, page, pageSize);
     }
 
     /**
      * Người dùng theo id, null nếu không có.
      */
     public User findById(int id) {
-        return userDAO.findById(id);
+        return userRepository.findById(id);
     }
 
     /**
@@ -37,7 +37,7 @@ public class UserService {
             throw new ValidationException(null, "Bạn không thể tự khóa tài khoản của chính mình.");
         }
         User u = require(userId);
-        userDAO.setActive(userId, !u.isActive());
+        userRepository.setActive(userId, !u.isActive());
         return !u.isActive();
     }
 
@@ -52,11 +52,11 @@ public class UserService {
             throw new ValidationException("role", "Bạn không thể tự đổi quyền của chính mình.");
         }
         require(userId);
-        userDAO.setRole(userId, role);
+        userRepository.setRole(userId, role);
     }
 
     private User require(int userId) {
-        User u = userDAO.findById(userId);
+        User u = userRepository.findById(userId);
         if (u == null) {
             throw new ValidationException(null, "Người dùng không tồn tại.");
         }

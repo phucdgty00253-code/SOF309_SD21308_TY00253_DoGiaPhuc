@@ -1,4 +1,4 @@
-package com.fashionweb.dao.shop;
+package com.fashionweb.repository.shop;
 
 import com.fashionweb.exception.DataAccessException;
 import com.fashionweb.model.Color;
@@ -25,7 +25,7 @@ import java.util.Map;
  * Câu lệnh có điều kiện động được ghép từ các đoạn SQL cố định trong code; giá trị người dùng nhập
  * luôn truyền qua dấu ? (không nối chuỗi từ tham số URL).
  */
-public class ProductDAO {
+public class ProductRepository {
 
     /** Cột sản phẩm kèm số liệu hiển thị: điểm và số đánh giá (bỏ đánh giá ẩn), số đã bán (đơn chưa hủy), tổng tồn. */
     private static final String SELECT_WITH_STATS = "SELECT p.*, c.name AS category_name, c.slug AS category_slug, "

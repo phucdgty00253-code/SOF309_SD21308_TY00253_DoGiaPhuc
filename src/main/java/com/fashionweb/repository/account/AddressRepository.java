@@ -1,4 +1,4 @@
-package com.fashionweb.dao.account;
+package com.fashionweb.repository.account;
 
 import com.fashionweb.exception.DataAccessException;
 import com.fashionweb.model.Address;
@@ -17,7 +17,7 @@ import java.util.List;
  *
  * <p>Chỉ chứa SQL (PreparedStatement) và chuyển ResultSet thành entity. Kết nối lấy từ DBContext.getConnection().
  */
-public class AddressDAO {
+public class AddressRepository {
 
     /**
      * SELECT ORDER BY is_default DESC, id.

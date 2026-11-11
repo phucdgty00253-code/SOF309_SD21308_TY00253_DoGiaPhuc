@@ -1,4 +1,4 @@
-package com.fashionweb.dao.shop;
+package com.fashionweb.repository.shop;
 
 import com.fashionweb.exception.DataAccessException;
 import com.fashionweb.model.Category;
@@ -17,7 +17,7 @@ import java.util.List;
  *
  * <p>Chỉ chứa SQL (PreparedStatement) và chuyển ResultSet thành entity. Kết nối lấy từ DBContext.getConnection().
  */
-public class CategoryDAO {
+public class CategoryRepository {
 
     /** Số sản phẩm đang bán (chưa xóa mềm) của danh mục. */
     private static final String PRODUCT_COUNT =

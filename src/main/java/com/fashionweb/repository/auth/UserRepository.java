@@ -1,4 +1,4 @@
-package com.fashionweb.dao.auth;
+package com.fashionweb.repository.auth;
 
 import com.fashionweb.constant.Role;
 import com.fashionweb.exception.DataAccessException;
@@ -20,7 +20,7 @@ import java.util.List;
  * <p>Đã làm: tài khoản (#1, #4, #74), Admin người dùng (#6).
  * <p>Chỉ chứa SQL (PreparedStatement) và chuyển ResultSet thành entity. Kết nối lấy từ DBContext.getConnection().
  */
-public class UserDAO {
+public class UserRepository {
 
     /**
      * SELECT theo email.

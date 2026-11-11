@@ -1,4 +1,4 @@
-package com.fashionweb.dao.order;
+package com.fashionweb.repository.order;
 
 import com.fashionweb.constant.CancelledBy;
 import com.fashionweb.constant.OrderStatus;
@@ -27,7 +27,7 @@ import java.util.Map;
  * <p>Chỉ chứa SQL (PreparedStatement) và chuyển ResultSet thành entity. Các hàm nhận Connection chạy trong
  * transaction do OrderService mở (đặt hàng, hủy đơn).
  */
-public class OrderDAO {
+public class OrderRepository {
 
     private static final String SELECT = "SELECT o.*, u.full_name AS customer_name, u.email AS customer_email, "
             + "(SELECT COALESCE(SUM(d.quantity), 0) FROM order_details d WHERE d.order_id = o.id) AS item_count "

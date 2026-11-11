@@ -1,6 +1,6 @@
 package com.fashionweb.service.shop;
 
-import com.fashionweb.dao.shop.BlogDAO;
+import com.fashionweb.repository.shop.BlogRepository;
 import com.fashionweb.exception.ValidationException;
 import com.fashionweb.model.Blog;
 import com.fashionweb.util.Page;
@@ -13,24 +13,24 @@ import java.util.Map;
  * Bài viết blog.
  *
  * <p>Khách chỉ thấy bài đang hiển thị (is_published = 1); Admin thấy tất cả.
- * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL.
+ * <p>Luồng gọi: Servlet -> Service -> Repository -> MySQL.
  */
 public class BlogService {
 
-    private final BlogDAO blogDAO = new BlogDAO();
+    private final BlogRepository blogRepository = new BlogRepository();
 
     /**
      * Bài đã xuất bản, mới nhất trước.
      */
     public List<Blog> listPublished() {
-        return blogDAO.findPublished(0);
+        return blogRepository.findPublished(0);
     }
 
     /**
      * n bài đã xuất bản mới nhất (trang chủ).
      */
     public List<Blog> latestPublished(int n) {
-        return blogDAO.findPublished(n);
+        return blogRepository.findPublished(n);
     }
 
     /**
@@ -40,7 +40,7 @@ public class BlogService {
         if (slug == null || slug.isBlank()) {
             return null;
         }
-        Blog b = blogDAO.findBySlug(slug.trim());
+        Blog b = blogRepository.findBySlug(slug.trim());
         return b != null && b.isPublished() ? b : null;
     }
 
@@ -48,21 +48,21 @@ public class BlogService {
      * n bài đã xuất bản khác bài excludeId, mới nhất trước (khối gợi ý).
      */
     public List<Blog> listOthers(int excludeId, int n) {
-        return blogDAO.findPublishedExcept(excludeId, n);
+        return blogRepository.findPublishedExcept(excludeId, n);
     }
 
     /**
      * Danh sách cho Admin (cả bài đang ẩn), tìm theo tiêu đề, mới nhất trước.
      */
     public Page<Blog> search(String q, int page, int pageSize) {
-        return blogDAO.findPage(q, page, pageSize);
+        return blogRepository.findPage(q, page, pageSize);
     }
 
     /**
      * Bài theo id (kể cả chưa xuất bản). null nếu không có.
      */
     public Blog findById(int id) {
-        return blogDAO.findById(id);
+        return blogRepository.findById(id);
     }
 
     /**
@@ -80,7 +80,7 @@ public class BlogService {
         b.setSlug(slug);
         if (!SlugUtil.isValid(slug) || slug.length() > 220) {
             errors.put("slug", "Slug chỉ gồm chữ thường không dấu, số và dấu gạch ngang.");
-        } else if (blogDAO.existsSlug(slug, b.getId())) {
+        } else if (blogRepository.existsSlug(slug, b.getId())) {
             errors.put("slug", "Slug đã được dùng cho bài viết khác.");
         }
         String summary = b.getSummary() == null ? "" : b.getSummary().trim();
@@ -93,16 +93,16 @@ public class BlogService {
         if (content.length() < 20) {
             errors.put("content", "Nội dung cần ít nhất 20 ký tự.");
         }
-        if (b.getId() > 0 && blogDAO.findById(b.getId()) == null) {
+        if (b.getId() > 0 && blogRepository.findById(b.getId()) == null) {
             errors.put("title", "Bài viết không tồn tại.");
         }
         if (!errors.isEmpty()) {
             throw new ValidationException(errors);
         }
         if (b.getId() == 0) {
-            b.setId(blogDAO.insert(b));
+            b.setId(blogRepository.insert(b));
         } else {
-            blogDAO.update(b);
+            blogRepository.update(b);
         }
     }
 
@@ -110,11 +110,11 @@ public class BlogService {
      * Đảo trạng thái đăng/ẩn. Trả trạng thái mới.
      */
     public boolean togglePublish(int id) {
-        Blog b = blogDAO.findById(id);
+        Blog b = blogRepository.findById(id);
         if (b == null) {
             throw new ValidationException(null, "Bài viết không tồn tại.");
         }
-        blogDAO.setPublished(id, !b.isPublished());
+        blogRepository.setPublished(id, !b.isPublished());
         return !b.isPublished();
     }
 
@@ -122,9 +122,9 @@ public class BlogService {
      * Xóa bài.
      */
     public void delete(int id) {
-        if (blogDAO.findById(id) == null) {
+        if (blogRepository.findById(id) == null) {
             throw new ValidationException(null, "Bài viết không tồn tại.");
         }
-        blogDAO.delete(id);
+        blogRepository.delete(id);
     }
 }

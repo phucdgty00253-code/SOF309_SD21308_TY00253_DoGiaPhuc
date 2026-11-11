@@ -1,4 +1,4 @@
-package com.fashionweb.dao.shop;
+package com.fashionweb.repository.shop;
 
 import com.fashionweb.exception.DataAccessException;
 import com.fashionweb.model.Banner;
@@ -17,7 +17,7 @@ import java.util.List;
  *
  * <p>Chỉ chứa SQL (PreparedStatement) và chuyển ResultSet thành entity. Kết nối lấy từ DBContext.getConnection().
  */
-public class BannerDAO {
+public class BannerRepository {
 
     /**
      * SELECT ORDER BY sort_order. onlyActive = true chỉ lấy banner đang bật (trang chủ).

@@ -2,8 +2,8 @@ package com.fashionweb.service.cart;
 
 import com.fashionweb.constant.AppConstant;
 import com.fashionweb.constant.DiscountType;
-import com.fashionweb.dao.cart.VoucherDAO;
-import com.fashionweb.dao.shop.CategoryDAO;
+import com.fashionweb.repository.cart.VoucherRepository;
+import com.fashionweb.repository.shop.CategoryRepository;
 import com.fashionweb.exception.ValidationException;
 import com.fashionweb.model.Category;
 import com.fashionweb.exception.VoucherException;
@@ -22,14 +22,14 @@ import java.util.regex.Pattern;
 /**
  * Mã giảm giá: kiểm tra, tính giảm giá, quản lý của Admin.
  *
- * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL. Quy tắc theo mục "Quy tắc voucher và phí ship" trong project.md.
+ * <p>Luồng gọi: Servlet -> Service -> Repository -> MySQL. Quy tắc theo mục "Quy tắc voucher và phí ship" trong project.md.
  */
 public class VoucherService {
 
     private static final Pattern CODE = Pattern.compile("[A-Z0-9]{4,20}");
 
-    private final VoucherDAO voucherDAO = new VoucherDAO();
-    private final CategoryDAO categoryDAO = new CategoryDAO();
+    private final VoucherRepository voucherRepository = new VoucherRepository();
+    private final CategoryRepository categoryRepository = new CategoryRepository();
 
     /**
      * Kiểm tra theo đúng thứ tự 7 bước trong project.md. Hợp lệ trả Voucher; sai ném VoucherException
@@ -38,7 +38,7 @@ public class VoucherService {
     public Voucher validate(String code, int userId, Cart cart) throws VoucherException {
         String c = code == null ? "" : code.trim().toUpperCase(Locale.ROOT);
         // 1. Không tồn tại
-        Voucher v = c.isEmpty() ? null : voucherDAO.findByCode(c);
+        Voucher v = c.isEmpty() ? null : voucherRepository.findByCode(c);
         if (v == null) {
             throw new VoucherException("Mã giảm giá không tồn tại.");
         }
@@ -59,7 +59,7 @@ public class VoucherService {
             throw new VoucherException("Mã giảm giá " + v.getCode() + " đã hết lượt sử dụng.");
         }
         // 5. Khách đã dùng đủ số lần cho phép (số đơn chưa hủy có mã này)
-        if (voucherDAO.countUsedByUser(v.getId(), userId) >= v.getPerUserLimit()) {
+        if (voucherRepository.countUsedByUser(v.getId(), userId) >= v.getPerUserLimit()) {
             throw new VoucherException("Bạn đã dùng mã " + v.getCode() + " đủ số lần cho phép.");
         }
         // 6. Chưa đạt đơn tối thiểu (tính trên tổng tiền hàng cả đơn)
@@ -119,7 +119,7 @@ public class VoucherService {
     public List<Voucher> findActive() {
         Date now = new Date();
         List<Voucher> list = new ArrayList<>();
-        for (Voucher v : voucherDAO.findAll()) {
+        for (Voucher v : voucherRepository.findAll()) {
             if (v.isActive() && !now.before(v.getStartDate()) && !now.after(v.getEndDate()) && v.getUsedCount() < v.getUsageLimit()) {
                 list.add(v);
             }
@@ -133,7 +133,7 @@ public class VoucherService {
      */
     public List<Voucher> findAll() {
         Date now = new Date();
-        List<Voucher> list = voucherDAO.findAll();
+        List<Voucher> list = voucherRepository.findAll();
         for (Voucher v : list) {
             if (v.getCategoryName() == null) {
                 v.setCategoryName("Tất cả danh mục");
@@ -162,7 +162,7 @@ public class VoucherService {
      */
     public void save(Voucher v) {
         Map<String, String> errors = new LinkedHashMap<>();
-        Voucher existing = v.getId() > 0 ? voucherDAO.findById(v.getId()) : null;
+        Voucher existing = v.getId() > 0 ? voucherRepository.findById(v.getId()) : null;
         if (v.getId() > 0 && existing == null) {
             throw new ValidationException(null, "Voucher không tồn tại.");
         }
@@ -173,7 +173,7 @@ public class VoucherService {
             v.setCode(code);
             if (!CODE.matcher(code).matches()) {
                 errors.put("code", "Mã gồm 4 đến 20 chữ in hoa không dấu hoặc số.");
-            } else if (voucherDAO.findByCode(code) != null) {
+            } else if (voucherRepository.findByCode(code) != null) {
                 errors.put("code", "Mã đã tồn tại.");
             }
         }
@@ -203,7 +203,7 @@ public class VoucherService {
             errors.put("minOrderAmount", "Đơn tối thiểu không được âm.");
         }
         if (v.getCategoryId() != null) {
-            Category c = categoryDAO.findById(v.getCategoryId());
+            Category c = categoryRepository.findById(v.getCategoryId());
             if (c == null || c.isDeleted()) {
                 errors.put("categoryId", "Danh mục không hợp lệ.");
             }
@@ -229,9 +229,9 @@ public class VoucherService {
             throw new ValidationException(errors);
         }
         if (existing == null) {
-            v.setId(voucherDAO.insert(v));
+            v.setId(voucherRepository.insert(v));
         } else {
-            voucherDAO.update(v);
+            voucherRepository.update(v);
         }
     }
 
@@ -239,11 +239,11 @@ public class VoucherService {
      * Bật hoặc vô hiệu hóa. Trả trạng thái mới (true = đang bật).
      */
     public boolean toggleActive(int id) {
-        Voucher v = voucherDAO.findById(id);
+        Voucher v = voucherRepository.findById(id);
         if (v == null) {
             throw new ValidationException(null, "Voucher không tồn tại.");
         }
-        voucherDAO.setActive(id, !v.isActive());
+        voucherRepository.setActive(id, !v.isActive());
         return !v.isActive();
     }
 
@@ -251,14 +251,14 @@ public class VoucherService {
      * Chỉ xóa khi chưa có lượt dùng và chưa nằm trong đơn nào (kể cả đơn đã hủy); ngược lại chỉ được tạm dừng.
      */
     public void delete(int id) {
-        Voucher v = voucherDAO.findById(id);
+        Voucher v = voucherRepository.findById(id);
         if (v == null) {
             throw new ValidationException(null, "Voucher không tồn tại.");
         }
-        if (v.getUsedCount() > 0 || voucherDAO.countOrders(id) > 0) {
+        if (v.getUsedCount() > 0 || voucherRepository.countOrders(id) > 0) {
             throw new ValidationException(null, "Voucher " + v.getCode() + " đã có người dùng, chỉ có thể tạm dừng.");
         }
-        voucherDAO.delete(id);
+        voucherRepository.delete(id);
     }
 
     private static String money(long n) {

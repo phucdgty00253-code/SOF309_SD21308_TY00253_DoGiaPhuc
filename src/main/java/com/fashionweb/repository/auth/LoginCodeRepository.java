@@ -1,4 +1,4 @@
-package com.fashionweb.dao.auth;
+package com.fashionweb.repository.auth;
 
 import com.fashionweb.exception.DataAccessException;
 import com.fashionweb.util.DBContext;
@@ -15,7 +15,7 @@ import java.sql.SQLException;
  *
  * <p>Chỉ lưu băm SHA-256 của mã. Hạn dùng tính bằng NOW() của MySQL để cùng một đồng hồ khi tạo và khi kiểm tra.
  */
-public class LoginCodeDAO {
+public class LoginCodeRepository {
 
     /** Kết quả kiểm tra mã. */
     public enum Status { OK, WRONG, LOCKED, NONE }

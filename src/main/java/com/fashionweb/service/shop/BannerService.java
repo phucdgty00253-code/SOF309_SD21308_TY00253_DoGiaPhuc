@@ -1,6 +1,6 @@
 package com.fashionweb.service.shop;
 
-import com.fashionweb.dao.shop.BannerDAO;
+import com.fashionweb.repository.shop.BannerRepository;
 import com.fashionweb.exception.ValidationException;
 import com.fashionweb.model.Banner;
 import java.util.LinkedHashMap;
@@ -12,27 +12,27 @@ import java.util.regex.Pattern;
  * Banner trang chủ.
  *
  * <p>Đã làm: đọc (#9), quản lý của Admin (#11).
- * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL.
+ * <p>Luồng gọi: Servlet -> Service -> Repository -> MySQL.
  */
 public class BannerService {
 
     /** Trang trong web (/...) hoặc liên kết ngoài http(s)://, không khoảng trắng, không "//" đầu (tránh chuyển ra ngoài ngầm). */
     private static final Pattern LINK = Pattern.compile("(/(?!/)|https?://)\\S*");
 
-    private final BannerDAO bannerDAO = new BannerDAO();
+    private final BannerRepository bannerRepository = new BannerRepository();
 
     /**
      * Banner đang bật, theo sortOrder (trang chủ).
      */
     public List<Banner> findActive() {
-        return bannerDAO.findAll(true);
+        return bannerRepository.findAll(true);
     }
 
     /**
      * Mọi banner (Admin).
      */
     public List<Banner> findAll() {
-        return bannerDAO.findAll(false);
+        return bannerRepository.findAll(false);
     }
 
     /**
@@ -40,7 +40,7 @@ public class BannerService {
      */
     public void save(Banner b) {
         Map<String, String> errors = new LinkedHashMap<>();
-        Banner existing = b.getId() > 0 ? bannerDAO.findById(b.getId()) : null;
+        Banner existing = b.getId() > 0 ? bannerRepository.findById(b.getId()) : null;
         if (b.getId() > 0 && existing == null) {
             throw new ValidationException(null, "Banner không tồn tại.");
         }
@@ -64,9 +64,9 @@ public class BannerService {
             throw new ValidationException(errors);
         }
         if (existing == null) {
-            b.setId(bannerDAO.insert(b));
+            b.setId(bannerRepository.insert(b));
         } else {
-            bannerDAO.update(b);
+            bannerRepository.update(b);
         }
     }
 
@@ -75,7 +75,7 @@ public class BannerService {
      */
     public boolean toggle(int id) {
         Banner b = require(id);
-        bannerDAO.setActive(id, !b.isActive());
+        bannerRepository.setActive(id, !b.isActive());
         return !b.isActive();
     }
 
@@ -84,14 +84,14 @@ public class BannerService {
      */
     public void setActive(int id, boolean active) {
         require(id);
-        bannerDAO.setActive(id, active);
+        bannerRepository.setActive(id, active);
     }
 
     /**
      * Banner theo id, null nếu không có.
      */
     public Banner findById(int id) {
-        return bannerDAO.findById(id);
+        return bannerRepository.findById(id);
     }
 
     /**
@@ -99,11 +99,11 @@ public class BannerService {
      */
     public void delete(int id) {
         require(id);
-        bannerDAO.delete(id);
+        bannerRepository.delete(id);
     }
 
     private Banner require(int id) {
-        Banner b = bannerDAO.findById(id);
+        Banner b = bannerRepository.findById(id);
         if (b == null) {
             throw new ValidationException(null, "Banner không tồn tại.");
         }

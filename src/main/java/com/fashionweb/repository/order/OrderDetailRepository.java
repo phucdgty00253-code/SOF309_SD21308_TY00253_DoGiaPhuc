@@ -1,4 +1,4 @@
-package com.fashionweb.dao.order;
+package com.fashionweb.repository.order;
 
 import com.fashionweb.exception.DataAccessException;
 import com.fashionweb.model.OrderDetail;
@@ -16,7 +16,7 @@ import java.util.List;
  *
  * <p>Chỉ chứa SQL (PreparedStatement) và chuyển ResultSet thành entity.
  */
-public class OrderDetailDAO {
+public class OrderDetailRepository {
 
     /**
      * INSERT hàng loạt (batch) trong transaction. Lưu sẵn tên, màu, size, ảnh, đơn giá tại thời điểm đặt.

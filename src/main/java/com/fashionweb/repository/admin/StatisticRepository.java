@@ -1,4 +1,4 @@
-package com.fashionweb.dao.admin;
+package com.fashionweb.repository.admin;
 
 import com.fashionweb.dto.DashboardStats;
 import com.fashionweb.exception.DataAccessException;
@@ -23,7 +23,7 @@ import java.util.Map;
  * <p>Khoảng ngày [from, to] tính trên created_at của đơn: created_at &gt;= from 00:00 và &lt; (to + 1 ngày) 00:00.
  * <p>Chỉ chứa SQL (PreparedStatement). Kết nối lấy từ DBContext.getConnection().
  */
-public class StatisticDAO {
+public class StatisticRepository {
 
     private static final String RANGE = "o.created_at >= ? AND o.created_at < ? ";
     private static final DateTimeFormatter LABEL = DateTimeFormatter.ofPattern("dd/MM");

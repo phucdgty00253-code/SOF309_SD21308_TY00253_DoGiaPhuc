@@ -30,7 +30,7 @@ Closes #
 ## Checklist
 
 - [ ] Nhánh tách từ `develop`, PR vào `develop`, đã `git pull origin develop` trước khi mở PR
-- [ ] Đúng luồng `Servlet -> Service -> DAO`; Servlet không viết SQL, JSP không gọi DAO/Service
+- [ ] Đúng luồng `Servlet -> Service -> Repository`; Servlet không viết SQL, JSP không gọi Repository/Service
 - [ ] SQL dùng `PreparedStatement`, không nối chuỗi từ dữ liệu người dùng
 - [ ] Đã bỏ `MockData.xxx()` ở phần mình làm
 - [ ] Đã chạy thử trên máy mình, các mục nghiệm thu trong issue đều đạt

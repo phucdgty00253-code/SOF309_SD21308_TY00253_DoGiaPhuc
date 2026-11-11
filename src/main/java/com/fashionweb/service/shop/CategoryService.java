@@ -1,6 +1,6 @@
 package com.fashionweb.service.shop;
 
-import com.fashionweb.dao.shop.CategoryDAO;
+import com.fashionweb.repository.shop.CategoryRepository;
 import com.fashionweb.exception.ValidationException;
 import com.fashionweb.model.Category;
 import com.fashionweb.util.SlugUtil;
@@ -12,19 +12,19 @@ import java.util.Map;
 /**
  * Danh mục sản phẩm.
  *
- * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL.
+ * <p>Luồng gọi: Servlet -> Service -> Repository -> MySQL.
  * <p>Quy ước của nhóm: KHÔNG cho xóa mềm danh mục còn sản phẩm đang bán (báo rõ số sản phẩm),
  * để trang cửa hàng không có sản phẩm "mồ côi" danh mục.
  */
 public class CategoryService {
 
-    private final CategoryDAO categoryDAO = new CategoryDAO();
+    private final CategoryRepository categoryRepository = new CategoryRepository();
 
     /**
      * Danh mục chưa xóa mềm kèm productCount.
      */
     public List<Category> findAll() {
-        return categoryDAO.findAll();
+        return categoryRepository.findAll();
     }
 
     /**
@@ -34,7 +34,7 @@ public class CategoryService {
         if (q == null || q.trim().length() < 2) {
             return List.of();
         }
-        return categoryDAO.searchByName(q.trim());
+        return categoryRepository.searchByName(q.trim());
     }
 
     /**
@@ -44,14 +44,14 @@ public class CategoryService {
         if (slug == null || slug.isBlank()) {
             return null;
         }
-        return categoryDAO.findBySlug(slug.trim());
+        return categoryRepository.findBySlug(slug.trim());
     }
 
     /**
      * Một danh mục theo id, kể cả đã xóa mềm. null nếu không có.
      */
     public Category findById(int id) {
-        return categoryDAO.findById(id);
+        return categoryRepository.findById(id);
     }
 
     /**
@@ -71,13 +71,13 @@ public class CategoryService {
         }
         if (slug.isEmpty() || slug.length() > 120 || !SlugUtil.isValid(slug)) {
             errors.put("slug", "Slug chỉ gồm chữ thường không dấu, số và dấu gạch ngang (tối đa 120 ký tự).");
-        } else if (categoryDAO.existsSlug(slug, c.getId())) {
+        } else if (categoryRepository.existsSlug(slug, c.getId())) {
             errors.put("slug", "Slug \"" + slug + "\" đã được dùng (có thể ở danh mục trong Thùng rác).");
         }
 
         Category existing = null;
         if (c.getId() > 0) {
-            existing = categoryDAO.findById(c.getId());
+            existing = categoryRepository.findById(c.getId());
             if (existing == null || existing.isDeleted()) {
                 errors.put("name", "Danh mục không tồn tại hoặc đã bị xóa.");
             }
@@ -89,12 +89,12 @@ public class CategoryService {
         c.setName(name);
         c.setSlug(slug);
         if (existing == null) {
-            c.setId(categoryDAO.insert(c));
+            c.setId(categoryRepository.insert(c));
         } else {
             if (c.getImage() == null) {
                 c.setImage(existing.getImage()); // không chọn ảnh mới thì giữ ảnh cũ
             }
-            categoryDAO.update(c);
+            categoryRepository.update(c);
         }
     }
 
@@ -102,7 +102,7 @@ public class CategoryService {
      * Xóa mềm. Chặn khi danh mục còn sản phẩm đang bán.
      */
     public void softDelete(int id) {
-        Category c = categoryDAO.findById(id);
+        Category c = categoryRepository.findById(id);
         if (c == null || c.isDeleted()) {
             throw new ValidationException(null, "Danh mục không tồn tại hoặc đã nằm trong Thùng rác.");
         }
@@ -110,24 +110,24 @@ public class CategoryService {
             throw new ValidationException(null, "Không thể xóa \"" + c.getName() + "\" vì còn " + c.getProductCount()
                     + " sản phẩm đang bán. Hãy chuyển hoặc xóa các sản phẩm này trước.");
         }
-        categoryDAO.setDeleted(id, true);
+        categoryRepository.setDeleted(id, true);
     }
 
     /**
      * Danh mục đã xóa mềm (Thùng rác).
      */
     public List<Category> findDeleted() {
-        return categoryDAO.findDeleted();
+        return categoryRepository.findDeleted();
     }
 
     /**
      * Khôi phục danh mục đã xóa mềm.
      */
     public void restore(int id) {
-        Category c = categoryDAO.findById(id);
+        Category c = categoryRepository.findById(id);
         if (c == null || !c.isDeleted()) {
             throw new ValidationException(null, "Danh mục không có trong Thùng rác.");
         }
-        categoryDAO.setDeleted(id, false);
+        categoryRepository.setDeleted(id, false);
     }
 }
