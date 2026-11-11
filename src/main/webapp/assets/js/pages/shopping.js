@@ -98,7 +98,7 @@
   }
 
   /* ---------- Thanh toán ---------- */
-  const addrRadios = $$('input[name="addressId"]');
+  const addrRadios = $$('input[type="radio"][name="addressId"]');
   const newBox = $('[data-new-address]');
   if (addrRadios.length && newBox) {
     const sync = () => {

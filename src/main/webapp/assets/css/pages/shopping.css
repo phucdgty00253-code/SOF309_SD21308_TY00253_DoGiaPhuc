@@ -197,3 +197,6 @@ a.thumb:hover { opacity: .85; }
   .sh-kv--total { font-size: 18px; }
   .timeline__step small { display: none; }
 }
+
+/* Ô email của khách chưa đăng nhập ở bước thông tin nhận hàng */
+.sh-guest-email { margin-bottom: 20px; }

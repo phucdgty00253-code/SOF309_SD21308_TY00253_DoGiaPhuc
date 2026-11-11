@@ -7,6 +7,7 @@
   THANH TOÁN  (GET /checkout -> CheckoutServlet)
   Xem thử mã giảm giá: /checkout?voucher=WELCOME10 (hợp lệ) hoặc ?voucher=HETHAN20 (báo lỗi)
   Thuộc tính request:
+    guest           : boolean         - true khi khách chưa đăng nhập: ô email bắt buộc, không có sổ địa chỉ
     cart            : Cart            - giỏ hàng (items, subtotal, itemCount)
     addresses       : List<Address>   - sổ địa chỉ của khách
     defaultAddress  : Address | null  - địa chỉ mặc định (chọn sẵn)
@@ -21,7 +22,7 @@
     errors          : Map<String,String> | absent - lỗi từng field khi đặt hàng thất bại
   Form:
     POST /checkout action=applyVoucher   fields: voucherCode
-    POST /checkout action=placeOrder     fields: addressId ("new" = địa chỉ khác), receiverName, receiverPhone, addressLine,
+    POST /checkout action=placeOrder     fields: email (chỉ khi guest), addressId ("new" = địa chỉ khác), receiverName, receiverPhone, addressLine,
                                                  ward, district, city, voucherCode, paymentMethod, note
   Các field của form đặt hàng nằm rải ở nhiều khối nên gắn vào form bằng thuộc tính form="checkout-form".
 --%>
@@ -54,8 +55,19 @@
           <div class="sh-step__head">
             <span class="sh-step__num" aria-hidden="true">1</span>
             <h2 class="h-2" id="sh-s1">Thông tin nhận hàng</h2>
-            <a class="link-underline" href="${ctx}/addresses">Sổ địa chỉ</a>
+            <c:if test="${not guest}"><a class="link-underline" href="${ctx}/addresses">Sổ địa chỉ</a></c:if>
           </div>
+
+          <c:if test="${guest}">
+            <div class="field sh-guest-email">
+              <label class="field__label" for="f-email">Email</label>
+              <input class="input${empty errors.email ? '' : ' is-invalid'}" id="f-email" type="email" name="email" form="checkout-form" value="${fn:escapeXml(param.email)}" maxlength="150" autocomplete="email" required>
+              <c:choose>
+                <c:when test="${not empty errors.email}"><span class="field__error"><c:out value="${errors.email}"/></span></c:when>
+                <c:otherwise><span class="field__hint">Dùng để xem lại đơn hàng: đăng nhập bằng email này và mã 6 số.</span></c:otherwise>
+              </c:choose>
+            </div>
+          </c:if>
 
           <div class="sh-options" role="radiogroup" aria-labelledby="sh-s1">
             <c:forEach items="${addresses}" var="a">

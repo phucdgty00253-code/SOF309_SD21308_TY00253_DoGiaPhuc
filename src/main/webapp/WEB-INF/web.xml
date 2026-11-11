@@ -38,11 +38,8 @@
     <filter-mapping><filter-name>StaticCacheFilter</filter-name><url-pattern>/assets/*</url-pattern></filter-mapping>
     <filter-mapping>
         <filter-name>AuthFilter</filter-name>
-        <url-pattern>/cart</url-pattern>
-        <url-pattern>/checkout</url-pattern>
         <url-pattern>/order</url-pattern>
         <url-pattern>/orders</url-pattern>
-        <url-pattern>/order-success</url-pattern>
         <url-pattern>/profile</url-pattern>
         <url-pattern>/addresses</url-pattern>
         <url-pattern>/wishlist</url-pattern>

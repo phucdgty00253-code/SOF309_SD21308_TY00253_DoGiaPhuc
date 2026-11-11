@@ -9,6 +9,7 @@ import com.fashionweb.model.Order;
 import com.fashionweb.model.User;
 import com.fashionweb.model.Voucher;
 import com.fashionweb.service.account.AccountService;
+import com.fashionweb.service.auth.AuthService;
 import com.fashionweb.service.cart.CartService;
 import com.fashionweb.service.cart.VoucherService;
 import com.fashionweb.service.order.OrderService;
@@ -29,7 +30,9 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
- * GET /checkout : trang thanh toán (Customer, AuthFilter bắt buộc đăng nhập). Giỏ trống thì về /cart.
+ * GET /checkout : trang thanh toán, mở được cả khi chưa đăng nhập. Giỏ trống thì về /cart.
+ * Khách chưa đăng nhập (thuộc tính guest = true): giỏ lấy từ session, bắt buộc nhập email và địa chỉ; đơn gắn vào tài khoản
+ * của email đó (chưa có thì tạo), không tự đăng nhập, mã đơn lưu vào session để mở trang đặt hàng thành công.
  * JSP: /WEB-INF/views/cart/checkout.jsp. Tham số voucher: mã đang áp dụng (kiểm tra lại mỗi lần mở trang).
  * Thuộc tính: cart, addresses, defaultAddress, subtotal, shippingFee, discountAmount, total, appliedVoucher,
  * hintVouchers, voucherCode, voucherError, errors.
@@ -46,10 +49,11 @@ public class CheckoutServlet extends HttpServlet {
     private final AccountService accountService = new AccountService();
     private final VoucherService voucherService = new VoucherService();
     private final OrderService orderService = new OrderService();
+    private final AuthService authService = new AuthService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        Cart cart = cartService.getCart(WebUtil.currentUser(req).getId());
+        Cart cart = currentCart(req);
         if (cart.getItems().isEmpty()) {
             WebUtil.flash(req, "Giỏ hàng đang trống. Hãy chọn sản phẩm trước khi thanh toán.", "info");
             resp.sendRedirect(req.getContextPath() + "/cart");
@@ -61,7 +65,7 @@ public class CheckoutServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         User user = WebUtil.currentUser(req);
-        Cart cart = cartService.getCart(user.getId());
+        Cart cart = currentCart(req);
         if (cart.getItems().isEmpty()) {
             WebUtil.flash(req, "Giỏ hàng đang trống, không thể đặt hàng.", "error");
             resp.sendRedirect(req.getContextPath() + "/cart");
@@ -72,7 +76,7 @@ public class CheckoutServlet extends HttpServlet {
 
         if ("applyVoucher".equals(action)) {
             try {
-                voucherService.validate(code, user.getId(), cart);
+                voucherService.validate(code, userId(user), cart);
                 resp.sendRedirect(req.getContextPath() + "/checkout?voucher=" + URLEncoder.encode(code, StandardCharsets.UTF_8));
             } catch (VoucherException e) {
                 show(req, resp, cart, code); // show() kiểm tra lại mã, đặt voucherError và giữ mã trong ô nhập
@@ -85,8 +89,15 @@ public class CheckoutServlet extends HttpServlet {
         }
 
         try {
-            Address address = shippingAddress(req, user.getId());
-            Order order = orderService.placeOrder(user.getId(), address, code, req.getParameter("note"));
+            Order order;
+            if (user != null) {
+                Address address = shippingAddress(req, user.getId());
+                order = orderService.placeOrder(user.getId(), address, code, req.getParameter("note"));
+            } else {
+                order = placeGuestOrder(req, cart, code);
+                WebUtil.guestCart(req).clear();
+                req.getSession().setAttribute(AppConstant.SESSION_GUEST_ORDER, order.getOrderCode());
+            }
             req.getSession().setAttribute(AppConstant.SESSION_CART_COUNT, 0);
             resp.sendRedirect(req.getContextPath() + "/order-success?code=" + URLEncoder.encode(order.getOrderCode(), StandardCharsets.UTF_8));
         } catch (ValidationException e) {
@@ -101,14 +112,47 @@ public class CheckoutServlet extends HttpServlet {
                 code = "";
             }
             req.setAttribute("errors", errors);
-            show(req, resp, cartService.getCart(user.getId()), code);
+            show(req, resp, currentCart(req), code);
         }
+    }
+
+    /** Giỏ trong DB của khách đã đăng nhập, hoặc giỏ trong session của khách chưa đăng nhập. */
+    private Cart currentCart(HttpServletRequest req) {
+        User user = WebUtil.currentUser(req);
+        return user != null ? cartService.getCart(user.getId()) : cartService.getGuestCart(WebUtil.guestCart(req));
+    }
+
+    /** Id dùng để kiểm tra voucher; khách chưa đăng nhập là 0 (kiểm tra lại theo tài khoản của email lúc đặt hàng). */
+    private static int userId(User user) {
+        return user == null ? 0 : user.getId();
+    }
+
+    /** Khách chưa đăng nhập: kiểm tra email cùng lúc với địa chỉ, tìm hoặc tạo tài khoản theo email rồi đặt hàng. */
+    private Order placeGuestOrder(HttpServletRequest req, Cart cart, String code) {
+        Map<String, String> errors = new LinkedHashMap<>();
+        String email = null;
+        try {
+            email = authService.normalizeEmail(req.getParameter("email"));
+        } catch (ValidationException e) {
+            errors.putAll(e.getErrors());
+        }
+        Address address = null;
+        try {
+            address = shippingAddress(req, 0);
+        } catch (ValidationException e) {
+            errors.putAll(e.getErrors());
+        }
+        if (!errors.isEmpty()) {
+            throw new ValidationException(errors);
+        }
+        User owner = authService.findOrCreateCustomer(email, address.getReceiverName(), address.getPhone());
+        return orderService.placeGuestOrder(owner.getId(), cart, address, code, req.getParameter("note"));
     }
 
     /** Địa chỉ giao: chọn từ sổ địa chỉ (addressId) hoặc nhập địa chỉ khác (addressId = "new"). */
     private Address shippingAddress(HttpServletRequest req, int userId) {
         String addressId = req.getParameter("addressId");
-        if (addressId != null && !"new".equals(addressId)) {
+        if (userId > 0 && addressId != null && !"new".equals(addressId)) {
             Address a = accountService.findAddress(userId, WebUtil.parseInt(addressId, 0));
             if (a == null) {
                 throw new ValidationException("addressId", "Vui lòng chọn địa chỉ giao hàng.");
@@ -160,15 +204,16 @@ public class CheckoutServlet extends HttpServlet {
         String code = normalize(voucherParam);
         if (!code.isEmpty()) {
             try {
-                applied = voucherService.validate(code, user.getId(), cart);
+                applied = voucherService.validate(code, userId(user), cart);
             } catch (VoucherException e) {
                 req.setAttribute("voucherError", e.getMessage());
             }
         }
         long discount = voucherService.computeDiscount(applied, subtotal);
         long shippingFee = voucherService.shippingFee(applied);
-        List<Address> addresses = accountService.findAddresses(user.getId());
+        List<Address> addresses = user == null ? List.of() : accountService.findAddresses(user.getId());
 
+        req.setAttribute("guest", user == null);
         req.setAttribute("cart", cart);
         req.setAttribute("addresses", addresses);
         req.setAttribute("defaultAddress", addresses.isEmpty() ? null : addresses.get(0)); // mặc định đứng đầu
