@@ -14,6 +14,19 @@
    1. DANH SÁCH SẢN PHẨM
    ========================================================================== */
 .toolbar { flex-wrap: wrap; }
+/* Trang danh sách (#89), đo trên trang danh mục của a-dam ở 1440x900: tiêu đề đệm 72px, thanh công cụ có kẻ trên,
+   chữ 12px/500, nút lọc dạng chữ kèm icon, lưới 4 cột khe 40px 12px */
+.plp-page .page-head { padding: 72px var(--gutter); }
+.plp-page .page-head p { max-width: 768px; margin-top: 32px; color: var(--navy); }
+.plp-page .toolbar { padding: 28.8px 28px; border-top: 1px solid var(--line); font-size: 12px; font-weight: 500; line-height: normal; }
+.plp-page .toolbar__count, .plp-page .toolbar__count strong { color: var(--navy); font-weight: 500; }
+.plp-page .toolbar__right { gap: 24px; }
+.plp-page .view-toggle { gap: 14px; padding-right: 24px; border-right: 1px solid var(--line-2); }
+.plp-page .view-toggle button { width: 16px; height: 16px; }
+.toolbar__filter { display: inline-flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 500; line-height: normal; transition: opacity var(--t) var(--ease); }
+.toolbar__filter:hover { opacity: .6; }
+.plp-page .pagination { gap: 16px; }
+.plp-page .pagination a, .plp-page .pagination span { min-width: 40px; height: 40px; font-size: 12px; font-weight: 500; }
 .toolbar__count { color: var(--navy-60); }
 .toolbar__count strong { color: var(--navy); font-weight: 700; }
 .filter-count { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--navy); color: var(--white); font-size: 11px; font-weight: 700; line-height: 20px; text-align: center; transition: background-color var(--t) var(--ease), color var(--t) var(--ease); }
@@ -177,6 +190,9 @@
 }
 
 @media (max-width: 750px) {
+  .plp-page .page-head { padding: 48px var(--gutter); }
+  .plp-page .toolbar { padding: 20px var(--gutter); }
+  .plp-page .view-toggle { border-right: 0; padding-right: 0; }
   .toolbar { padding-inline: 8px; }
   .active-filters { padding-inline: 8px; }
   .product-grid[data-view="large"] { grid-template-columns: 1fr; }

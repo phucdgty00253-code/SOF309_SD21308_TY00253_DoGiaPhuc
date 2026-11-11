@@ -25,7 +25,7 @@
 --%>
 <c:set var="soldOut" value="${product.stockTotal == 0}"/>
 <t:layout title="${product.name}" nav="shop" bodyClass="pdp-page" description="${product.description}">
-  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/catalog.css?v=2"></jsp:attribute>
+  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/catalog.css?v=3"></jsp:attribute>
   <jsp:attribute name="scripts"><script src="${ctx}/assets/js/pages/catalog.js" defer></script></jsp:attribute>
   <jsp:body>
 

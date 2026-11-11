@@ -10,7 +10,7 @@
   Không có form.
 --%>
 <t:layout title="Blog" nav="blog" description="Gợi ý phối đồ, chọn size và bảo quản quần áo từ Saltair.">
-  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/catalog.css"></jsp:attribute>
+  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/catalog.css?v=3"></jsp:attribute>
   <jsp:body>
 
     <header class="page-head cat-enter">
