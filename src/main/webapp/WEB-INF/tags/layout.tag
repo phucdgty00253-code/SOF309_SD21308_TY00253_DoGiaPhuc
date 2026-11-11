@@ -28,7 +28,7 @@
   <link rel="stylesheet" href="${ctx}/assets/css/style.css">
   <jsp:invoke fragment="head"/>
 </head>
-<body class="${bodyClass}${overlay ? ' has-overlay-header' : ''}">
+<body class="${bodyClass}${overlay ? ' has-overlay-header' : ''}" data-ctx="${ctx}" data-logged-in="${not empty sessionScope.currentUser}">
 <%@ include file="/WEB-INF/views/common/icons.jspf" %>
 <a class="skip-link" href="#main">Bỏ qua, đến nội dung chính</a>
 
@@ -76,27 +76,8 @@
 
     <div class="header__actions">
       <button type="button" class="icon-btn" data-search-open aria-label="Tìm kiếm" aria-expanded="false" aria-controls="search-drawer"><t:icon name="search" size="md"/></button>
-      <c:choose>
-        <c:when test="${empty sessionScope.currentUser}">
-          <a class="icon-btn" href="${ctx}/login" aria-label="Đăng nhập"><t:icon name="user" size="md"/></a>
-        </c:when>
-        <c:otherwise>
-          <div class="has-dropdown">
-            <a class="icon-btn" href="${ctx}/profile" aria-label="Tài khoản" data-dropdown-trigger><t:icon name="user" size="md"/></a>
-            <div class="dropdown dropdown--right">
-              <div class="dropdown__panel">
-                <span class="dropdown__title"><c:out value="${sessionScope.currentUser.fullName}"/></span>
-                <c:if test="${sessionScope.currentUser.role == 'ADMIN'}"><a class="link-underline bold" href="${ctx}/admin">Trang quản trị</a></c:if>
-                <a class="link-underline" href="${ctx}/profile">Tài khoản của tôi</a>
-                <a class="link-underline" href="${ctx}/orders">Đơn hàng</a>
-                <a class="link-underline" href="${ctx}/wishlist">Yêu thích</a>
-                <a class="link-underline" href="${ctx}/addresses">Sổ địa chỉ</a>
-                <a class="link-underline" href="${ctx}/logout">Đăng xuất</a>
-              </div>
-            </div>
-          </div>
-        </c:otherwise>
-      </c:choose>
+      <button type="button" class="icon-btn" data-account-open aria-haspopup="dialog" aria-expanded="false" aria-controls="account-pop"
+              aria-label="${empty sessionScope.currentUser ? 'Đăng nhập' : 'Tài khoản'}"><t:icon name="user" size="md"/></button>
       <a class="icon-btn" href="${ctx}/cart" aria-label="Giỏ hàng"><t:icon name="bag" size="md"/><span class="cart-badge"${cartCount > 0 ? '' : ' hidden'}>${cartCount}</span></a>
     </div>
   </div>
@@ -115,6 +96,40 @@
     <div class="search-drawer__results" data-search-results aria-live="polite"></div>
   </div>
 </aside>
+<%-- Khung tài khoản (#75): trồi lên dưới góc phải header, không làm mờ nền --%>
+<c:set var="me" value="${sessionScope.currentUser}"/>
+<div class="account-pop" id="account-pop" role="dialog" aria-labelledby="account-pop-title" aria-hidden="true" data-account-pop>
+  <div class="account-pop__inner">
+    <div class="account-pop__head">
+      <div>
+        <h2 class="account-pop__title" id="account-pop-title">${empty me ? 'Đăng nhập hoặc tạo tài khoản' : 'Tài khoản'}</h2>
+        <c:if test="${not empty me}"><p class="account-pop__email"><c:out value="${me.email}"/></p></c:if>
+      </div>
+      <button type="button" class="account-pop__close" data-account-close aria-label="Đóng"><t:icon name="x"/></button>
+    </div>
+
+    <c:if test="${empty me}">
+      <form class="account-pop__form" method="post" action="${ctx}/login/email" data-account-login novalidate>
+        <input type="hidden" name="redirect" value="" data-account-redirect>
+        <div class="pill-input">
+          <input class="pill-input__field" type="email" name="email" placeholder="Email" aria-label="Email" autocomplete="email"
+                 maxlength="150" required data-account-email aria-describedby="account-pop-msg">
+          <button class="pill-input__btn" type="submit" aria-label="Tiếp tục"><t:icon name="arrow-right" cls="pill-input__arrow"/><span class="spinner" aria-hidden="true"></span></button>
+        </div>
+        <p class="account-pop__msg" id="account-pop-msg" role="alert" data-account-msg hidden></p>
+      </form>
+    </c:if>
+
+    <nav class="account-menu" aria-label="Tài khoản">
+      <a class="account-menu__row" href="${ctx}/orders" data-account-need="Đăng nhập để xem đơn hàng">Đơn hàng</a>
+      <a class="account-menu__row" href="${ctx}/profile" data-account-need="Đăng nhập để xem hồ sơ">Hồ sơ</a>
+      <a class="account-menu__row" href="${ctx}/wishlist" data-account-need="Đăng nhập để xem danh sách yêu thích">Yêu thích</a>
+      <a class="account-menu__row" href="${ctx}/addresses" data-account-need="Đăng nhập để xem sổ địa chỉ">Sổ địa chỉ</a>
+      <c:if test="${me.role == 'ADMIN'}"><a class="account-menu__row" href="${ctx}/admin">Trang quản trị</a></c:if>
+      <c:if test="${not empty me}"><a class="account-menu__row" href="${ctx}/logout">Đăng xuất</a></c:if>
+    </nav>
+  </div>
+</div>
 <aside class="drawer drawer--left" id="mobile-nav" aria-label="Menu">
   <div class="drawer__head">
     <img src="${ctx}/assets/brand/saltair-logo.png" alt="Saltair" height="36" style="height:36px;width:auto">

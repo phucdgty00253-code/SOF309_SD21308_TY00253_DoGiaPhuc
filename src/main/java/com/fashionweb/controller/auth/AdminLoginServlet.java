@@ -72,8 +72,12 @@ public class AdminLoginServlet extends HttpServlet {
 
         User user;
         try {
-            user = authService.verifyCode(email, req.getParameter("code"), AuthService.Flow.ADMIN);
+            user = authService.verifyCode(email, LoginSupport.codeParam(req), AuthService.Flow.ADMIN);
         } catch (ValidationException e) {
+            if (LoginSupport.wantsJson(req)) {
+                LoginSupport.json(resp, LoginSupport.error(req, e.getErrors(), e.getMessage()));
+                return;
+            }
             req.setAttribute("errors", e.getErrors());
             showCode(req, resp, email);
             return;
@@ -84,6 +88,10 @@ public class AdminLoginServlet extends HttpServlet {
         authService.notifyAdminLogin(user, req.getRemoteAddr(), req.getHeader("User-Agent"));
         if (target == null || !target.startsWith("/admin")) {
             target = "/admin";
+        }
+        if (LoginSupport.wantsJson(req)) {
+            LoginSupport.json(resp, LoginSupport.ok(req.getContextPath() + target));
+            return;
         }
         resp.sendRedirect(req.getContextPath() + target);
     }

@@ -165,6 +165,7 @@
 
   function openPanel(panel, focusSelector, triggerEl) {
     if (!panel) return;
+    closeAccount(false);
     closeAllPanels();
     lastTrigger = triggerEl || null;
     if (panel === searchDrawer) {
@@ -187,6 +188,7 @@
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
+      if (accountPop?.classList.contains('is-open')) { closeAccount(true); return; }
       closeAllPanels();
       return;
     }
@@ -208,6 +210,115 @@
       }
     }
   });
+
+  /* ---------- Khung tài khoản (#75): popover trồi lên, đăng nhập bằng email ---------- */
+  const accountPop = $('#account-pop');
+  const accountBtns = $$('[data-account-open]');
+  const ctxPath = document.body.dataset.ctx || '';
+  const loggedIn = document.body.dataset.loggedIn === 'true';
+  let accountTrigger = null;
+
+  function closeAccount(returnFocus) {
+    if (!accountPop || !accountPop.classList.contains('is-open')) return;
+    accountPop.classList.remove('is-open');
+    accountPop.setAttribute('aria-hidden', 'true');
+    accountBtns.forEach((b) => b.setAttribute('aria-expanded', 'false'));
+    if (returnFocus) (accountTrigger || accountBtns[0])?.focus();
+  }
+
+  function openAccount(trigger) {
+    if (!accountPop) return;
+    closeAllPanels();
+    accountTrigger = trigger || accountBtns[0] || null;
+    accountPop.classList.add('is-open');
+    accountPop.setAttribute('aria-hidden', 'false');
+    accountBtns.forEach((b) => b.setAttribute('aria-expanded', 'true'));
+    const target = loggedIn ? $('.account-menu__row', accountPop) : $('[data-account-email]', accountPop);
+    // visibility đổi theo transition nên có lúc phần tử chưa nhận focus ngay: thử lại vài lần
+    let tries = 0;
+    const focusTarget = () => {
+      if (!target || !accountPop.classList.contains('is-open')) return;
+      target.focus({ preventScroll: true });
+      if (document.activeElement !== target && ++tries < 6) setTimeout(focusTarget, 50);
+    };
+    setTimeout(focusTarget, reduceMotion ? 20 : 60);
+  }
+
+  if (accountPop) {
+    accountBtns.forEach((b) => b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (accountPop.classList.contains('is-open')) closeAccount(true); else openAccount(b);
+    }));
+    $('[data-account-close]', accountPop)?.addEventListener('click', () => closeAccount(true));
+    document.addEventListener('click', (e) => {
+      if (accountPop.classList.contains('is-open') && !accountPop.contains(e.target)
+          && !e.target.closest('[data-account-open]')) closeAccount(false);
+    });
+
+    const form = $('[data-account-login]', accountPop);
+    const emailInput = $('[data-account-email]', accountPop);
+    const msg = $('[data-account-msg]', accountPop);
+    const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const showMsg = (html, hint) => {
+      if (!msg) return;
+      msg.innerHTML = html;
+      msg.hidden = !html;
+      msg.classList.toggle('is-hint', !!hint);
+      emailInput?.setAttribute('aria-invalid', html && !hint ? 'true' : 'false');
+    };
+
+    // Chưa đăng nhập: bấm một dòng menu thì focus ô email và hiện gợi ý, không chuyển trang
+    if (!loggedIn) {
+      $$('[data-account-need]', accountPop).forEach((row) => row.addEventListener('click', (e) => {
+        e.preventDefault();
+        const redirect = $('[data-account-redirect]', accountPop);
+        if (redirect) redirect.value = row.getAttribute('href').slice(ctxPath.length);
+        showMsg(esc(row.dataset.accountNeed), true);
+        emailInput?.focus();
+      }));
+    }
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (form.classList.contains('is-busy')) return;
+      const email = emailInput.value.trim();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        showMsg(email ? 'Email không đúng định dạng.' : 'Vui lòng nhập email.');
+        emailInput.focus();
+        return;
+      }
+      const redirect = $('[data-account-redirect]', form);
+      if (redirect && !redirect.value) redirect.value = location.pathname.slice(ctxPath.length) + location.search;
+      form.classList.add('is-busy');
+      emailInput.readOnly = true;
+      showMsg('');
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+          body: new URLSearchParams(new FormData(form)),
+          credentials: 'same-origin'
+        });
+        const data = await res.json();
+        if (data.ok) { location.href = data.redirect; return; }
+        let html = esc(data.error || 'Không gửi được mã, vui lòng thử lại.');
+        if (data.adminUrl) html += ' <a href="' + esc(data.adminUrl) + '">Tới trang quản trị</a>';
+        showMsg(html);
+      } catch (err) {
+        showMsg('Không gửi được mã, vui lòng thử lại.');
+      }
+      form.classList.remove('is-busy');
+      emailInput.readOnly = false;
+      emailInput.focus();
+    });
+
+    // /home?login=1 (link "Đổi email" ở trang nhập mã): mở sẵn khung
+    const params = new URLSearchParams(location.search);
+    if (params.get('login') === '1' && !loggedIn) {
+      if (emailInput && params.get('email')) emailInput.value = params.get('email');
+      openAccount();
+    }
+  }
 
   /* ---------- Tìm kiếm nhanh khi đang gõ (debounce 250ms + AbortController) ---------- */
   if (searchDrawer) {

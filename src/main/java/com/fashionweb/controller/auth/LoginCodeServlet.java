@@ -60,8 +60,12 @@ public class LoginCodeServlet extends HttpServlet {
 
         User user;
         try {
-            user = authService.verifyCode(email, req.getParameter("code"), AuthService.Flow.CUSTOMER);
+            user = authService.verifyCode(email, LoginSupport.codeParam(req), AuthService.Flow.CUSTOMER);
         } catch (ValidationException e) {
+            if (LoginSupport.wantsJson(req)) {
+                LoginSupport.json(resp, LoginSupport.error(req, e.getErrors(), e.getMessage()));
+                return;
+            }
             req.setAttribute("errors", e.getErrors());
             show(req, resp, email);
             return;
@@ -70,6 +74,10 @@ public class LoginCodeServlet extends HttpServlet {
         LoginSupport.login(req, user);
         if (target == null || target.startsWith("/admin")) {
             target = "/home";
+        }
+        if (LoginSupport.wantsJson(req)) {
+            LoginSupport.json(resp, LoginSupport.ok(req.getContextPath() + target));
+            return;
         }
         resp.sendRedirect(req.getContextPath() + target);
     }

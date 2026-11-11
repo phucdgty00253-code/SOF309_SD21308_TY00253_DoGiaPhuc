@@ -36,6 +36,10 @@ public class EmailLoginServlet extends HttpServlet {
             email = authService.normalizeEmail(req.getParameter("email"));
             devCode = authService.requestCode(email, AuthService.Flow.CUSTOMER);
         } catch (ValidationException e) {
+            if (LoginSupport.wantsJson(req)) {
+                LoginSupport.json(resp, LoginSupport.error(req, e.getErrors(), e.getMessage()));
+                return;
+            }
             req.setAttribute("errors", e.getErrors());
             LoginServlet.show(req, resp);
             return;
@@ -48,6 +52,10 @@ public class EmailLoginServlet extends HttpServlet {
             session.removeAttribute(AppConstant.SESSION_LOGIN_REDIRECT);
         }
         LoginSupport.rememberDevCode(req, devCode);
+        if (LoginSupport.wantsJson(req)) {
+            LoginSupport.json(resp, LoginSupport.ok(req.getContextPath() + "/login/code"));
+            return;
+        }
         resp.sendRedirect(req.getContextPath() + "/login/code");
     }
 }
