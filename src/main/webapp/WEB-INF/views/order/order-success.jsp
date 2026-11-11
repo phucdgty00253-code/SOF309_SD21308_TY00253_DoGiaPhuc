@@ -10,8 +10,8 @@
     order : Order - đơn vừa đặt (orderCode, createdAt, receiverName, receiverPhone, shippingAddress, paymentMethod, totalAmount)
   Không có form.
 --%>
-<t:layout title="Đặt hàng thành công">
-  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/shopping.css"></jsp:attribute>
+<t:layout title="Đặt hàng thành công" chrome="checkout">
+  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/shopping.css?v=5"></jsp:attribute>
   <jsp:body>
     <section class="sh-success" aria-labelledby="sh-success-title">
       <div class="sh-success__icon"><t:icon name="check-circle"/></div>

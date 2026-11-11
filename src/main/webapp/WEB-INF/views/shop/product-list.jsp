@@ -48,7 +48,7 @@
 </c:choose>
 
 <t:layout title="${heading}" nav="${navKey}" description="${intro}" bodyClass="plp-page">
-  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/catalog.css?v=3"></jsp:attribute>
+  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/catalog.css?v=6"></jsp:attribute>
   <jsp:attribute name="scripts"><script src="${ctx}/assets/js/pages/catalog.js" defer></script></jsp:attribute>
   <jsp:body>
 

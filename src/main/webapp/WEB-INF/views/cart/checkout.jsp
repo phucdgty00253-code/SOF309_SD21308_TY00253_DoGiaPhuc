@@ -27,7 +27,7 @@
     POST /checkout action=removeVoucher : các field trên
 --%>
 <t:layout title="Thanh toán" nav="shop" chrome="checkout" bodyClass="co-page">
-  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/shopping.css?v=4"></jsp:attribute>
+  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/shopping.css?v=5"></jsp:attribute>
   <jsp:attribute name="scripts"><script src="${ctx}/assets/js/pages/shopping.js?v=3" defer></script></jsp:attribute>
   <jsp:body>
     <c:set var="posted" value="${not empty param.action}"/>

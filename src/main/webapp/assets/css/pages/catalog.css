@@ -68,7 +68,10 @@
 /* ==========================================================================
    2. CHI TIẾT SẢN PHẨM
    ========================================================================== */
-.pdp-page .pdp { padding-top: 24px; }
+/* Bố cục như mẫu (1440px): khung ảnh 48..720, cột thông tin 820..1340 rộng 520px, cách header 28px, không có breadcrumb */
+.pdp-page .pdp { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; padding-top: 28px; }
+.pdp-page .pdp__info { width: 100%; max-width: 520px; margin-left: 100px; }
+@media (max-width: 1240px) { .pdp-page .pdp__info { margin-left: 48px; max-width: none; width: auto; } }
 .pdp__gallery .media:first-child { aspect-ratio: 4 / 5; }
 /* Nhiều ảnh: lưới 2 cột, mọi ô dọc 2:3, khe 4px; khung ảnh dính khi cột thông tin dài hơn */
 .pdp__gallery--grid { position: sticky; top: calc(var(--header-h-small) + 24px); }
@@ -197,37 +200,51 @@
 /* ==========================================================================
    4. GIỚI THIỆU
    ========================================================================== */
-.about-hero { padding: 96px var(--gutter) 72px; text-align: center; }
-.about-hero .h-display { max-width: 900px; margin: 16px auto 0; }
-.about-hero p.about-hero__lead { max-width: 640px; margin: 28px auto 0; color: var(--navy-60); font-size: 17px; line-height: 26px; }
-.about-story { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; max-width: 1200px; margin-inline: auto; padding: 72px var(--gutter) 96px; }
-.about-story__text { display: grid; gap: 20px; color: var(--navy-60); }
-.about-values { display: grid; grid-template-columns: repeat(3, 1fr); border-block: 1px solid var(--line); }
-.about-value { padding: 56px 32px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; border-right: 1px solid var(--line); }
-.about-value:last-child { border-right: 0; }
-.about-value .icon { width: 28px; height: 28px; transition: transform var(--t) ease; }
-.about-value:hover .icon { transform: translateY(-3px); }
-.about-value p:last-child { color: var(--navy-60); max-width: 300px; }
-.about-split { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px; }
-.about-split__text { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 20px; padding: 48px var(--gutter); }
-.about-split__text p { color: var(--navy-60); max-width: 480px; }
-.about-split .media > img { transition: transform .6s var(--ease); }
-.about-split .media:hover > img { transform: scale(1.03); }
+/* Số đo lấy trên trang "Who we are" của trang tham chiếu ở 1440x900 (#91) */
+.about-cover { position: relative; height: 720px; background: var(--navy); overflow: hidden; }
+.about-cover__media, .about-statement__media { position: absolute; inset: 0; }
+.about-cover__media img, .about-statement__media img, .about-cover__media .ph, .about-statement__media .ph { width: 100%; height: 100%; object-fit: cover; }
+.marquee { overflow: hidden; padding: 60px 0; }
+.marquee__track { display: flex; width: max-content; animation: marquee 40s linear infinite; }
+.marquee__item { flex: none; padding-right: 80px; font-size: 72px; line-height: 72px; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+.about-tm { display: grid; grid-template-columns: 1fr 1fr; align-items: center; }
+.about-tm__media { padding: 48px 0 48px 48px; }
+.about-tm__media .media, .about-tm__brand { aspect-ratio: 1 / 1; }
+.about-tm__brand { display: grid; place-items: center; background: var(--cobalt); }
+.about-tm__brand span { width: 49%; aspect-ratio: 1 / 1; display: grid; place-items: center; border-radius: 50%; background: var(--white); }
+.about-tm__brand img { width: 46%; height: auto; }
+.about-tm__text { display: grid; gap: 24px; padding: 48px; max-width: 624px; font-size: 13px; line-height: 18.2px; }
+.about-tm__title { font-size: 20.2px; line-height: 22.2px; font-weight: 700; margin-bottom: 8px; max-width: 480px; }
+.about-tm__text strong { font-weight: 700; }
+.about-statement { position: relative; min-height: 720px; display: grid; place-content: center; justify-items: center; gap: 32px; padding: 96px var(--gutter); background: var(--navy); color: var(--white); text-align: center; overflow: hidden; }
+.about-statement__media::after { content: ""; position: absolute; inset: 0; background: rgba(0, 0, 197, .62); }
+.about-statement__text { position: relative; max-width: 960px; font-size: 70.5px; line-height: 70.5px; font-weight: 700; text-wrap: balance; }
+.about-statement .btn { position: relative; padding-inline: 40px; }
+.about-statement--solid { min-height: 520px; background: var(--navy); }
+.about-line { max-width: calc(768px + var(--gutter) * 2); margin: 0 auto; padding: 24px var(--gutter) 72px; text-align: center; font-size: 20.2px; line-height: 22.2px; font-weight: 700; text-wrap: balance; }
+@media (prefers-reduced-motion: reduce) { .marquee__track { animation: none; } }
 
-/* ==========================================================================
-   Responsive: cùng điểm ngắt với style.css (990px, 750px)
-   ========================================================================== */
 @media (max-width: 990px) {
+  .pdp-page .pdp { grid-template-columns: minmax(0, 1fr); gap: 32px; padding-top: 16px; }
+  .pdp-page .pdp__info { margin-left: 0; max-width: none; }
+  .about-cover { height: 520px; }
+  .about-tm { grid-template-columns: 1fr; }
+  .about-tm__media { padding: 24px var(--gutter) 0; }
+  .about-tm__text { padding: 32px var(--gutter) 48px; }
+  .about-statement { min-height: 520px; }
+  .about-statement__text { font-size: 44px; line-height: 46px; }
+  .marquee { padding: 40px 0; }
+  .marquee__item { font-size: 44px; line-height: 44px; padding-right: 48px; }
   .reviews-layout { grid-template-columns: 1fr; gap: 32px; }
   .rating-summary { position: static; }
   .blog-grid { grid-template-columns: repeat(2, 1fr); }
-  .about-hero { padding-top: 64px; }
-  .about-story { grid-template-columns: 1fr; gap: 24px; padding-block: 48px 64px; }
-  .about-split { grid-template-columns: 1fr; }
-  .about-split__text { padding-block: 40px; }
 }
 
 @media (max-width: 750px) {
+  .about-cover { height: 440px; }
+  .about-statement, .about-statement--solid { min-height: 440px; }
+  .about-statement__text { font-size: 32px; line-height: 36px; }
   .plp-page .page-head { padding: 48px var(--gutter); }
   .plp-page .toolbar { padding: 20px var(--gutter); }
   .plp-page .view-toggle { border-right: 0; padding-right: 0; }
@@ -238,10 +255,6 @@
   .blog-page .page-head { padding: 32px var(--gutter); }
   .blog-page .page-head .h-1 { font-size: 37.6px; line-height: 41.4px; }
   .blog-page .blog-grid { gap: 32px; padding-bottom: 64px; }
-  .about-hero { padding-block: 48px; }
-  .about-values { grid-template-columns: 1fr; }
-  .about-value { border-right: 0; border-bottom: 1px solid var(--line); padding-block: 40px; }
-  .about-value:last-child { border-bottom: 0; }
   .article__body p { font-size: 16px; line-height: 26px; }
   .article__body p:first-child { font-size: 17px; line-height: 27px; }
   .review-form { padding: 24px 20px; }

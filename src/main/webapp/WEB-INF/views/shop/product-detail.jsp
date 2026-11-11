@@ -25,15 +25,9 @@
 --%>
 <c:set var="soldOut" value="${product.stockTotal == 0}"/>
 <t:layout title="${product.name}" nav="shop" bodyClass="pdp-page" description="${product.description}">
-  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/catalog.css?v=5"></jsp:attribute>
+  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/catalog.css?v=6"></jsp:attribute>
   <jsp:attribute name="scripts"><script src="${ctx}/assets/js/pages/catalog.js?v=2" defer></script></jsp:attribute>
   <jsp:body>
-
-    <nav class="breadcrumb" aria-label="Đường dẫn">
-      <a href="${ctx}/home">Trang chủ</a><span aria-hidden="true">/</span>
-      <a href="${ctx}/products?category=${fn:escapeXml(product.categorySlug)}"><c:out value="${product.categoryName}"/></a><span aria-hidden="true">/</span>
-      <span aria-current="page"><c:out value="${product.name}"/></span>
-    </nav>
 
     <div class="pdp">
       <%-- Cột trái: ảnh --%>
@@ -153,11 +147,26 @@
             <div class="accordion__body"><p><c:out value="${product.description}"/></p></div>
           </details>
           <details class="accordion">
-            <summary><span>Chất liệu và bảo quản</span><svg class="accordion__arrow" aria-hidden="true" width="11" height="7" viewBox="0 0 11 7" fill="none"><path stroke="currentColor" stroke-width="1.5" d="M10 1 5.5 5.5 1 1"/></svg></summary>
+            <summary><span>Chất liệu</span><svg class="accordion__arrow" aria-hidden="true" width="11" height="7" viewBox="0 0 11 7" fill="none"><path stroke="currentColor" stroke-width="1.5" d="M10 1 5.5 5.5 1 1"/></svg></summary>
             <div class="accordion__body">
               <p>Vải cotton mềm, thoáng và dễ chịu khi mặc cả ngày. Thành phần chi tiết ghi trên nhãn của từng sản phẩm.</p>
-              <p>Giặt với nước mát, lộn trái khi giặt, không dùng chất tẩy mạnh. Phơi nơi thoáng, tránh nắng gắt để giữ màu. Ủi ở nhiệt độ thấp.</p>
             </div>
+          </details>
+          <details class="accordion">
+            <summary><span>Hướng dẫn bảo quản</span><svg class="accordion__arrow" aria-hidden="true" width="11" height="7" viewBox="0 0 11 7" fill="none"><path stroke="currentColor" stroke-width="1.5" d="M10 1 5.5 5.5 1 1"/></svg></summary>
+            <div class="accordion__body">
+              <p>Giặt với nước mát, lộn trái khi giặt, không dùng chất tẩy mạnh.</p>
+              <p>Phơi nơi thoáng, tránh nắng gắt để giữ màu. Ủi ở nhiệt độ thấp.</p>
+            </div>
+          </details>
+          <details class="accordion">
+            <summary><span>Giao hàng và đổi trả</span><svg class="accordion__arrow" aria-hidden="true" width="11" height="7" viewBox="0 0 11 7" fill="none"><path stroke="currentColor" stroke-width="1.5" d="M10 1 5.5 5.5 1 1"/></svg></summary>
+            <div class="accordion__body">
+              <p>Phí ship cố định <t:price value="${shippingFee}"/> cho mỗi đơn, giao tận nơi và thanh toán khi nhận hàng. Đơn dùng mã giảm giá hợp lệ được miễn phí ship.</p>
+              <p>Bạn có thể hủy đơn khi đơn còn ở trạng thái Chờ xác nhận, trong mục Đơn hàng của tài khoản.</p>
+            </div>
+          </details>
+        </div>
           </details>
           <details class="accordion">
             <summary><span>Vận chuyển</span><svg class="accordion__arrow" aria-hidden="true" width="11" height="7" viewBox="0 0 11 7" fill="none"><path stroke="currentColor" stroke-width="1.5" d="M10 1 5.5 5.5 1 1"/></svg></summary>

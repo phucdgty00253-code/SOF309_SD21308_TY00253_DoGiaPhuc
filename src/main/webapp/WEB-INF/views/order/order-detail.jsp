@@ -13,7 +13,7 @@
     POST /order action=confirmReceived fields: orderCode, returnTo=detail
 --%>
 <t:account-layout title="Đơn hàng ${order.orderCode}" active="orders">
-  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/shopping.css"></jsp:attribute>
+  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/shopping.css?v=5"></jsp:attribute>
   <jsp:attribute name="scripts"><script src="${ctx}/assets/js/pages/shopping.js" defer></script></jsp:attribute>
   <jsp:body>
     <c:set var="dialogReturn" value="detail"/>

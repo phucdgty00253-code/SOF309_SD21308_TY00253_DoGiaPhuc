@@ -107,7 +107,8 @@ a.thumb:hover { opacity: .85; }
 .sh-success__icon::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 1px solid var(--success); animation: sh-ring 1.2s .5s var(--ease) both; }
 .sh-success__icon .icon { width: 40px; height: 40px; stroke-width: 1.5; }
 .sh-success__lead { max-width: 460px; color: var(--navy-60); }
-.sh-success__card { width: 100%; display: grid; gap: 14px; margin-top: 12px; padding: 28px 32px; background: var(--bg); text-align: left; }
+/* Cùng khung tối giản và kiểu thẻ với trang thanh toán (#86, #91): viền #dedede, bo 12px */
+.sh-success__card { width: 100%; display: grid; gap: 14px; margin-top: 12px; padding: 28px 32px; background: #f5f5f5; border: 1px solid #dedede; border-radius: 12px; text-align: left; }
 .sh-kv { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
 .sh-kv > :first-child { color: var(--navy-60); flex: none; }
 .sh-kv > :last-child { text-align: right; min-width: 0; }
