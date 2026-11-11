@@ -1,15 +1,14 @@
-# KẾ HOẠCH KIỂM THỬ (TEST PLAN) - SALTAIR
+# KẾ HOẠCH KIỂM THỬ (TEST PLAN)
+> *File RIÊNG của dự án. Bối cảnh dự án: [SPECIFICATIONS.md](SPECIFICATIONS.md). Quy trình: [HUONG_DAN_QUY_TRINH_PHAT_TRIEN.md](HUONG_DAN_QUY_TRINH_PHAT_TRIEN.md) (Bước 5).*
 
 * **Dự án:** Saltair - website bán quần áo basic (JAV102)
-* **Công nghệ:** Java 17, Jakarta Servlet/JSP, Tomcat 11, MySQL 8
-* **URL chạy local:** `http://localhost:8080/saltair/home`
-* **Quy trình áp dụng:** [QUY_TRINH_PHAT_TRIEN_FEATURE.md](QUY_TRINH_PHAT_TRIEN_FEATURE.md) (Bước 3 và Bước 5)
+* **Người phụ trách:** Trưởng nhóm (`nhan0x`)
 
 ---
 
 ## 1. MỤC TIÊU KIỂM THỬ
 * Kiểm thử nghiệp vụ ở tầng Service bằng **JUnit 5** (giá trị biên, lỗi nghiệp vụ).
-* Kiểm thử từng feature theo `docs/features/<số>-<tên>/TEST_CASES.md` trước khi mở PR.
+* Kiểm thử từng yêu cầu theo `docs/requirements/REQ_<số>_<TEN>/03_TEST_CASES.md` trước khi mở PR.
 * Kiểm thử toàn luồng (khách xem hàng → giỏ → đặt hàng → admin xử lý đơn) trước mỗi lần merge lớn vào `develop` và trước khi đưa lên `main`.
 
 ## 2. PHẠM VI KIỂM THỬ
@@ -27,14 +26,12 @@
 | Cấp độ | Công cụ | Thư mục / Tài liệu | Khi nào chạy |
 | :--- | :--- | :--- | :--- |
 | Unit test | JUnit 5 (`mvn test`) | `src/test/java/com/fashionweb/` | Mỗi lần commit có sửa Service |
-| Test case feature | Làm tay theo bảng | `docs/features/<số>-<tên>/TEST_CASES.md` | Bước 5, trước khi mở PR |
+| Test case theo yêu cầu | Làm tay theo bảng | `docs/requirements/REQ_<số>_<TEN>/03_TEST_CASES.md` | Bước 5, trước khi mở PR |
 | Toàn luồng | Làm tay (hoặc script curl) | Mục 5 bên dưới | Trước khi merge PR lớn, trước khi lên `main` |
 
 ## 4. MÔI TRƯỜNG & DỮ LIỆU
-* Chạy `database/schema.sql` rồi `database/data.sql` để có dữ liệu sạch.
-* `src/main/resources/mail.properties` có `auth.devCode=true` để mã đăng nhập hiện trên trang (email mẫu là email giả).
-* Tài khoản mẫu: `admin@saltair.vn` (ADMIN), `khach@saltair.vn` (có giỏ, đơn đủ trạng thái), `mai.pham@example.com` (đang bị khóa).
-* Voucher mẫu: `WELCOME10`, `GIAM50K` (dùng được), `HETHAN20`, `HETLUOT`, `TAMDUNG` (để thử lỗi).
+* Cách chạy, cấu hình và dữ liệu mẫu: [SPECIFICATIONS.md](SPECIFICATIONS.md) mục 2 và mục 6.
+* Trước mỗi đợt test: chạy lại `database/schema.sql` rồi `database/data.sql` để có dữ liệu sạch.
 
 ## 5. CÁC LUỒNG CHÍNH PHẢI LUÔN CHẠY ĐƯỢC (SMOKE)
 1. Khách chưa đăng nhập mở trang chủ, tìm kiếm, mở chi tiết sản phẩm, thêm vào giỏ.
@@ -47,5 +44,5 @@
 
 ## 6. TIÊU CHÍ HOÀN THÀNH
 * `mvn test`: 100% Pass.
-* Mọi `TEST_CASES.md` của các feature trong đợt merge đều Pass.
+* Mọi `03_TEST_CASES.md` của các yêu cầu trong đợt merge đều Pass.
 * 7 luồng ở mục 5 đều chạy được, log Tomcat không có `SEVERE`/`Exception`.

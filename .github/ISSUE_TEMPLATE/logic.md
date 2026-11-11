@@ -1,29 +1,30 @@
 ---
 name: "[Logic] Chức năng phía server"
-about: Servlet, Service, Repository, database, cấu hình
+about: Xử lý nghiệp vụ, API/endpoint, dữ liệu, cấu hình
 title: "[Logic] "
 labels: logic
 assignees: ''
 ---
 
-**Giai đoạn**: <!-- ví dụ: Sprint 1 -->
-**Đi cùng**: <!-- issue giao diện liên quan, ví dụ #75. Không có thì xóa dòng này -->
-**Tài liệu**: `docs/features/<số>-<ten-ngan>/` (tạo ở Bước 2 của [quy trình](../../docs/QUY_TRINH_PHAT_TRIEN_FEATURE.md))
+**Yêu cầu**: `docs/requirements/REQ_<số>_<TEN>/` <!-- tạo ở Bước 1-2 của docs/HUONG_DAN_QUY_TRINH_PHAT_TRIEN.md -->
+**Quy tắc phụ trách**: BR-<x>, BR-<y> <!-- lấy từ 02_PHAN_TICH.md -->
+**Đi cùng / Phụ thuộc**: <!-- ví dụ #75. Không có thì xóa dòng này -->
+**Sprint**: <!-- nếu dự án dùng Scrum -->
 
 ## Mô tả
-<!-- Người dùng nào, làm được gì, vì sao cần. Một đến ba câu. -->
+<!-- Một đến ba câu: phần nào của yêu cầu issue này làm. -->
 
 ## Cần làm
-- **Database**: <!-- bảng/cột thêm, sửa, xóa; file migration. Không đổi thì ghi "Không" -->
-- **Repository**:
-- **Service**: <!-- quy tắc nghiệp vụ có con số cụ thể -->
-- **Servlet / Endpoint**: <!-- phương thức, đường dẫn, tham số -->
+- **Dữ liệu**: <!-- bảng/cột thêm, sửa, xóa; migration. Không đổi ghi "Không" -->
+- **Nghiệp vụ**: <!-- quy tắc có con số cụ thể -->
+- **Endpoint / API**: <!-- phương thức, đường dẫn, tham số -->
+- **Cấu hình**:
 
 ## Nghiệm thu
-<!-- Mỗi dòng đo được: làm gì, thấy gì. -->
+<!-- Mỗi dòng đo được: làm gì, thấy gì. Lấy từ các BR-x. -->
 - [ ]
 - [ ]
-- [ ] `docs/features/<số>-<ten-ngan>/TEST_CASES.md` đều Pass, `mvn test` xanh
+- [ ] Các ca của issue này trong `03_TEST_CASES.md` đều Pass, unit test xanh
 
 ---
-**Quy tắc chung**: nhánh `feature/<số-issue>-<tên-ngắn>` tách từ `develop`, PR vào `develop` ghi `Closes #<số-issue>`. Luồng `Servlet -> Service -> Repository -> MySQL`, SQL dùng `PreparedStatement`.
+**Quy tắc chung**: tạo nhánh và mở PR theo `docs/SPECIFICATIONS.md` → *Quy ước Git*, PR ghi `Closes #<số-issue>`.

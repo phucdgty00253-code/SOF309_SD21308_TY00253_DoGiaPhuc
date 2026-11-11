@@ -1,14 +1,16 @@
 ---
-name: "[Giao diện] JSP, CSS, JS, hiệu ứng"
-about: Trang mới, sửa bố cục, hiệu ứng
+name: "[Giao diện] Trang, bố cục, hiệu ứng"
+about: Giao diện người dùng, hiệu ứng, trải nghiệm trên điện thoại
 title: "[Giao diện] "
 labels: giao-dien
 assignees: ''
 ---
 
-**Giai đoạn**: <!-- ví dụ: Sprint 1 -->
+**Yêu cầu**: `docs/requirements/REQ_<số>_<TEN>/` <!-- tạo ở Bước 1-2 của docs/HUONG_DAN_QUY_TRINH_PHAT_TRIEN.md -->
+**Quy tắc phụ trách**: BR-<x> <!-- lấy từ 02_PHAN_TICH.md -->
 **Phụ thuộc**: <!-- issue logic cần có trước, ví dụ #74. Không có thì xóa dòng này -->
-**Tham chiếu**: <!-- trang mẫu, ảnh chụp, số đo (chỉ mượn bố cục và hiệu ứng, không dùng logo, ảnh, chữ của trang khác) -->
+**Tham chiếu**: <!-- ảnh chụp, trang mẫu, số đo. Chỉ mượn bố cục và hiệu ứng, không dùng logo, ảnh, chữ của người khác -->
+**Sprint**: <!-- nếu dự án dùng Scrum -->
 
 ## Mô tả
 <!-- Hiện tại thế nào, cần đổi thành thế nào. -->
@@ -21,18 +23,13 @@ assignees: ''
 |---|---|---|---|---|
 | | | | | |
 
-- Chỉ animate `transform` và `opacity`.
-- `prefers-reduced-motion: reduce`: chỉ hiện/ẩn dần bằng `opacity`.
-
 ## Hành vi
-<!-- Bấm, rê chuột, bàn phím (Esc, Tab), điện thoại. -->
-
-## File dự kiến
-<!-- layout.tag, style.css, app.js, views/... -->
+<!-- Bấm, rê chuột, bàn phím (Esc, Tab), trợ năng, điện thoại. -->
 
 ## Nghiệm thu
 - [ ]
-- [ ] Đúng ở khổ máy tính (1440px) và điện thoại (375px), Console không có lỗi đỏ
+- [ ] Các ca của issue này trong `03_TEST_CASES.md` đều Pass
+- [ ] Đúng ở khổ máy tính và điện thoại, Console không có lỗi
 
 ---
-**Quy tắc chung**: nhánh `feature/<số-issue>-<tên-ngắn>` tách từ `develop`, PR vào `develop` ghi `Closes #<số-issue>`.
+**Quy tắc chung**: tạo nhánh và mở PR theo `docs/SPECIFICATIONS.md` → *Quy ước Git*, PR ghi `Closes #<số-issue>`.

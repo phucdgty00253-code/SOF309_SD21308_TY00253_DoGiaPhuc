@@ -275,7 +275,7 @@ Tên package đã chốt: `model` (thay cho `entity`), `repository` (thay cho `d
 
 ## Quy ước sơ bộ
 
-> Quy trình làm một feature (issue, đặc tả, test case, nhánh, PR, merge): [`docs/QUY_TRINH_PHAT_TRIEN_FEATURE.md`](docs/QUY_TRINH_PHAT_TRIEN_FEATURE.md). Kế hoạch kiểm thử: [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md).
+> Quy trình từ nhận yêu cầu tới merge: [`docs/HUONG_DAN_QUY_TRINH_PHAT_TRIEN.md`](docs/HUONG_DAN_QUY_TRINH_PHAT_TRIEN.md). Bối cảnh dự án cho quy trình: [`docs/SPECIFICATIONS.md`](docs/SPECIFICATIONS.md). Kế hoạch kiểm thử: [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md). Danh sách yêu cầu: [`docs/requirements/`](docs/requirements/README.md).
 
 
 - Servlet đặt tên kết thúc bằng `Servlet`, Repository bằng `Repository`, Service bằng `Service`.
@@ -293,5 +293,5 @@ Tên package đã chốt: `model` (thay cho `entity`), `repository` (thay cho `d
 - [x] Giao diện JSP của toàn bộ trang và khung file (Servlet, Service, Repository, Filter)
 - [ ] Database: `database/schema.sql` (17 bảng) và `database/data.sql` (dữ liệu demo, tài khoản và voucher mẫu ghi ở đầu file) đã chạy thử trên MySQL 8.0, chờ team review. Chạy `schema.sql` trước rồi `data.sql`
 - [ ] Code convention đầy đủ
-- [x] Quy trình GitHub (branch, PR, giao task): xem `docs/QUY_TRINH_PHAT_TRIEN_FEATURE.md`
+- [x] Quy trình GitHub (branch, PR, giao task): xem `docs/HUONG_DAN_QUY_TRINH_PHAT_TRIEN.md`
 - [ ] Phân công 6 thành viên
