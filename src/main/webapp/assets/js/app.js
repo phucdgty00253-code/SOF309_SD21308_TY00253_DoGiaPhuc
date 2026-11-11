@@ -65,22 +65,35 @@
     start();
   });
 
-  /* ---------- Header: sticky; như a-dam: cuộn xuống thì ẩn, cuộn lên thì hiện; có nền khi đã cuộn ---------- */
+  /* ---------- Header (#87, đo trên a-dam): luôn dính trên cùng, không ẩn khi cuộn, cao cố định.
+     Header trong suốt trên banner chuyển sang nền trắng khi cuộn quá 200px. ---------- */
   const header = $('.header');
   if (header) {
-    let lastY = window.scrollY;
-    const onScroll = () => {
-      const y = window.scrollY;
-      header.classList.toggle('is-scrolled', y > 8);
-      const menuOpen = header.matches(':focus-within') || $('.has-dropdown.is-open', header);
-      const hide = y > header.offsetHeight + 120 && y > lastY + 4 && !menuOpen;
-      const show = y < lastY - 4 || y <= header.offsetHeight;
-      if (hide) header.classList.add('is-hidden');
-      else if (show) header.classList.toggle('is-hidden', false);
-      lastY = y;
-    };
+    const SOLID_AT = 200;
+    const onScroll = () => header.classList.toggle('is-scrolled', window.scrollY > SOLID_AT);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
+
+    /* Menu điện thoại: khung phủ phần dưới header; nút ba gạch đổi thành dấu X */
+    const menuBtn = $('[data-menu-toggle]', header);
+    const menu = $('#mobile-nav', header);
+    if (menuBtn && menu) {
+      const setMenu = (open) => {
+        if (open) document.documentElement.style.setProperty('--menu-top', Math.max(0, Math.round(header.getBoundingClientRect().bottom)) + 'px');
+        header.classList.toggle('is-menu-open', open);
+        menu.setAttribute('aria-hidden', String(!open));
+        menuBtn.setAttribute('aria-expanded', String(open));
+        menuBtn.setAttribute('aria-label', open ? 'Đóng menu' : 'Mở menu');
+        document.body.style.overflow = open ? 'hidden' : '';
+      };
+      const isOpen = () => header.classList.contains('is-menu-open');
+      menuBtn.addEventListener('click', () => setMenu(!isOpen()));
+      menu.addEventListener('click', (e) => { if (e.target === menu) setMenu(false); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen()) { setMenu(false); menuBtn.focus(); } });
+      // Mở tìm kiếm hoặc giỏ hàng từ header thì đóng menu trước; quay ngang hoặc kéo rộng cửa sổ cũng đóng
+      $$('[data-search-open], [data-cart-open]', header).forEach((b) => b.addEventListener('click', () => { if (isOpen()) setMenu(false); }, true));
+      window.matchMedia('(min-width: 991px)').addEventListener('change', (e) => { if (e.matches && isOpen()) setMenu(false); });
+    }
   }
 
   /* ---------- Nút: bọc chữ để có hiệu ứng chữ cuộn lên khi rê chuột (như a-dam) ----------
