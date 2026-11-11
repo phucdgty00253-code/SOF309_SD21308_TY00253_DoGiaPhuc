@@ -32,6 +32,31 @@ public class CategoryDAO {
     }
 
     /**
+     * Danh mục chưa xóa mềm có tên chứa {@code q}, kèm số sản phẩm đang bán.
+     */
+    public List<Category> searchByName(String q) {
+        if (q == null || q.isBlank()) {
+            return List.of();
+        }
+        String sql = "SELECT c.*, " + PRODUCT_COUNT
+                + " FROM categories c WHERE c.is_deleted = 0 AND c.name LIKE ? ESCAPE '!' ORDER BY c.id";
+        String pattern = "%" + q.trim().replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
+        List<Category> list = new ArrayList<>();
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, pattern);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(map(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi tìm danh mục theo tên", e);
+        }
+        return list;
+    }
+
+    /**
      * SELECT theo slug (chỉ danh mục chưa xóa mềm). null nếu không có.
      */
     public Category findBySlug(String slug) {

@@ -28,6 +28,16 @@ public class CategoryService {
     }
 
     /**
+     * Danh mục chưa xóa mềm có tên chứa {@code q}, kèm productCount (cho khung tìm kiếm nhanh).
+     */
+    public List<Category> searchByName(String q) {
+        if (q == null || q.trim().length() < 2) {
+            return List.of();
+        }
+        return categoryDAO.searchByName(q.trim());
+    }
+
+    /**
      * Một danh mục chưa xóa mềm theo slug. null nếu không có.
      */
     public Category findBySlug(String slug) {

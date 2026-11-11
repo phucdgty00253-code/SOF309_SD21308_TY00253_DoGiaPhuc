@@ -134,6 +134,32 @@ public class ProductDAO {
     }
 
     /**
+     * Gợi ý tối đa {@code limit} tên sản phẩm đang bán có chứa {@code q} (không phân biệt hoa thường và dấu).
+     */
+    public List<String> suggestNames(String q, int limit) {
+        if (q == null || q.isBlank() || limit <= 0) {
+            return List.of();
+        }
+        String sql = "SELECT p.name FROM products p JOIN categories c ON c.id = p.category_id "
+                + VISIBLE + "AND p.name LIKE ? ESCAPE '!' ORDER BY p.created_at DESC, p.id DESC LIMIT ?";
+        String pattern = "%" + q.trim().replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
+        List<String> names = new ArrayList<>();
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, pattern);
+            ps.setInt(2, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    names.add(rs.getString(1));
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Lỗi gợi ý tên sản phẩm", e);
+        }
+        return names;
+    }
+
+    /**
      * Sản phẩm đã xóa mềm kèm tên danh mục, mới xóa trước (Thùng rác).
      */
     public List<Product> findDeleted() {

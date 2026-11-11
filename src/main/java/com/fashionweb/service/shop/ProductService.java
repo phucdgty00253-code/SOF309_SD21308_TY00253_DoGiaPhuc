@@ -47,6 +47,16 @@ public class ProductService {
     }
 
     /**
+     * Tối đa {@code limit} tên sản phẩm đang bán có chứa {@code q} (cho khung tìm kiếm nhanh).
+     */
+    public List<String> suggestNames(String q, int limit) {
+        if (q == null || q.trim().length() < 2 || limit <= 0) {
+            return List.of();
+        }
+        return productDAO.suggestNames(q.trim(), limit);
+    }
+
+    /**
      * Chi tiết sản phẩm kèm variants, colors, sizes, avgRating, reviewCount. null nếu không có hoặc đã xóa mềm.
      */
     public Product findBySlug(String slug) {
