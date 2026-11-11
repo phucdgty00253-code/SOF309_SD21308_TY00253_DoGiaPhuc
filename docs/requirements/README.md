@@ -23,4 +23,4 @@ Ví dụ đã điền đầy đủ: [REQ_001_DANG_NHAP_BANG_MA](REQ_001_DANG_NHA
 | :---: | :--- | :--- | :--- | :--- | :---: |
 | [REQ_001](REQ_001_DANG_NHAP_BANG_MA/) | Đăng nhập bằng email + mã 6 số, khung tài khoản dạng popover | Trưởng nhóm | 10/11/2026 | #74, #75 | Đã nghiệm thu |
 
-> Các chức năng làm trước khi có quy trình này (issue #1 → #27, #72, #73, #80 → #91) không có thư mục REQ; lịch sử xem trong issue và PR trên GitHub.
+> Các chức năng làm trước khi có quy trình này (issue #1 → #27, #72, #73, #80, #82 → #91) không có thư mục REQ; lịch sử xem trong issue và PR trên GitHub.
