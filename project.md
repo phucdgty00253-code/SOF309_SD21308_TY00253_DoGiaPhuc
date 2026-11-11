@@ -263,7 +263,7 @@ src/main/webapp/
     views/
       auth/  account/  shop/  cart/  order/      JSP khách hàng, tên thư mục trùng tên chức năng
       admin/catalog/  admin/sales/  admin/system/   JSP quản trị
-      common/        icons, flash, account-nav (dùng chung)
+      common/        icons, flash (dùng chung); khung khu vực tài khoản là tags/account-layout.tag
       error/         403, 404, 500
 ```
 

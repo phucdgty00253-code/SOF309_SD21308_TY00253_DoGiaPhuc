@@ -4,7 +4,7 @@
 <%@ attribute name="nav" required="false" description="Mục menu đang chọn: shop | new | best | blog | about" %>
 <%@ attribute name="bodyClass" required="false" %>
 <%@ attribute name="overlay" required="false" type="java.lang.Boolean" description="true = menu trong suốt đè lên hero (trang chủ)" %>
-<%@ attribute name="chrome" required="false" description="Kiểu khung trang: để trống = đầy đủ; checkout = chỉ có logo ở trên, không thanh thông báo, menu, footer" %>
+<%@ attribute name="chrome" required="false" description="Kiểu khung trang: để trống = đầy đủ; checkout = chỉ có logo ở trên, không thanh thông báo, menu, footer; account = khu vực tài khoản (#85): logo bên trái, icon tài khoản bên phải, chân trang tối giản" %>
 <%@ attribute name="head" fragment="true" required="false" description="Thêm vào <head>: CSS riêng của trang" %>
 <%@ attribute name="scripts" fragment="true" required="false" description="Thêm cuối <body>: JS riêng của trang" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
@@ -13,6 +13,7 @@
 <%@ taglib prefix="t" tagdir="/WEB-INF/tags" %>
 <c:set var="ctx" value="${pageContext.request.contextPath}" scope="request"/>
 <fmt:setLocale value="vi_VN" scope="request"/>
+<c:set var="bare" value="${chrome == 'checkout' or chrome == 'account'}"/>
 <c:set var="cartCount" value="${empty sessionScope.cartCount ? 0 : sessionScope.cartCount}"/>
 <!DOCTYPE html>
 <html lang="vi" class="no-js">
@@ -26,7 +27,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="${ctx}/assets/css/style.css?v=3">
+  <link rel="stylesheet" href="${ctx}/assets/css/style.css?v=4">
   <jsp:invoke fragment="head"/>
 </head>
 <body class="${bodyClass}${overlay ? ' has-overlay-header' : ''}" data-ctx="${ctx}" data-logged-in="${not empty sessionScope.currentUser}">
@@ -38,9 +39,15 @@
     <a class="co-header__logo" href="${ctx}/home" aria-label="Saltair - Trang chủ"><img src="${ctx}/assets/brand/saltair-logo.png" alt="Saltair"></a>
   </header>
 </c:if>
+<c:if test="${chrome == 'account'}">
+  <header class="acct-header">
+    <a class="acct-header__logo" href="${ctx}/home" aria-label="Saltair - Trang chủ"><img src="${ctx}/assets/brand/saltair-logo.png" alt="Saltair"></a>
+    <button type="button" class="acct-header__user" data-account-open aria-haspopup="dialog" aria-expanded="false" aria-controls="account-pop" aria-label="Tài khoản"><t:icon name="user" size="md"/></button>
+  </header>
+</c:if>
 
 <%-- Thanh thông báo --%>
-<c:if test="${chrome != 'checkout' and not empty applicationScope.announcements}">
+<c:if test="${not bare and not empty applicationScope.announcements}">
   <div class="announcement-bar" data-announcements>
     <div class="announcement-bar__inner">
       <button type="button" class="announcement-bar__arrow" data-ann-prev aria-label="Thông báo trước"><t:icon name="chevron-left" size="sm"/></button>
@@ -55,7 +62,7 @@
 </c:if>
 
 <%-- Menu --%>
-<c:if test="${chrome != 'checkout'}">
+<c:if test="${not bare}">
 <header class="header${overlay ? ' header--overlay' : ''}">
   <div class="header__inner">
     <nav class="header__nav" aria-label="Menu chính">
@@ -176,7 +183,7 @@
 </main>
 
 <%-- Footer --%>
-<c:if test="${chrome != 'checkout'}">
+<c:if test="${not bare}">
 <footer class="footer">
   <div class="footer__grid">
     <div class="footer__brand">
@@ -214,6 +221,12 @@
     <span>Phí ship cố định 30.000đ · Miễn phí khi dùng mã giảm giá</span>
   </div>
 </footer>
+</c:if>
+<c:if test="${chrome == 'account'}">
+  <footer class="acct-footer">
+    <span>© 2026 Saltair</span>
+    <nav aria-label="Liên kết"><a href="${ctx}/products">Cửa hàng</a><a href="${ctx}/about">Giới thiệu</a><a href="${ctx}/blog">Blog</a></nav>
+  </footer>
 </c:if>
 
 <script src="${ctx}/assets/js/app.js?v=3" defer></script>
