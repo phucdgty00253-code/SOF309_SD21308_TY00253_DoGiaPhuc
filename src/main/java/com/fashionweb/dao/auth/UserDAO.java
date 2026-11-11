@@ -15,15 +15,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Truy vấn bảng users và password_resets.
+ * Truy vấn bảng users.
  *
- * <p>Đã làm: tài khoản (#1, #4), token đặt lại mật khẩu (#3). Admin người dùng (#6).
+ * <p>Đã làm: tài khoản (#1, #4, #74), Admin người dùng (#6).
  * <p>Chỉ chứa SQL (PreparedStatement) và chuyển ResultSet thành entity. Kết nối lấy từ DBContext.getConnection().
  */
 public class UserDAO {
 
     /**
-     * SELECT theo email (kèm password_hash).
+     * SELECT theo email.
      */
     public User findByEmail(String email) {
         return findOne("SELECT * FROM users WHERE email = ?", email);
@@ -40,15 +40,14 @@ public class UserDAO {
      * INSERT, trả id.
      */
     public int insert(User u) {
-        String sql = "INSERT INTO users (email, password_hash, full_name, phone, role, is_active) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO users (email, full_name, phone, role, is_active) VALUES (?, ?, ?, ?, ?)";
         try (Connection con = DBContext.getConnection();
              PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, u.getEmail());
-            ps.setString(2, u.getPasswordHash());
-            ps.setString(3, u.getFullName());
-            ps.setString(4, u.getPhone());
-            ps.setString(5, u.getRole().name());
-            ps.setBoolean(6, u.isActive());
+            ps.setString(2, u.getFullName());
+            ps.setString(3, u.getPhone());
+            ps.setString(4, u.getRole().name());
+            ps.setBoolean(5, u.isActive());
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 keys.next();
@@ -86,7 +85,6 @@ public class UserDAO {
         User u = new User();
         u.setId(rs.getInt("id"));
         u.setEmail(rs.getString("email"));
-        u.setPasswordHash(rs.getString("password_hash"));
         u.setFullName(rs.getString("full_name"));
         u.setPhone(rs.getString("phone"));
         u.setRole(Role.valueOf(rs.getString("role")));
@@ -101,13 +99,6 @@ public class UserDAO {
      */
     public void updateProfile(int id, String fullName, String phone) {
         executeUpdate("UPDATE users SET full_name = ?, phone = ? WHERE id = ?", fullName, phone, id);
-    }
-
-    /**
-     * UPDATE password_hash.
-     */
-    public void updatePassword(int id, String passwordHash) {
-        executeUpdate("UPDATE users SET password_hash = ? WHERE id = ?", passwordHash, id);
     }
 
     /**
@@ -193,7 +184,6 @@ public class UserDAO {
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         User u = map(rs);
-                        u.setPasswordHash(null);
                         u.setOrderCount(rs.getInt("order_count"));
                         items.add(u);
                     }
@@ -202,72 +192,6 @@ public class UserDAO {
             return new Page<>(items, safePage, pageSize, total);
         } catch (SQLException e) {
             throw new DataAccessException("Lỗi đọc danh sách người dùng", e);
-        }
-    }
-
-    /**
-     * INSERT vào password_resets, hết hạn sau minutes phút tính theo giờ của MySQL (cùng đồng hồ với NOW() khi kiểm tra).
-     */
-    public void insertResetToken(int userId, String tokenHash, int minutes) {
-        executeUpdate("INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL ? MINUTE))",
-                userId, tokenHash, minutes);
-    }
-
-    /**
-     * SELECT user_id WHERE token_hash = ? AND used = 0 AND expires_at &gt; NOW(). null nếu token không dùng được.
-     */
-    public Integer findUserIdByValidToken(String tokenHash) {
-        try (Connection con = DBContext.getConnection();
-             PreparedStatement ps = con.prepareStatement(
-                     "SELECT user_id FROM password_resets WHERE token_hash = ? AND used = 0 AND expires_at > NOW()")) {
-            ps.setString(1, tokenHash);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? rs.getInt(1) : null;
-            }
-        } catch (SQLException e) {
-            throw new DataAccessException("Lỗi kiểm tra token đặt lại mật khẩu", e);
-        }
-    }
-
-    /**
-     * Một transaction: khóa token còn hiệu lực (FOR UPDATE), đổi mật khẩu, đánh dấu used = 1 cho MỌI token của user đó
-     * (liên kết cũ gửi trước đó cũng hết dùng được). Trả false nếu token sai, đã dùng hoặc hết hạn.
-     */
-    public boolean resetPasswordByToken(String tokenHash, String passwordHash) {
-        try (Connection con = DBContext.getConnection()) {
-            con.setAutoCommit(false);
-            try {
-                Integer userId = null;
-                try (PreparedStatement ps = con.prepareStatement(
-                        "SELECT user_id FROM password_resets WHERE token_hash = ? AND used = 0 AND expires_at > NOW() FOR UPDATE")) {
-                    ps.setString(1, tokenHash);
-                    try (ResultSet rs = ps.executeQuery()) {
-                        if (rs.next()) {
-                            userId = rs.getInt(1);
-                        }
-                    }
-                }
-                if (userId == null) {
-                    con.rollback();
-                    return false;
-                }
-                try (PreparedStatement ps = con.prepareStatement("UPDATE users SET password_hash = ? WHERE id = ?")) {
-                    ps.setString(1, passwordHash);
-                    ps.setInt(2, userId);
-                    ps.executeUpdate();
-                }
-                try (PreparedStatement ps = con.prepareStatement("UPDATE password_resets SET used = 1 WHERE user_id = ? AND used = 0")) {
-                    ps.setInt(1, userId);
-                    ps.executeUpdate();
-                }
-                con.commit();
-                return true;
-            } catch (SQLException | RuntimeException e) {
-                con.rollback();
-                throw e;
-            }
-        } catch (SQLException e) {
-            throw new DataAccessException("Lỗi đặt lại mật khẩu", e);
         }
     }
 }

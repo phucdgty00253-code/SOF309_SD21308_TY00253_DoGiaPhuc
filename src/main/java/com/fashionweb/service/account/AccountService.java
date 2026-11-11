@@ -7,7 +7,6 @@ import com.fashionweb.exception.ValidationException;
 import com.fashionweb.model.Address;
 import com.fashionweb.model.Product;
 import com.fashionweb.model.User;
-import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -49,38 +48,10 @@ public class AccountService {
     }
 
     /**
-     * Kiểm tra mật khẩu hiện tại bằng BCrypt, băm và lưu mật khẩu mới. Sai thì ném ValidationException
-     * (currentPassword, newPassword).
-     */
-    public void changePassword(int userId, String currentPassword, String newPassword) {
-        User u = userDAO.findById(userId);
-        boolean ok;
-        try {
-            ok = u != null && currentPassword != null && BCrypt.checkpw(currentPassword, u.getPasswordHash());
-        } catch (IllegalArgumentException e) {
-            ok = false;
-        }
-        if (!ok) {
-            throw new ValidationException("currentPassword", "Mật khẩu hiện tại không đúng.");
-        }
-        if (newPassword == null || newPassword.length() < 6 || newPassword.length() > 72 || newPassword.isBlank()) {
-            throw new ValidationException("newPassword", "Mật khẩu mới từ 6 đến 72 ký tự.");
-        }
-        if (newPassword.equals(currentPassword)) {
-            throw new ValidationException("newPassword", "Mật khẩu mới phải khác mật khẩu hiện tại.");
-        }
-        userDAO.updatePassword(userId, BCrypt.hashpw(newPassword, BCrypt.gensalt(10)));
-    }
-
-    /**
-     * Thông tin user mới nhất từ DB (không kèm mật khẩu băm).
+     * Thông tin user mới nhất từ DB.
      */
     public User findUser(int userId) {
-        User u = userDAO.findById(userId);
-        if (u != null) {
-            u.setPasswordHash(null);
-        }
-        return u;
+        return userDAO.findById(userId);
     }
 
     /**

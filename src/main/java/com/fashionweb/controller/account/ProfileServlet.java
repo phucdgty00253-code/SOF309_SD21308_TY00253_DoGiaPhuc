@@ -14,10 +14,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
- * GET /profile : thông tin tài khoản và đổi mật khẩu (Customer, AuthFilter bắt buộc đăng nhập).
+ * GET /profile : thông tin tài khoản (Customer, AuthFilter bắt buộc đăng nhập).
  * <p>JSP: /WEB-INF/views/account/profile.jsp. Request attributes: user, orderCount, wishlistCount, errors.
- * <p>POST action=updateProfile (fullName, phone; email và role không sửa được) và
- * action=changePassword (currentPassword, newPassword, confirmPassword). Xong redirect kèm flash, lỗi thì hiện lại form.
+ * <p>POST action=updateProfile (fullName, phone; email và role không sửa được). Xong redirect kèm flash, lỗi thì hiện lại form.
+ * Không còn đổi mật khẩu: đăng nhập bằng email + mã 6 số (#74).
  */
 @WebServlet("/profile")
 public class ProfileServlet extends HttpServlet {
@@ -39,13 +39,6 @@ public class ProfileServlet extends HttpServlet {
                 // Cập nhật bản User trong session để đầu trang hiện tên mới
                 req.getSession().setAttribute(AppConstant.SESSION_USER, accountService.findUser(user.getId()));
                 WebUtil.flash(req, "Đã lưu thông tin tài khoản.", "success");
-            } else if ("changePassword".equals(action)) {
-                String newPassword = req.getParameter("newPassword");
-                if (newPassword == null || !newPassword.equals(req.getParameter("confirmPassword"))) {
-                    throw new ValidationException("confirmPassword", "Mật khẩu nhập lại không khớp.");
-                }
-                accountService.changePassword(user.getId(), req.getParameter("currentPassword"), newPassword);
-                WebUtil.flash(req, "Đã đổi mật khẩu.", "success");
             } else {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
                 return;

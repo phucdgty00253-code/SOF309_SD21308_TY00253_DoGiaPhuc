@@ -6,13 +6,12 @@ USE saltair;
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS blogs, banners, reviews, order_details, orders, vouchers,
                      wishlists, cart_items, carts, product_variants, products,
-                     sizes, colors, categories, addresses, password_resets, users;
+                     sizes, colors, categories, addresses, login_codes, password_resets, users;
 SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE users (
   id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
   email         VARCHAR(150) NOT NULL,
-  password_hash VARCHAR(100) NOT NULL,
   full_name     VARCHAR(100) NOT NULL,
   phone         VARCHAR(15)  NULL,
   role          ENUM('CUSTOMER','ADMIN') NOT NULL DEFAULT 'CUSTOMER',
@@ -23,16 +22,16 @@ CREATE TABLE users (
   UNIQUE (email)
 ) ENGINE=InnoDB;
 
-CREATE TABLE password_resets (
+CREATE TABLE login_codes (
   id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  user_id     INT UNSIGNED NOT NULL,
-  token_hash  CHAR(64)     NOT NULL,
+  email       VARCHAR(150) NOT NULL,
+  code_hash   CHAR(64)     NOT NULL,
   expires_at  DATETIME     NOT NULL,
+  attempts    TINYINT      NOT NULL DEFAULT 0,
   used        TINYINT(1)   NOT NULL DEFAULT 0,
   created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE (token_hash),
-  FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+  INDEX idx_login_codes_email (email, created_at)
 ) ENGINE=InnoDB;
 
 CREATE TABLE addresses (

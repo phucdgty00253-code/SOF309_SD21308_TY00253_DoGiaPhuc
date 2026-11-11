@@ -102,9 +102,7 @@ Cột `role` trong bảng user chỉ lưu `CUSTOMER` hoặc `ADMIN`.
 - Tìm kiếm theo tên
 - Xem chi tiết sản phẩm: ảnh, mô tả, giá, màu, size, tồn kho, đánh giá
 - Xem blog
-- Đăng ký tài khoản
-- Đăng nhập
-- Quên mật khẩu
+- Đăng nhập hoặc tạo tài khoản bằng email + mã 6 số gửi qua email (không dùng mật khẩu)
 - Bấm "Thêm vào giỏ" hoặc "Mua" khi chưa đăng nhập: chuyển sang trang đăng nhập
 
 ### 2. CUSTOMER
@@ -113,7 +111,6 @@ Có mọi quyền xem của Guest, cộng thêm:
 
 - Đăng xuất
 - Xem và sửa profile (họ tên, SĐT)
-- Đổi mật khẩu
 - Sổ địa chỉ giao hàng: thêm, sửa, xóa, đặt mặc định
 - Giỏ hàng: thêm sản phẩm theo màu và size, tăng giảm số lượng, xóa, kiểm tra tồn kho
 - Danh sách yêu thích: thêm, bỏ, xem
@@ -212,7 +209,7 @@ Role Staff và Marketing, thanh toán online (VNPay, MoMo, QR), đăng nhập Go
 - Font Manrope (Google Fonts), bộ icon đường nét kiểu Lucide (sprite SVG nội bộ)
 - Git + GitHub
 
-- "Quên mật khẩu": gửi **email thật qua SMTP (Gmail)** bằng `util/MailUtil`, token băm SHA-256, hết hạn 15 phút, dùng một lần. Cấu hình ở `mail.properties` (không commit, chỉ trưởng nhóm cần).
+- Đăng nhập bằng mã (#74): gửi mã 6 số qua **email thật (SMTP Gmail)** bằng `util/MailUtil`. Chỉ lưu băm SHA-256 của mã; khách hết hạn 15 phút, sai 5 lần thì hủy; admin đăng nhập ở `/admin/login`, hết hạn 5 phút, sai 3 lần thì hủy. Cấu hình ở `mail.properties` (không commit). Tài khoản mẫu là email giả: bật `auth.devCode=true` để mã hiện trên trang nhập mã và trong log Tomcat.
 
 ## Design pattern áp dụng
 
@@ -280,9 +277,9 @@ Tên package đã chốt: `model` (thay cho `entity`), `dao` (không dùng `repo
 
 - Servlet đặt tên kết thúc bằng `Servlet`, DAO bằng `DAO`, Service bằng `Service`.
 - JSP viết thường, nối bằng gạch ngang (`product-list.jsp`).
-- URL: `/home`, `/products`, `/product?slug=`, `/cart`, `/checkout`, `/orders`, `/order?code=`, `/login`, `/register`, `/admin/*`.
+- URL: `/home`, `/products`, `/product?slug=`, `/cart`, `/checkout`, `/orders`, `/order?code=`, `/login`, `/login/code`, `/admin/login`, `/admin/*`.
 - Mọi câu SQL dùng `PreparedStatement`.
-- Mật khẩu băm bằng BCrypt, không lưu thô.
+- Không dùng mật khẩu: đăng nhập bằng mã 6 số, DB chỉ lưu băm SHA-256 của mã.
 - Thông tin đăng nhập và role lưu trong `HttpSession`.
 
 ## Còn cần chốt

@@ -1,154 +1,211 @@
 package com.fashionweb.service.auth;
 
 import com.fashionweb.constant.Role;
+import com.fashionweb.dao.auth.LoginCodeDAO;
+import com.fashionweb.dao.auth.LoginCodeDAO.RecentStats;
+import com.fashionweb.dao.auth.LoginCodeDAO.VerifyResult;
 import com.fashionweb.dao.auth.UserDAO;
 import com.fashionweb.exception.ValidationException;
 import com.fashionweb.model.User;
-import org.mindrot.jbcrypt.BCrypt;
+import com.fashionweb.util.MailUtil;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Base64;
-
-import java.util.LinkedHashMap;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
-import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
- * Đăng nhập, đăng ký, quên và đặt lại mật khẩu.
+ * Đăng nhập bằng email + mã 6 số (#74). Không còn mật khẩu.
  *
- * <p>Đã làm: đăng nhập, đăng ký (#1), quên mật khẩu (#3).
+ * <p>Khách: email chưa có tài khoản thì tự tạo CUSTOMER khi nhập đúng mã. Admin: luồng riêng /admin/login,
+ * hạn mã ngắn hơn, không bao giờ tự tạo tài khoản và không cho biết email có phải admin hay không.
  * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL.
  */
 public class AuthService {
 
-    /** BCrypt chỉ dùng 72 byte đầu nên giới hạn độ dài tối đa. */
-    private static final int MIN_PASSWORD = 6;
-    private static final int MAX_PASSWORD = 72;
+    private static final Logger LOG = Logger.getLogger(AuthService.class.getName());
     private static final Pattern EMAIL = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
-    private static final Pattern PHONE = Pattern.compile("0[0-9]{9}");
-
-    /** Thời hạn liên kết đặt lại mật khẩu (phút). */
-    public static final int RESET_TOKEN_MINUTES = 15;
+    private static final Pattern CODE = Pattern.compile("\\d{6}");
     private static final SecureRandom RANDOM = new SecureRandom();
+    private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy");
+
+    /** Số giây tối thiểu giữa hai lần xin mã. */
+    public static final int RESEND_SECONDS = 60;
+
+    /** Field lỗi riêng khi nhập email admin ở luồng khách: Servlet hiện kèm link tới /admin/login. */
+    public static final String ERROR_ADMIN = "admin";
+
+    public static final String MSG_LOCKED = "Tài khoản đã bị khóa. Vui lòng liên hệ Saltair để được hỗ trợ.";
+
+    /** Giới hạn theo luồng: hạn mã (phút), số lần nhập sai, số mã mỗi giờ. */
+    public enum Flow {
+        CUSTOMER(15, 5, 5),
+        ADMIN(5, 3, 3);
+
+        public final int minutes;
+        public final int maxAttempts;
+        public final int maxPerHour;
+
+        Flow(int minutes, int maxAttempts, int maxPerHour) {
+            this.minutes = minutes;
+            this.maxAttempts = maxAttempts;
+            this.maxPerHour = maxPerHour;
+        }
+    }
 
     private final UserDAO userDAO = new UserDAO();
+    private final LoginCodeDAO codeDAO = new LoginCodeDAO();
+
+    /** Chuẩn hóa email (trim, chữ thường). Sai định dạng thì ném ValidationException field "email". */
+    public String normalizeEmail(String email) {
+        String e = email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
+        if (e.isEmpty()) {
+            throw new ValidationException("email", "Vui lòng nhập email.");
+        }
+        if (e.length() > 150 || !EMAIL.matcher(e).matches()) {
+            throw new ValidationException("email", "Email không đúng định dạng.");
+        }
+        return e;
+    }
 
     /**
-     * Kiểm tra BCrypt. Trả null nếu sai; ném lỗi riêng nếu tài khoản bị khóa (is_active = 0).
+     * Tạo mã 6 số cho email (đã chuẩn hóa), hủy mã cũ, gửi mail (hoặc ghi log khi auth.devCode).
+     *
+     * <p>Luồng ADMIN: email không phải admin đang hoạt động thì không làm gì và trả null (Servlet vẫn báo chung chung).
+     * Luồng CUSTOMER: email admin bị chặn (field {@link #ERROR_ADMIN}), tài khoản bị khóa bị chặn.
+     *
+     * @return mã gốc chỉ khi auth.devCode bật (để hiện trên trang), ngược lại null
      */
-    public User login(String email, String password) {
-        if (email == null || password == null || email.isBlank() || password.isEmpty()) {
-            return null;
+    public String requestCode(String email, Flow flow) {
+        User u = userDAO.findByEmail(email);
+        if (flow == Flow.ADMIN) {
+            if (u == null || u.getRole() != Role.ADMIN || !u.isActive()) {
+                return null;
+            }
+        } else if (u != null) {
+            if (u.getRole() == Role.ADMIN) {
+                throw new ValidationException(ERROR_ADMIN, "Tài khoản quản trị vui lòng đăng nhập tại trang quản trị.");
+            }
+            if (!u.isActive()) {
+                throw new ValidationException("email", MSG_LOCKED);
+            }
         }
-        User u = userDAO.findByEmail(email.trim());
-        if (u == null || !checkPassword(password, u.getPasswordHash())) {
-            return null;
+
+        RecentStats stats = codeDAO.recentStats(email);
+        if (stats.countLastHour() >= flow.maxPerHour
+                || (stats.secondsSinceLast() >= 0 && stats.secondsSinceLast() < RESEND_SECONDS)) {
+            throw new ValidationException("email", "Bạn thử lại sau ít phút.");
         }
-        // Chỉ báo "bị khóa" khi đã nhập đúng mật khẩu, để không lộ thông tin tài khoản cho người đoán mò
+
+        String code = String.format("%06d", RANDOM.nextInt(1_000_000));
+        codeDAO.replace(email, hash(email, code), flow.minutes);
+
+        if (MailUtil.isDevCode()) {
+            LOG.info("[DEV] Mã đăng nhập cho " + email + ": " + code);
+            return code;
+        }
+        try {
+            MailUtil.send(email, code + " là mã đăng nhập Saltair của bạn", mailBody(code, flow));
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "Không gửi được mã đăng nhập tới " + email, e);
+            throw new ValidationException("email", "Không gửi được mã, vui lòng thử lại.");
+        }
+        return null;
+    }
+
+    /** Số giây còn phải chờ trước khi được gửi lại mã (0 nếu gửi được ngay). */
+    public int resendWaitSeconds(String email) {
+        int since = codeDAO.recentStats(email).secondsSinceLast();
+        return since < 0 ? 0 : Math.max(0, RESEND_SECONDS - since);
+    }
+
+    /**
+     * Kiểm tra mã. Đúng thì trả User (khách mới thì tạo tài khoản CUSTOMER). Sai thì ném ValidationException field "code".
+     */
+    public User verifyCode(String email, String code, Flow flow) {
+        String c = code == null ? "" : code.replaceAll("\\s", "");
+        if (!CODE.matcher(c).matches()) {
+            throw new ValidationException("code", "Mã gồm 6 chữ số.");
+        }
+        VerifyResult r = codeDAO.verify(email, hash(email, c), flow.maxAttempts);
+        switch (r.status()) {
+            case WRONG -> throw new ValidationException("code", "Mã không đúng, bạn còn " + r.remaining() + " lần thử.");
+            case LOCKED -> throw new ValidationException("code", "Bạn đã nhập sai quá số lần cho phép. Vui lòng gửi lại mã mới.");
+            case NONE -> throw new ValidationException("code", "Mã đã hết hạn hoặc không còn hiệu lực. Vui lòng gửi lại mã mới.");
+            default -> {
+                // OK
+            }
+        }
+
+        User u = userDAO.findByEmail(email);
+        if (flow == Flow.ADMIN) {
+            if (u == null || u.getRole() != Role.ADMIN || !u.isActive()) {
+                throw new ValidationException("code", "Mã đã hết hạn hoặc không còn hiệu lực. Vui lòng gửi lại mã mới.");
+            }
+            return u;
+        }
+        if (u == null) {
+            u = new User();
+            u.setEmail(email);
+            String name = email.substring(0, email.indexOf('@'));
+            u.setFullName(name.length() > 100 ? name.substring(0, 100) : name);
+            u.setRole(Role.CUSTOMER);
+            u.setActive(true);
+            u.setId(userDAO.insert(u));
+            return userDAO.findById(u.getId());
+        }
+        if (u.getRole() == Role.ADMIN) {
+            throw new ValidationException(ERROR_ADMIN, "Tài khoản quản trị vui lòng đăng nhập tại trang quản trị.");
+        }
         if (!u.isActive()) {
-            throw new ValidationException(null, "Tài khoản của bạn đang bị khóa. Vui lòng liên hệ Saltair để được hỗ trợ.");
+            throw new ValidationException("code", MSG_LOCKED);
         }
-        u.setPasswordHash(null); // không giữ chuỗi băm trong session
         return u;
     }
 
     /**
-     * Kiểm tra dữ liệu và email chưa tồn tại, băm BCrypt, INSERT role CUSTOMER.
-     * Giỏ hàng được tạo khi khách thêm sản phẩm đầu tiên (CartService.getCart).
-     * Sai thì ném ValidationException với lỗi theo ô: fullName, email, phone, password.
+     * Gửi mail báo có lượt đăng nhập trang quản trị (chạy nền, lỗi chỉ ghi log). auth.devCode bật thì chỉ ghi log.
      */
-    public User register(User user, String rawPassword) {
-        Map<String, String> errors = new LinkedHashMap<>();
-        String fullName = user.getFullName() == null ? "" : user.getFullName().trim();
-        String email = user.getEmail() == null ? "" : user.getEmail().trim().toLowerCase(Locale.ROOT);
-        String phone = user.getPhone() == null ? "" : user.getPhone().trim();
-
-        if (fullName.length() < 2 || fullName.length() > 100) {
-            errors.put("fullName", "Họ và tên từ 2 đến 100 ký tự.");
+    public void notifyAdminLogin(User admin, String ip, String userAgent) {
+        String time = LocalDateTime.now().format(TIME);
+        String body = "Tài khoản quản trị " + admin.getEmail() + " vừa đăng nhập Saltair.\n\n"
+                + "Thời gian: " + time + "\n"
+                + "Địa chỉ IP: " + ip + "\n"
+                + "Trình duyệt: " + (userAgent == null ? "không rõ" : userAgent) + "\n\n"
+                + "Nếu không phải bạn, hãy báo ngay cho trưởng nhóm.\n";
+        if (MailUtil.isDevCode()) {
+            LOG.info("[DEV] Admin " + admin.getEmail() + " đăng nhập lúc " + time + " từ " + ip);
+            return;
         }
-        if (email.isEmpty() || email.length() > 150 || !EMAIL.matcher(email).matches()) {
-            errors.put("email", "Email không đúng định dạng.");
-        } else if (userDAO.existsByEmail(email)) {
-            errors.put("email", "Email này đã được đăng ký. Hãy đăng nhập hoặc dùng email khác.");
-        }
-        if (!PHONE.matcher(phone).matches()) {
-            errors.put("phone", "Số điện thoại gồm 10 chữ số, bắt đầu bằng 0.");
-        }
-        if (rawPassword == null || rawPassword.length() < MIN_PASSWORD || rawPassword.length() > MAX_PASSWORD) {
-            errors.put("password", "Mật khẩu từ " + MIN_PASSWORD + " đến " + MAX_PASSWORD + " ký tự.");
-        } else if (rawPassword.isBlank()) {
-            errors.put("password", "Mật khẩu không được chỉ gồm khoảng trắng.");
-        }
-        if (!errors.isEmpty()) {
-            throw new ValidationException(errors);
-        }
-
-        user.setFullName(fullName);
-        user.setEmail(email);
-        user.setPhone(phone);
-        user.setRole(Role.CUSTOMER);
-        user.setActive(true);
-        user.setPasswordHash(BCrypt.hashpw(rawPassword, BCrypt.gensalt(10)));
-        user.setId(userDAO.insert(user));
-        user.setPasswordHash(null);
-        return user;
+        Thread t = new Thread(() -> {
+            try {
+                MailUtil.send(admin.getEmail(), "Đăng nhập trang quản trị Saltair lúc " + time, body);
+            } catch (Exception e) {
+                LOG.log(Level.WARNING, "Không gửi được mail báo đăng nhập admin", e);
+            }
+        }, "admin-login-mail");
+        t.setDaemon(true);
+        t.start();
     }
 
-    private static boolean checkPassword(String raw, String hash) {
+    private static String mailBody(String code, Flow flow) {
+        return "SALTAIR\n\n"
+                + "Mã xác thực của bạn\n\n"
+                + "    " + code + "\n\n"
+                + "Mã chỉ dùng được một lần và hết hạn sau " + flow.minutes + " phút.\n"
+                + "Nếu bạn không yêu cầu mã này, hãy bỏ qua email.\n";
+    }
+
+    /** SHA-256 hex của email + ":" + mã: không lưu mã gốc, và cùng một mã ở hai email cho hai băm khác nhau. */
+    private static String hash(String email, String code) {
         try {
-            return hash != null && BCrypt.checkpw(raw, hash);
-        } catch (IllegalArgumentException e) {
-            return false; // chuỗi băm hỏng hoặc không phải BCrypt
-        }
-    }
-
-    /**
-     * Tạo token ngẫu nhiên (32 byte, Base64 URL), lưu băm SHA-256 vào password_resets (hạn 15 phút), trả token để gửi mail.
-     * Trả null nếu email không tồn tại hoặc tài khoản bị khóa (Servlet vẫn báo chung chung).
-     */
-    public String createResetToken(String email) {
-        if (email == null || email.isBlank()) {
-            return null;
-        }
-        User u = userDAO.findByEmail(email.trim().toLowerCase(Locale.ROOT));
-        if (u == null || !u.isActive()) {
-            return null;
-        }
-        byte[] raw = new byte[32];
-        RANDOM.nextBytes(raw);
-        String token = Base64.getUrlEncoder().withoutPadding().encodeToString(raw);
-        userDAO.insertResetToken(u.getId(), sha256(token), RESET_TOKEN_MINUTES);
-        return token;
-    }
-
-    /**
-     * Token tồn tại, chưa dùng, chưa hết hạn.
-     */
-    public boolean isResetTokenValid(String token) {
-        return token != null && !token.isBlank() && userDAO.findUserIdByValidToken(sha256(token.trim())) != null;
-    }
-
-    /**
-     * Băm BCrypt, cập nhật mật khẩu, đánh dấu token đã dùng (trong một transaction).
-     * Mật khẩu 6 đến 72 ký tự; token sai, đã dùng hoặc hết hạn thì ném ValidationException với field "token".
-     */
-    public void resetPassword(String token, String newPassword) {
-        if (newPassword == null || newPassword.isBlank() || newPassword.length() < MIN_PASSWORD || newPassword.length() > MAX_PASSWORD) {
-            throw new ValidationException("password", "Mật khẩu từ 6 đến 72 ký tự.");
-        }
-        if (token == null || token.isBlank()
-                || !userDAO.resetPasswordByToken(sha256(token.trim()), BCrypt.hashpw(newPassword, BCrypt.gensalt(10)))) {
-            throw new ValidationException("token", "Liên kết đặt lại mật khẩu không hợp lệ, đã dùng hoặc đã hết hạn.");
-        }
-    }
-
-    /** Chuỗi hex SHA-256 (64 ký tự) để lưu token, không lưu token gốc. */
-    private static String sha256(String s) {
-        try {
-            byte[] d = MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8));
+            byte[] d = MessageDigest.getInstance("SHA-256").digest((email + ":" + code).getBytes(StandardCharsets.UTF_8));
             StringBuilder hex = new StringBuilder(64);
             for (byte b : d) {
                 hex.append(String.format("%02x", b));

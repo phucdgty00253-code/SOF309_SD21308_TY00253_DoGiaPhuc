@@ -9,11 +9,10 @@
     user          : User                 - người dùng hiện tại (fullName, email, phone, createdAt)
     orderCount    : Integer              - số đơn hàng của user
     wishlistCount : Integer              - số sản phẩm yêu thích
-    errors        : Map<String,String>   - (tùy chọn) lỗi theo ô: fullName, phone, currentPassword, newPassword, confirmPassword
+    errors        : Map<String,String>   - (tùy chọn) lỗi theo ô: fullName, phone
     message / messageType                - (tùy chọn) thông báo chung, xem flash.jspf
   Forms:
     POST /profile  action=updateProfile   fields=fullName,phone (email chỉ đọc)
-    POST /profile  action=changePassword  fields=currentPassword,newPassword,confirmPassword
 --%>
 <t:layout title="Tài khoản của tôi" description="Xem và cập nhật thông tin cá nhân, đổi mật khẩu tài khoản Saltair.">
   <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/account.css"></jsp:attribute>
@@ -89,57 +88,6 @@
             </div>
             <div class="form-actions">
               <button class="btn btn--primary" type="submit">Lưu thay đổi</button>
-            </div>
-          </form>
-        </section>
-
-        <section class="card reveal" aria-labelledby="profile-password-title">
-          <div class="card__head">
-            <h2 class="h-2" id="profile-password-title">Đổi mật khẩu</h2>
-            <p class="t-small t-muted">Nên dùng mật khẩu khác với các dịch vụ khác. Tối thiểu 6 ký tự.</p>
-          </div>
-          <form method="post" action="${ctx}/profile">
-            <input type="hidden" name="action" value="changePassword">
-            <div class="form-grid">
-              <div class="field span-2">
-                <label class="field__label" for="profile-current">Mật khẩu hiện tại</label>
-                <div class="input-group">
-                  <input class="input${not empty errors.currentPassword ? ' is-invalid' : ''}" id="profile-current" type="password" name="currentPassword"
-                         autocomplete="current-password" required>
-                  <button type="button" class="icon-btn input-group__btn pw-toggle" data-toggle-password="profile-current" aria-pressed="false" aria-label="Hiện hoặc ẩn mật khẩu hiện tại">
-                    <t:icon name="eye" cls="pw-on"/><t:icon name="eye-off" cls="pw-off"/>
-                  </button>
-                </div>
-                <c:if test="${not empty errors.currentPassword}"><span class="field__error"><c:out value="${errors.currentPassword}"/></span></c:if>
-              </div>
-              <div class="field">
-                <label class="field__label" for="profile-new">Mật khẩu mới</label>
-                <div class="input-group">
-                  <input class="input${not empty errors.newPassword ? ' is-invalid' : ''}" id="profile-new" type="password" name="newPassword"
-                         placeholder="Tối thiểu 6 ký tự" autocomplete="new-password" minlength="6" maxlength="72" required>
-                  <button type="button" class="icon-btn input-group__btn pw-toggle" data-toggle-password="profile-new" aria-pressed="false" aria-label="Hiện hoặc ẩn mật khẩu mới">
-                    <t:icon name="eye" cls="pw-on"/><t:icon name="eye-off" cls="pw-off"/>
-                  </button>
-                </div>
-                <div class="pw-meter" data-password-meter="profile-new" data-level="0" aria-hidden="true">
-                  <i></i><i></i><i></i><span class="pw-meter__label" data-meter-label></span>
-                </div>
-                <c:if test="${not empty errors.newPassword}"><span class="field__error"><c:out value="${errors.newPassword}"/></span></c:if>
-              </div>
-              <div class="field">
-                <label class="field__label" for="profile-confirm">Nhập lại mật khẩu mới</label>
-                <div class="input-group">
-                  <input class="input${not empty errors.confirmPassword ? ' is-invalid' : ''}" id="profile-confirm" type="password" name="confirmPassword"
-                         placeholder="Nhập lại mật khẩu" autocomplete="new-password" minlength="6" maxlength="72" data-match="profile-new" required>
-                  <button type="button" class="icon-btn input-group__btn pw-toggle" data-toggle-password="profile-confirm" aria-pressed="false" aria-label="Hiện hoặc ẩn mật khẩu nhập lại">
-                    <t:icon name="eye" cls="pw-on"/><t:icon name="eye-off" cls="pw-off"/>
-                  </button>
-                </div>
-                <c:if test="${not empty errors.confirmPassword}"><span class="field__error"><c:out value="${errors.confirmPassword}"/></span></c:if>
-              </div>
-            </div>
-            <div class="form-actions">
-              <button class="btn btn--primary" type="submit">Đổi mật khẩu</button>
             </div>
           </form>
         </section>

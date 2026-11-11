@@ -182,14 +182,14 @@
   </c:if>
 
   <%-- 10. Ưu đãi: hộp lùi vào, chữ lớn, ô email kèm nút mũi tên (như khối "Good mail" của a-dam).
-       Ô email chuyển sang trang Đăng ký và điền sẵn email (register.jsp đọc param.email). --%>
+       Ô email chuyển sang trang Đăng nhập và điền sẵn email (login.jsp đọc param.email). --%>
   <section class="newsletter reveal">
     <div>
       <p class="newsletter__label">Tham gia cùng Saltair</p>
       <h2 class="h-display newsletter__title">Mã ưu đãi.<br>Đơn đầu tiên.</h2>
     </div>
     <div class="newsletter__side">
-      <form class="newsletter__form" action="${ctx}/register" method="get">
+      <form class="newsletter__form" action="${ctx}/login" method="get">
         <label class="sr-only" for="newsletter-email">Email</label>
         <input class="newsletter__input" id="newsletter-email" type="email" name="email" placeholder="Email của bạn" autocomplete="email" required>
         <button class="newsletter__submit" type="submit" aria-label="Đăng ký"><t:icon name="arrow-right" size="md"/></button>

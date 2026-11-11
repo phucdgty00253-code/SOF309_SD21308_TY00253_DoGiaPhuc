@@ -549,14 +549,6 @@
     el.addEventListener(evt, (e) => { if (!window.confirm(el.dataset.confirm)) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);
   });
 
-  /* ---------- Hiện/ẩn mật khẩu ---------- */
-  $$('[data-toggle-password]').forEach((b) => b.addEventListener('click', () => {
-    const input = document.getElementById(b.dataset.togglePassword);
-    if (!input) return;
-    input.type = input.type === 'password' ? 'text' : 'password';
-    b.setAttribute('aria-pressed', String(input.type === 'text'));
-  }));
-
   /* ---------- Tab ---------- */
   $$('[data-tabs]').forEach((root) => {
     const tabs = $$('[role="tab"]', root);

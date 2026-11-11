@@ -1,7 +1,8 @@
 -- Dữ liệu mẫu cho Saltair, tạo bằng script từ docs/product-catalog.csv (24 sản phẩm, 276 biến thể).
 -- Chạy SAU database/schema.sql (schema.sql sẽ xóa và tạo lại toàn bộ bảng).
 --
--- Tài khoản demo (cùng một mật khẩu): Saltair@123
+-- Tài khoản demo (đăng nhập bằng email + mã 6 số; email demo là email giả nên cần bật auth.devCode=true
+--   trong mail.properties để mã hiện trên trang nhập mã và trong log Tomcat):
 --   ADMIN    admin@saltair.vn
 --   CUSTOMER khach@saltair.vn (có giỏ hàng, yêu thích, đơn ở đủ các trạng thái)
 --   CUSTOMER lan.tran@example.com, hoang.le@example.com, duc.vo@example.com
@@ -12,13 +13,13 @@
 SET NAMES utf8mb4;
 USE saltair;
 
-INSERT INTO users (id, email, password_hash, full_name, phone, role, is_active, created_at, updated_at) VALUES
-  (1, 'admin@saltair.vn', '$2a$10$b9t5Cp5tkzpvsUIrX1h6KOn6C/gJjaGEdVRcACbONUzPaVDxqCYue', 'Quản trị Saltair', '0900000001', 'ADMIN', 1, '2026-09-01 08:00:00', '2026-09-01 08:00:00'),
-  (2, 'khach@saltair.vn', '$2a$10$b9t5Cp5tkzpvsUIrX1h6KOn6C/gJjaGEdVRcACbONUzPaVDxqCYue', 'Nguyễn Minh Anh', '0900000002', 'CUSTOMER', 1, '2026-10-05 09:30:00', '2026-10-05 09:30:00'),
-  (3, 'lan.tran@example.com', '$2a$10$b9t5Cp5tkzpvsUIrX1h6KOn6C/gJjaGEdVRcACbONUzPaVDxqCYue', 'Trần Ngọc Lan', '0900000003', 'CUSTOMER', 1, '2026-10-08 14:10:00', '2026-10-08 14:10:00'),
-  (4, 'hoang.le@example.com', '$2a$10$b9t5Cp5tkzpvsUIrX1h6KOn6C/gJjaGEdVRcACbONUzPaVDxqCYue', 'Lê Quốc Hoàng', '0900000004', 'CUSTOMER', 1, '2026-10-12 19:45:00', '2026-10-12 19:45:00'),
-  (5, 'mai.pham@example.com', '$2a$10$b9t5Cp5tkzpvsUIrX1h6KOn6C/gJjaGEdVRcACbONUzPaVDxqCYue', 'Phạm Thanh Mai', '0900000005', 'CUSTOMER', 0, '2026-10-15 11:00:00', '2026-10-15 11:00:00'),
-  (6, 'duc.vo@example.com', '$2a$10$b9t5Cp5tkzpvsUIrX1h6KOn6C/gJjaGEdVRcACbONUzPaVDxqCYue', 'Võ Minh Đức', '0900000006', 'CUSTOMER', 1, '2026-10-20 16:20:00', '2026-10-20 16:20:00');
+INSERT INTO users (id, email, full_name, phone, role, is_active, created_at, updated_at) VALUES
+  (1, 'admin@saltair.vn', 'Quản trị Saltair', '0900000001', 'ADMIN', 1, '2026-09-01 08:00:00', '2026-09-01 08:00:00'),
+  (2, 'khach@saltair.vn', 'Nguyễn Minh Anh', '0900000002', 'CUSTOMER', 1, '2026-10-05 09:30:00', '2026-10-05 09:30:00'),
+  (3, 'lan.tran@example.com', 'Trần Ngọc Lan', '0900000003', 'CUSTOMER', 1, '2026-10-08 14:10:00', '2026-10-08 14:10:00'),
+  (4, 'hoang.le@example.com', 'Lê Quốc Hoàng', '0900000004', 'CUSTOMER', 1, '2026-10-12 19:45:00', '2026-10-12 19:45:00'),
+  (5, 'mai.pham@example.com', 'Phạm Thanh Mai', '0900000005', 'CUSTOMER', 0, '2026-10-15 11:00:00', '2026-10-15 11:00:00'),
+  (6, 'duc.vo@example.com', 'Võ Minh Đức', '0900000006', 'CUSTOMER', 1, '2026-10-20 16:20:00', '2026-10-20 16:20:00');
 
 INSERT INTO addresses (id, user_id, receiver_name, phone, address_line, ward, district, city, is_default, created_at) VALUES
   (1, 2, 'Nguyễn Minh Anh', '0900000002', '12 Nguyễn Huệ', 'Phường Bến Nghé', 'Quận 1', 'TP. Hồ Chí Minh', 1, '2026-10-05 09:40:00'),

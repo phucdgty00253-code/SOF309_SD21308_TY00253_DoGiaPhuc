@@ -7,7 +7,7 @@ Java Servlet/JSP thuần, MySQL, chạy trên Tomcat 11. Chi tiết đầy đủ
 
 | Vai trò | Là ai | Làm được gì |
 |---|---|---|
-| **Guest** | Chưa đăng nhập | Xem trang chủ, danh sách và chi tiết sản phẩm, blog. Đăng ký, đăng nhập, quên mật khẩu |
+| **Guest** | Chưa đăng nhập | Xem trang chủ, danh sách và chi tiết sản phẩm, blog. Đăng nhập hoặc tạo tài khoản bằng email + mã 6 số |
 | **Customer** | Khách đã đăng nhập | Mọi thứ của Guest, thêm: giỏ hàng, yêu thích, sổ địa chỉ, đặt hàng COD, dùng voucher, xem và hủy đơn, đánh giá sản phẩm |
 | **Admin** | Quản trị | Quản lý sản phẩm, danh mục, màu và size, đơn hàng, người dùng, banner, blog, voucher, bình luận, thống kê, thùng rác |
 
@@ -20,7 +20,7 @@ flowchart LR
         products --> product["/product<br/>Chi tiết SP"]
         home --> blog["/blog<br/>Blog"]
         home --> about["/about<br/>Giới thiệu"]
-        login["/login /register<br/>/forgot-password"]
+        login["/login<br/>/login/code"]
     end
     subgraph C["Khách hàng (Customer)"]
         cart["/cart<br/>Giỏ hàng"] --> checkout["/checkout<br/>Thanh toán"]
@@ -76,4 +76,4 @@ Trình duyệt → Servlet → Service → DAO → MySQL
 
 Chạy dự án rồi mở `http://localhost:8080/saltair/home`. Đăng nhập bằng tài khoản demo để xem theo vai trò khách hàng hoặc quản trị.
 
-Tài khoản demo trong `data.sql` (cùng một mật khẩu, xem đầu file `data.sql`): `admin@saltair.vn`, `khach@saltair.vn`.
+Tài khoản demo trong `data.sql` (đăng nhập bằng mã, bật `auth.devCode=true` trong `mail.properties` để thấy mã): `admin@saltair.vn`, `khach@saltair.vn`.

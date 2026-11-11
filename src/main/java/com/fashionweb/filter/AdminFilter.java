@@ -18,7 +18,8 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * Chỉ ADMIN được vào /admin và /admin/*. Khai báo và thứ tự chạy nằm trong web.xml.
- * Chưa đăng nhập: chuyển sang /login?redirect=...; đã đăng nhập nhưng không phải ADMIN: trang 403.
+ * Chưa đăng nhập: chuyển sang /admin/login?redirect=...; đã đăng nhập nhưng không phải ADMIN: trang 403.
+ * /admin/login và /admin/login/* (trang đăng nhập admin, #74) được cho qua.
  */
 public class AdminFilter implements Filter {
 
@@ -27,10 +28,15 @@ public class AdminFilter implements Filter {
             throws IOException, ServletException {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse resp = (HttpServletResponse) response;
+        String path = req.getRequestURI().substring(req.getContextPath().length());
+        if (path.equals("/admin/login") || path.startsWith("/admin/login/")) {
+            chain.doFilter(request, response);
+            return;
+        }
         HttpSession session = req.getSession(false);
         Object user = session == null ? null : session.getAttribute(AppConstant.SESSION_USER);
         if (!(user instanceof User u)) {
-            resp.sendRedirect(req.getContextPath() + "/login?redirect="
+            resp.sendRedirect(req.getContextPath() + "/admin/login?redirect="
                     + URLEncoder.encode(AuthFilter.returnPath(req), StandardCharsets.UTF_8));
             return;
         }

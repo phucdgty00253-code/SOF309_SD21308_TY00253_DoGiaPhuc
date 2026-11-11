@@ -15,11 +15,11 @@ import java.io.UnsupportedEncodingException;
 import java.util.Properties;
 
 /**
- * Gửi email qua SMTP (dùng cho chức năng Quên mật khẩu).
+ * Gửi email qua SMTP (dùng cho mã đăng nhập 6 số, #74).
  * Đọc thông tin từ src/main/resources/mail.properties (sao chép từ mail.properties.example).
  *
  * Không có mail.properties thì ứng dụng vẫn chạy bình thường; chỉ khi gọi {@link #send} mới báo lỗi.
- * Chỉ người làm Quên mật khẩu và trưởng nhóm cần cấu hình file này.
+ * Bật auth.devCode=true để không gửi mail mà ghi mã vào log và hiện trên trang nhập mã (dùng cho tài khoản mẫu).
  */
 public final class MailUtil {
 
@@ -36,6 +36,11 @@ public final class MailUtil {
     }
 
     private MailUtil() {
+    }
+
+    /** true khi mail.properties có auth.devCode=true (mặc định false). */
+    public static boolean isDevCode() {
+        return Boolean.parseBoolean(PROPS.getProperty("auth.devCode", "false").trim());
     }
 
     /**
