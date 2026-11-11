@@ -6,6 +6,12 @@
 
 Closes #
 
+## Tài liệu feature
+
+<!-- Đường dẫn thư mục docs/features/<số>-<tên>/ (SPEC.md, TEST_CASES.md, AI_LOG.md). Việc rất nhỏ thì ghi "Không cần". Xem docs/QUY_TRINH_PHAT_TRIEN_FEATURE.md -->
+
+- `docs/features/`
+
 ## Đã làm
 
 -
@@ -32,7 +38,8 @@ Closes #
 - [ ] Nhánh tách từ `develop`, PR vào `develop`, đã `git pull origin develop` trước khi mở PR
 - [ ] Đúng luồng `Servlet -> Service -> Repository`; Servlet không viết SQL, JSP không gọi Repository/Service
 - [ ] SQL dùng `PreparedStatement`, không nối chuỗi từ dữ liệu người dùng
-- [ ] Đã bỏ `MockData.xxx()` ở phần mình làm
 - [ ] Đã chạy thử trên máy mình, các mục nghiệm thu trong issue đều đạt
-- [ ] Không commit `db.properties`, `target/`, mật khẩu
-- [ ] Commit theo dạng `feat(scope): ...`
+- [ ] `TEST_CASES.md` của feature đã điền Pass/Fail, `mvn test` xanh
+- [ ] Đổi `schema.sql` thì có file `database/migration_<số>_<tên>.sql`
+- [ ] Không commit `db.properties`, `mail.properties`, `cloudinary.properties`, `target/`, mật khẩu
+- [ ] Commit theo dạng `feat(scope): ... (#số)`

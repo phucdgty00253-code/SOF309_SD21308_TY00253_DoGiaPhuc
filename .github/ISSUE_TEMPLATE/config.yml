@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Quy trình phát triển một feature
+    url: https://github.com/nhan0x/saltair-fashion-web/blob/develop/docs/QUY_TRINH_PHAT_TRIEN_FEATURE.md
+    about: Đọc trước khi tạo issue hoặc mở PR
