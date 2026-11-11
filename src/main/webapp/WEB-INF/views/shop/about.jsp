@@ -10,7 +10,7 @@
   Không có form.
 --%>
 <t:layout title="Giới thiệu" nav="about" description="Saltair làm đồ basic nhẹ, thoáng và dễ phối, lấy cảm hứng từ không khí của biển.">
-  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/catalog.css?v=3"></jsp:attribute>
+  <jsp:attribute name="head"><link rel="stylesheet" href="${ctx}/assets/css/pages/catalog.css?v=5"></jsp:attribute>
   <jsp:body>
 
     <%-- 1. Mở đầu --%>

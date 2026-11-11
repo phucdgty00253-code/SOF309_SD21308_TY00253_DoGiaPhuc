@@ -184,6 +184,14 @@
 .article-others { padding-top: 24px; }
 .article-others .section-title { padding: 0 12px 32px; }
 .article-others .blog-grid { padding-bottom: 0; }
+/* Trang danh sách blog (#91, đo trên trang tham chiếu ở 1440x900): tiêu đề 58px, lưới 3 cột cách 48px, ảnh 416:513 */
+.blog-page .page-head { padding: 48px var(--gutter); }
+.blog-page .page-head .h-1 { font-size: 58.33px; line-height: 58.33px; }
+.blog-page .page-head p { margin-top: 24px; color: var(--navy); }
+.blog-page .blog-grid { gap: 48px; padding: 0 var(--gutter) 96px; }
+.blog-card__media { aspect-ratio: 416 / 513; }
+.blog-page .blog-card__body { padding: 24px 0 0; }
+
 .read-progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 120; background: var(--navy); transform: scaleX(0); transform-origin: 0 50%; pointer-events: none; }
 
 /* ==========================================================================
@@ -227,6 +235,9 @@
   .active-filters { padding-inline: 8px; }
   .product-grid[data-view="large"] { grid-template-columns: 1fr; }
   .blog-grid { grid-template-columns: 1fr; padding-bottom: 64px; }
+  .blog-page .page-head { padding: 32px var(--gutter); }
+  .blog-page .page-head .h-1 { font-size: 37.6px; line-height: 41.4px; }
+  .blog-page .blog-grid { gap: 32px; padding-bottom: 64px; }
   .about-hero { padding-block: 48px; }
   .about-values { grid-template-columns: 1fr; }
   .about-value { border-right: 0; border-bottom: 1px solid var(--line); padding-block: 40px; }

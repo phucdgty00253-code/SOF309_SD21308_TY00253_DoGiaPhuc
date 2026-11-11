@@ -829,8 +829,15 @@ dialog.dialog::backdrop { background: rgba(0, 14, 31, .45); }
 .no-js .reveal { opacity: 1; transform: none; }
 
 /* ---------- Trang lỗi ---------- */
-.error-page { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 96px var(--gutter); gap: 20px; }
-.error-page__code { font-size: 120px; line-height: 1; font-weight: 800; letter-spacing: -6px; }
+/* Trang lỗi (#91, đo trên trang 404 của trang tham chiếu): khối màu, số lỗi 352px mờ 10% phía sau */
+.error-page { position: relative; overflow: hidden; display: grid; justify-items: center; align-content: center; text-align: center; padding: 280px var(--gutter); background: var(--cobalt); color: var(--white); }
+.error-page::before { content: attr(data-code); position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 352px; line-height: 1; font-weight: 400; opacity: .1; pointer-events: none; }
+.error-page__title { position: relative; font-size: 37.6px; line-height: 41.4px; font-weight: 700; }
+.error-page__actions { position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 32px; }
+.error-page__btn { min-width: 251px; height: 53px; background: var(--white); color: var(--cobalt); font-size: 16px; }
+.error-page__btn:hover { background: var(--bg); }
+.error-page__btn--ghost { background: transparent; color: var(--white); border-color: rgba(255, 255, 255, .5); }
+.error-page__btn--ghost:hover { background: rgba(255, 255, 255, .1); border-color: var(--white); }
 
 /* ---------- Tiện ích ---------- */
 .mt-0 { margin-top: 0 !important; } .mt-8 { margin-top: 8px; } .mt-16 { margin-top: 16px; } .mt-24 { margin-top: 24px; } .mt-32 { margin-top: 32px; } .mt-48 { margin-top: 48px; }
@@ -948,7 +955,9 @@ dialog.dialog::backdrop { background: rgba(0, 14, 31, .45); }
   .footer__bottom { grid-template-columns: 1fr; justify-items: center; text-align: center; padding-block: 32px; }
   .footer__bottom > :last-child { text-align: center; }
   .reviews-strip .review-grid { grid-template-columns: 1fr; }
-  .error-page__code { font-size: 80px; }
+  .error-page { padding-block: 160px; }
+  .error-page::before { font-size: 200px; }
+  .error-page__title { font-size: 28px; line-height: 32px; }
   .timeline__step { font-size: 11px; }
   .table.responsive thead { display: none; }
   .table.responsive tr { display: block; padding: 12px 0; border-bottom: 1px solid var(--line); }
