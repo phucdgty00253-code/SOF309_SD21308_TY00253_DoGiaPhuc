@@ -38,7 +38,6 @@ Website thương mại điện tử bán quần áo thời trang. Đồ án môn
 
 Tham khảo phong cách của template A-dam (light, airy, flat). **Chỉ mượn phong cách**, không dùng logo, ảnh hay câu chữ của họ.
 
-**Số liệu thật đo từ a-dam.com** (kích thước, hiệu ứng, bố cục): `docs/a-dam-measurements.md`. Khi mô tả trong file này khác số liệu đo, **theo số liệu đo**.
 
 **Màu**
 - Nền trang `#ffffff`; ô ảnh, thẻ sản phẩm, hộp thông tin `#f4f4f4`

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Saltair - Design system (bám theo phong cách a-dam.com, số liệu ở docs/a-dam-measurements.md)
+   Saltair - Design system (bám theo phong cách a-dam.com)
    Nguyên tắc: phẳng, không box-shadow; nút/ô nhập bo 30px; thẻ sản phẩm không viền, không bo.
    Hiệu ứng: nhẹ và nhanh (0.15s - 0.3s). Phần đánh dấu [EXTRA] là hiệu ứng thêm ngoài trang gốc.
    Trang nào cần CSS riêng: tạo file trong assets/css/pages/ và nạp bằng fragment "head" của layout.
