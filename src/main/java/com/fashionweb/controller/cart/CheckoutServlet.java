@@ -36,9 +36,10 @@ import java.util.regex.Pattern;
  * JSP: /WEB-INF/views/cart/checkout.jsp. Tham số voucher: mã đang áp dụng (kiểm tra lại mỗi lần mở trang).
  * Thuộc tính: cart, addresses, defaultAddress, subtotal, shippingFee, discountAmount, total, appliedVoucher,
  * hintVouchers, voucherCode, voucherError, errors.
- * <p>POST action=applyVoucher (voucherCode): hợp lệ thì redirect /checkout?voucher=MÃ, sai thì hiện voucherError.
+ * <p>POST action=applyVoucher (voucherInput) hoặc removeVoucher: hiện lại trang với mã mới (hoặc bỏ mã), giữ nguyên dữ liệu
+ * khách đã nhập ở form; mã sai thì hiện voucherError.
  * <p>POST action=placeOrder (addressId hoặc "new" + receiverName, receiverPhone, addressLine, ward, district, city;
- * voucherCode, note): OrderService.placeOrder trong một transaction, xong redirect /order-success?code=...
+ * saveAddress, voucherCode, note): OrderService.placeOrder trong một transaction, xong redirect /order-success?code=...
  */
 @WebServlet("/checkout")
 public class CheckoutServlet extends HttpServlet {
@@ -74,13 +75,17 @@ public class CheckoutServlet extends HttpServlet {
         String action = req.getParameter("action");
         String code = normalize(req.getParameter("voucherCode"));
 
+        // Áp mã hoặc gỡ mã: không redirect, hiện lại trang để giữ dữ liệu khách đã nhập (JSP đọc lại từ param)
         if ("applyVoucher".equals(action)) {
-            try {
-                voucherService.validate(code, userId(user), cart);
-                resp.sendRedirect(req.getContextPath() + "/checkout?voucher=" + URLEncoder.encode(code, StandardCharsets.UTF_8));
-            } catch (VoucherException e) {
-                show(req, resp, cart, code); // show() kiểm tra lại mã, đặt voucherError và giữ mã trong ô nhập
+            String input = normalize(req.getParameter("voucherInput"));
+            if (input.isEmpty()) {
+                req.setAttribute("voucherError", "Vui lòng nhập mã giảm giá.");
             }
+            show(req, resp, cart, input); // show() kiểm tra mã, sai thì đặt voucherError và giữ mã trong ô nhập
+            return;
+        }
+        if ("removeVoucher".equals(action)) {
+            show(req, resp, cart, "");
             return;
         }
         if (!"placeOrder".equals(action)) {
@@ -93,6 +98,7 @@ public class CheckoutServlet extends HttpServlet {
             if (user != null) {
                 Address address = shippingAddress(req, user.getId());
                 order = orderService.placeOrder(user.getId(), address, code, req.getParameter("note"));
+                saveNewAddress(req, user.getId(), address);
             } else {
                 order = placeGuestOrder(req, cart, code);
                 WebUtil.guestCart(req).clear();
@@ -114,6 +120,19 @@ public class CheckoutServlet extends HttpServlet {
             }
             req.setAttribute("errors", errors);
             show(req, resp, currentCart(req), code);
+        }
+    }
+
+    /** Khách chọn "Lưu địa chỉ này vào sổ địa chỉ" khi nhập địa chỉ mới: lưu sau khi đặt hàng xong, lỗi thì bỏ qua. */
+    private void saveNewAddress(HttpServletRequest req, int userId, Address address) {
+        if (!"1".equals(req.getParameter("saveAddress")) || address.getId() > 0) {
+            return;
+        }
+        try {
+            address.setUserId(userId);
+            accountService.saveAddress(address);
+        } catch (ValidationException ignored) {
+            // Đơn đã đặt xong; địa chỉ không hợp lệ với sổ địa chỉ thì chỉ không lưu
         }
     }
 
@@ -209,6 +228,9 @@ public class CheckoutServlet extends HttpServlet {
             } catch (VoucherException e) {
                 req.setAttribute("voucherError", e.getMessage());
             }
+        }
+        if (applied != null) {
+            req.removeAttribute("voucherError");
         }
         long discount = voucherService.computeDiscount(applied, subtotal);
         long shippingFee = voucherService.shippingFee(applied);

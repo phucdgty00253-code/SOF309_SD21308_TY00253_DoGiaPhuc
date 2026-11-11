@@ -4,6 +4,7 @@
 <%@ attribute name="nav" required="false" description="Mục menu đang chọn: shop | new | best | blog | about" %>
 <%@ attribute name="bodyClass" required="false" %>
 <%@ attribute name="overlay" required="false" type="java.lang.Boolean" description="true = menu trong suốt đè lên hero (trang chủ)" %>
+<%@ attribute name="chrome" required="false" description="Kiểu khung trang: để trống = đầy đủ; checkout = chỉ có logo ở trên, không thanh thông báo, menu, footer" %>
 <%@ attribute name="head" fragment="true" required="false" description="Thêm vào <head>: CSS riêng của trang" %>
 <%@ attribute name="scripts" fragment="true" required="false" description="Thêm cuối <body>: JS riêng của trang" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
@@ -32,8 +33,14 @@
 <%@ include file="/WEB-INF/views/common/icons.jspf" %>
 <a class="skip-link" href="#main">Bỏ qua, đến nội dung chính</a>
 
+<c:if test="${chrome == 'checkout'}">
+  <header class="co-header">
+    <a class="co-header__logo" href="${ctx}/home" aria-label="Saltair - Trang chủ"><img src="${ctx}/assets/brand/saltair-logo.png" alt="Saltair"></a>
+  </header>
+</c:if>
+
 <%-- Thanh thông báo --%>
-<c:if test="${not empty applicationScope.announcements}">
+<c:if test="${chrome != 'checkout' and not empty applicationScope.announcements}">
   <div class="announcement-bar" data-announcements>
     <div class="announcement-bar__inner">
       <button type="button" class="announcement-bar__arrow" data-ann-prev aria-label="Thông báo trước"><t:icon name="chevron-left" size="sm"/></button>
@@ -48,6 +55,7 @@
 </c:if>
 
 <%-- Menu --%>
+<c:if test="${chrome != 'checkout'}">
 <header class="header${overlay ? ' header--overlay' : ''}">
   <div class="header__inner">
     <nav class="header__nav" aria-label="Menu chính">
@@ -82,6 +90,7 @@
     </div>
   </div>
 </header>
+</c:if>
 
 <%-- Lớp phủ, tìm kiếm, menu điện thoại --%>
 <div class="overlay" id="overlay"></div>
@@ -167,6 +176,7 @@
 </main>
 
 <%-- Footer --%>
+<c:if test="${chrome != 'checkout'}">
 <footer class="footer">
   <div class="footer__grid">
     <div class="footer__brand">
@@ -204,6 +214,7 @@
     <span>Phí ship cố định 30.000đ · Miễn phí khi dùng mã giảm giá</span>
   </div>
 </footer>
+</c:if>
 
 <script src="${ctx}/assets/js/app.js?v=3" defer></script>
 <jsp:invoke fragment="scripts"/>
