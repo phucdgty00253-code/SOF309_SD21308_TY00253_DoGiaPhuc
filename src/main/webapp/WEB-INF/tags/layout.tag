@@ -25,7 +25,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="${ctx}/assets/css/style.css">
+  <link rel="stylesheet" href="${ctx}/assets/css/style.css?v=3">
   <jsp:invoke fragment="head"/>
 </head>
 <body class="${bodyClass}${overlay ? ' has-overlay-header' : ''}" data-ctx="${ctx}" data-logged-in="${not empty sessionScope.currentUser}">
@@ -78,7 +78,7 @@
       <button type="button" class="icon-btn" data-search-open aria-label="Tìm kiếm" aria-expanded="false" aria-controls="search-drawer"><t:icon name="search" size="md"/></button>
       <button type="button" class="icon-btn" data-account-open aria-haspopup="dialog" aria-expanded="false" aria-controls="account-pop"
               aria-label="${empty sessionScope.currentUser ? 'Đăng nhập' : 'Tài khoản'}"><t:icon name="user" size="md"/></button>
-      <a class="icon-btn" href="${ctx}/cart" aria-label="Giỏ hàng"><t:icon name="bag" size="md"/><span class="cart-badge"${cartCount > 0 ? '' : ' hidden'}>${cartCount}</span></a>
+      <a class="icon-btn" href="${ctx}/cart" aria-label="Giỏ hàng" data-cart-open aria-haspopup="dialog" aria-expanded="false" aria-controls="cart-drawer"><t:icon name="bag" size="md"/><span class="cart-badge"${cartCount > 0 ? '' : ' hidden'}>${cartCount}</span></a>
     </div>
   </div>
 </header>
@@ -95,6 +95,17 @@
   <div class="search-drawer__body">
     <div class="search-drawer__results" data-search-results aria-live="polite"></div>
   </div>
+</aside>
+<%-- Khung giỏ hàng trượt từ phải (#84): ruột nạp bằng fetch từ /cart?fragment=drawer mỗi lần mở và sau mỗi thay đổi --%>
+<aside class="cart-drawer" id="cart-drawer" role="dialog" aria-modal="true" aria-label="Giỏ hàng" aria-hidden="true" data-cart-url="${ctx}/cart">
+  <header class="cart-drawer__head">
+    <button type="button" class="cart-drawer__close" data-panel-close aria-label="Đóng giỏ hàng"><svg aria-hidden="true" width="10" height="10" viewBox="0 0 10 10" fill="none"><path stroke="currentColor" d="m1 1 8 8m0-8L1 9"/></svg></button>
+    <div class="cart-drawer__title">
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none"><path stroke="currentColor" d="m1.5 14.5 1-12h11l1 12h-13Z"/><path stroke="currentColor" d="M5.5 5c.238.833 1.071 2.5 2.5 2.5s2.262-1.667 2.5-2.5"/></svg>
+      <h2>Giỏ hàng (<span data-cart-count>${cartCount}</span>)</h2>
+    </div>
+  </header>
+  <div class="cart-drawer__slot" data-cart-content aria-live="polite"></div>
 </aside>
 <%-- Khung tài khoản (#75): trồi lên dưới góc phải header, không làm mờ nền --%>
 <c:set var="me" value="${sessionScope.currentUser}"/>
@@ -194,7 +205,7 @@
   </div>
 </footer>
 
-<script src="${ctx}/assets/js/app.js" defer></script>
+<script src="${ctx}/assets/js/app.js?v=3" defer></script>
 <jsp:invoke fragment="scripts"/>
 </body>
 </html>

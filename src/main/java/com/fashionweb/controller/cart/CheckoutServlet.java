@@ -99,6 +99,7 @@ public class CheckoutServlet extends HttpServlet {
                 req.getSession().setAttribute(AppConstant.SESSION_GUEST_ORDER, order.getOrderCode());
             }
             req.getSession().setAttribute(AppConstant.SESSION_CART_COUNT, 0);
+            req.getSession().removeAttribute(AppConstant.SESSION_CART_NOTE);
             resp.sendRedirect(req.getContextPath() + "/order-success?code=" + URLEncoder.encode(order.getOrderCode(), StandardCharsets.UTF_8));
         } catch (ValidationException e) {
             Map<String, String> errors = new LinkedHashMap<>(e.getErrors());

@@ -20,6 +20,10 @@ import java.net.URI;
  * GET /cart : giỏ hàng. Khách đã đăng nhập dùng giỏ trong DB; khách chưa đăng nhập dùng giỏ trong session
  * (WebUtil.guestCart, itemId chính là variantId), đăng nhập thì được gộp vào giỏ trong DB.
  * JSP: /WEB-INF/views/cart/cart.jsp. Thuộc tính: cart (Cart), shippingFee (long), suggestions (List&lt;Product&gt;).
+ * <p>GET /cart?fragment=drawer : chỉ trả phần ruột của khung giỏ hàng trượt (#84), JSP /WEB-INF/views/cart/_cart-drawer.jsp.
+ * <p>POST có header Accept: application/json (gọi bằng fetch từ khung giỏ hàng): không redirect, trả
+ * {"ok": true|false, "message": "...", "count": số dòng trong giỏ}.
+ * <p>POST action=note (note): lưu ghi chú đơn hàng vào session (AppConstant.SESSION_CART_NOTE), trang thanh toán điền sẵn.
  * <p>POST (PRG, cập nhật session cartCount sau mỗi thay đổi):
  * <ul>
  *   <li>action=add (variantId, quantity): thêm vào giỏ, quay lại trang sản phẩm (Referer) kèm thông báo.</li>
@@ -42,6 +46,11 @@ public class CartServlet extends HttpServlet {
         req.getSession().setAttribute(AppConstant.SESSION_CART_COUNT, cart.getItemCount());
         req.setAttribute("cart", cart);
         req.setAttribute("shippingFee", AppConstant.SHIPPING_FEE);
+        if ("drawer".equals(req.getParameter("fragment"))) {
+            resp.setHeader("Cache-Control", "no-store");
+            req.getRequestDispatcher("/WEB-INF/views/cart/_cart-drawer.jsp").forward(req, resp);
+            return;
+        }
         req.setAttribute("suggestions", productService.bestSellers(SUGGESTION_COUNT));
         req.getRequestDispatcher("/WEB-INF/views/cart/cart.jsp").forward(req, resp);
     }
@@ -52,6 +61,8 @@ public class CartServlet extends HttpServlet {
         User user = (User) session.getAttribute(AppConstant.SESSION_USER);
         String action = req.getParameter("action");
         String back = "/cart";
+        String accept = req.getHeader("Accept");
+        boolean json = accept != null && accept.contains("application/json");
         String message = null;
         boolean ok = true;
         try {
@@ -88,6 +99,12 @@ public class CartServlet extends HttpServlet {
                     }
                     message = "Đã xóa sản phẩm khỏi giỏ hàng.";
                 }
+                case "note" -> {
+                    String note = req.getParameter("note");
+                    note = note == null ? "" : note.trim();
+                    session.setAttribute(AppConstant.SESSION_CART_NOTE, note.length() > 500 ? note.substring(0, 500) : note);
+                    message = "Đã lưu ghi chú.";
+                }
                 default -> {
                     resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
                     return;
@@ -99,6 +116,12 @@ public class CartServlet extends HttpServlet {
         }
         int count = user != null ? cartService.countItems(user.getId()) : WebUtil.guestCart(req).size();
         session.setAttribute(AppConstant.SESSION_CART_COUNT, count);
+        if (json) {
+            resp.setContentType("application/json;charset=UTF-8");
+            resp.setHeader("Cache-Control", "no-store");
+            resp.getWriter().write("{\"ok\":" + ok + ",\"count\":" + count + ",\"message\":\"" + jsonEscape(message) + "\"}");
+            return;
+        }
         if (message != null) {
             flash(session, message, ok ? "success" : "error");
         }
@@ -122,6 +145,30 @@ public class CartServlet extends HttpServlet {
             }
         }
         return "/cart";
+    }
+
+    private static String jsonEscape(String s) {
+        if (s == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(s.length() + 8);
+        for (char ch : s.toCharArray()) {
+            switch (ch) {
+                case '"' -> sb.append("\\\"");
+                case '\\' -> sb.append("\\\\");
+                case '\n' -> sb.append("\\n");
+                case '\r' -> sb.append("\\r");
+                case '\t' -> sb.append("\\t");
+                default -> {
+                    if (ch < 0x20 || ch == '<' || ch == '>' || ch == '&') {
+                        sb.append(String.format("\\u%04x", (int) ch));
+                    } else {
+                        sb.append(ch);
+                    }
+                }
+            }
+        }
+        return sb.toString();
     }
 
     private static int parseInt(String s, int fallback) {
