@@ -5,6 +5,7 @@ import com.fashionweb.constant.DiscountType;
 import com.fashionweb.exception.VoucherException;
 import com.fashionweb.model.Voucher;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -18,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * Unit test cho VoucherService ở các hàm không cần database:
  * tính tiền giảm (computeDiscount), phí ship (shippingFee) và bước 1 của validate (mã rỗng).
  */
+@Tag("unit")
 class VoucherServiceTest {
 
     private final VoucherService service = new VoucherService();
