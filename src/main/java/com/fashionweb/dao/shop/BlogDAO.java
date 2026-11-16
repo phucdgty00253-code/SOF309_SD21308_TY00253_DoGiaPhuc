@@ -1,4 +1,4 @@
-package com.fashionweb.repository.shop;
+package com.fashionweb.dao.shop;
 
 import com.fashionweb.exception.DataAccessException;
 import com.fashionweb.model.Blog;
@@ -18,7 +18,7 @@ import java.util.List;
  *
  * <p>Chỉ chứa SQL (PreparedStatement) và chuyển ResultSet thành entity. Kết nối lấy từ DBContext.getConnection().
  */
-public class BlogRepository {
+public class BlogDAO {
 
     private static final String SELECT = "SELECT b.*, u.full_name AS author_name FROM blogs b JOIN users u ON u.id = b.author_id ";
 

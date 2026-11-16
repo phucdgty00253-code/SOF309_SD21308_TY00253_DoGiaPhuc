@@ -19,12 +19,12 @@
 * **Cấu hình không commit** (copy từ file `.example`): `db.properties`, `mail.properties`, `cloudinary.properties` trong `src/main/resources/`
 
 ## 3. KIẾN TRÚC & QUY TẮC CODE
-* **Luồng bắt buộc:** `Servlet -> Service -> Repository -> MySQL` (MVC + Repository + Service Layer).
+* **Luồng bắt buộc:** `Servlet -> Service -> DAO -> MySQL` (MVC + DAO + Service Layer).
   * Servlet: đọc tham số, gọi Service, forward JSP hoặc redirect. Không viết SQL.
   * Service: nghiệp vụ, kiểm tra dữ liệu, ném `ValidationException` với câu tiếng Việt.
-  * Repository: chỉ SQL, luôn `PreparedStatement`.
+  * DAO: chỉ SQL, luôn `PreparedStatement`.
   * JSP: chỉ hiển thị, đầu file ghi comment route, thuộc tính request, các form.
-* **Package:** chia theo tầng rồi theo chức năng: `controller|service|repository/<auth|account|shop|cart|order|admin>/`.
+* **Package:** chia theo tầng rồi theo chức năng: `controller|service|dao/<auth|account|shop|cart|order|admin>/`.
 * **Đổi database:** sửa `schema.sql`, `data.sql` (nếu dữ liệu mẫu đổi) và thêm `database/migration_<số>_<tên>.sql`.
 * **Giao diện:** chỉ animate `transform`/`opacity`, hỗ trợ `prefers-reduced-motion`, điểm ngắt 990px và 750px. Chỉ mượn bố cục/hiệu ứng của trang mẫu, không dùng logo, ảnh, chữ của họ.
 
@@ -48,7 +48,7 @@
 * **Voucher:** `WELCOME10`, `GIAM50K` (dùng được); `HETHAN20` (hết hạn), `HETLUOT` (hết lượt), `TAMDUNG` (vô hiệu hóa).
 
 ## 7. CHECKLIST RIÊNG CỦA DỰ ÁN (DÙNG KHI REVIEW PR)
-- [ ] Đúng luồng `Servlet -> Service -> Repository`; Servlet không viết SQL, JSP không gọi Repository/Service.
+- [ ] Đúng luồng `Servlet -> Service -> DAO`; Servlet không viết SQL, JSP không gọi DAO/Service.
 - [ ] SQL dùng `PreparedStatement`, không nối chuỗi từ dữ liệu người dùng.
 - [ ] Không commit `*.properties` thật, `target/`, mật khẩu, khóa API.
 - [ ] Đổi `schema.sql` thì có `database/migration_<số>_<tên>.sql`.

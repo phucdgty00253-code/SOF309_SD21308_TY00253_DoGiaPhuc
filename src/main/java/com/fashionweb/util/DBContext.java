@@ -9,7 +9,7 @@ import java.util.Properties;
 
 /**
  * Tạo kết nối MySQL. Đọc thông tin từ src/main/resources/db.properties
- * (sao chép từ db.properties.example). Repository gọi DBContext.getConnection().
+ * (sao chép từ db.properties.example). DAO gọi DBContext.getConnection().
  */
 public final class DBContext {
 

@@ -1,4 +1,4 @@
-package com.fashionweb.repository.order;
+package com.fashionweb.dao.order;
 
 import com.fashionweb.exception.DataAccessException;
 import com.fashionweb.model.Review;
@@ -19,7 +19,7 @@ import java.util.List;
  * <p>Đã làm: phần của khách (#8, #18), trang chủ (#9), Admin ẩn/hiện (#21).
  * <p>Chỉ chứa SQL (PreparedStatement) và chuyển ResultSet thành entity. Kết nối lấy từ DBContext.getConnection().
  */
-public class ReviewRepository {
+public class ReviewDAO {
 
     /**
      * SELECT.
