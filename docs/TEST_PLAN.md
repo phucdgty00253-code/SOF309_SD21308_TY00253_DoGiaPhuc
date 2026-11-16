@@ -25,9 +25,25 @@
 
 | Cấp độ | Công cụ | Thư mục / Tài liệu | Khi nào chạy |
 | :--- | :--- | :--- | :--- |
-| Unit test | JUnit 5 (`mvn test`) | `src/test/java/com/fashionweb/` | Mỗi lần commit có sửa Service |
+| Unit test | JUnit 5 (`mvn test`), `@Tag("unit")` | `src/test/java/com/fashionweb/<tầng>/<mảng>/` | Mỗi lần commit có sửa Service |
+| Giao diện | Selenium + Page Object (`mvn test -Pui`), `@Tag("ui")` | `src/test/java/com/fashionweb/ui/{pages,tests}/` | Khi web đang chạy local, trước khi mở PR có sửa JSP |
 | Test case theo yêu cầu | Làm tay theo bảng | `docs/requirements/REQ_<số>_<TEN>/03_TEST_CASES.md` | Bước 5, trước khi mở PR |
 | Toàn luồng | Làm tay (hoặc script curl) | Mục 5 bên dưới | Trước khi merge PR lớn, trước khi lên `main` |
+
+### 3.1. Cách đặt test
+* Test nằm cùng package với class được test: `service/cart/VoucherService` → `src/test/java/com/fashionweb/service/cart/VoucherServiceTest.java`.
+* Mỗi class test gắn đúng một tag: `unit` (không cần DB, không cần server), `integration` (cần MySQL), `ui` (cần web đang chạy).
+* `mvn test` mặc định chỉ chạy `unit`; `mvn test -Pui` chỉ chạy `ui` (thêm `-Dheadless=true` để không mở cửa sổ Chrome).
+* `@DisplayName` ghi mã test case trong `03_TEST_CASES.md` (ví dụ `TC-CART-03: ...`) để tra ngược được.
+
+### 3.2. Phân công kiểm thử SOF309
+Mỗi người sở hữu test trong package của mảng mình; `ui/pages/` dùng chung.
+
+| Thành viên | Mảng kiểm thử | Package test |
+| :--- | :--- | :--- |
+| Nhân (`nhan0x`) | Đăng nhập, phân quyền, tài khoản | `service/auth`, `service/account`, `ui/tests/Login*` |
+| Minh (`HoangMinh219`) | Đơn hàng, đánh giá | `service/order`, `ui/tests/Order*` |
+| Phúc (`phucdgty00253-code`) | Sản phẩm, giỏ hàng, voucher | `service/shop`, `service/cart`, `util`, `ui/tests/Cart*` |
 
 ## 4. MÔI TRƯỜNG & DỮ LIỆU
 * Cách chạy, cấu hình và dữ liệu mẫu: [SPECIFICATIONS.md](SPECIFICATIONS.md) mục 2 và mục 6.
