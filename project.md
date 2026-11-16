@@ -4,7 +4,7 @@ Website thương mại điện tử bán quần áo thời trang. Đồ án môn
 
 ## Kiến trúc
 
-- Ứng dụng web **Java Servlet/JSP thuần**, mô hình **MVC + Repository + Service**, render phía server.
+- Ứng dụng web **Java Servlet/JSP thuần**, mô hình **MVC + DAO + Service**, render phía server.
 - **Một codebase duy nhất** (một project Maven), không tách Frontend/Backend, không dùng Spring Boot.
 
 ## Thương hiệu và phạm vi sản phẩm
@@ -71,7 +71,7 @@ File CSS dùng chung: `webapp/assets/css/style.css` (khách hàng) và `admin.cs
 
 ## Trạng thái code
 
-- Mọi Servlet lấy dữ liệu thật qua Service -> Repository -> MySQL. Package `mock` và `DevPreviewFilter` đã xóa (#27).
+- Mọi Servlet lấy dữ liệu thật qua Service -> DAO -> MySQL. Package `mock` và `DevPreviewFilter` đã xóa (#27).
 - `demoMode` trong `web.xml` = `false`. Đặt `true` chỉ khi dựng giao diện mới: form còn gắn `data-demo` sẽ chỉ hiện thông báo.
 - Trang nào cần dữ liệu gì: đọc comment đầu mỗi file JSP (route, thuộc tính request) và Javadoc của Servlet tương ứng (các `action` của form).
 - Ảnh do Admin tải lên (danh mục, sản phẩm, banner, ảnh bìa blog) đi qua `util/ImageUploadUtil`:
@@ -215,22 +215,22 @@ Role Staff và Marketing, thanh toán online (VNPay, MoMo, QR), đăng nhập Go
 
 | Pattern | Dùng ở đâu | Tác dụng |
 |---|---|---|
-| **MVC** | Toàn project: Servlet (`controller`) = Controller, JSP = View, `model`/`repository`/`service` = Model | Tách giao diện, điều phối, dữ liệu |
-| **Repository** | Package `repository` | Gom toàn bộ SQL vào một chỗ |
-| **Service Layer** | Package `service` | Logic nghiệp vụ và transaction giữa Controller và Repository |
+| **MVC** | Toàn project: Servlet (`controller`) = Controller, JSP = View, `model`/`dao`/`service` = Model | Tách giao diện, điều phối, dữ liệu |
+| **DAO** | Package `dao` | Gom toàn bộ SQL vào một chỗ |
+| **Service Layer** | Package `service` | Logic nghiệp vụ và transaction giữa Controller và DAO |
 | **Intercepting Filter** | Package `filter` | Kiểm tra đăng nhập, quyền Admin, encoding trước khi vào Servlet |
 | **Singleton** (tùy chọn) | `DBContext` | Quản lý kết nối DB tại một nơi |
 
 Không dùng Front Controller: mỗi chức năng có Servlet riêng.
 
-**Luồng gọi bắt buộc:** `Servlet -> Service -> Repository -> MySQL`
-- Servlet không gọi thẳng Repository, không viết SQL.
-- Repository chỉ chứa SQL, không chứa nghiệp vụ.
-- JSP chỉ hiển thị, không gọi Repository/Service.
+**Luồng gọi bắt buộc:** `Servlet -> Service -> DAO -> MySQL`
+- Servlet không gọi thẳng DAO, không viết SQL.
+- DAO chỉ chứa SQL, không chứa nghiệp vụ.
+- JSP chỉ hiển thị, không gọi DAO/Service.
 
 ## Cấu trúc package (chia theo tầng, mỗi tầng chia tiếp theo chức năng)
 
-Kiến trúc 3 tầng (Controller, Service, Repository) kết hợp MVC. Thư mục gốc chia theo **tầng kỹ thuật**; bên trong mỗi tầng chia tiếp theo **chức năng** (`auth`, `account`, `shop`, `cart`, `order`, `admin`). Một thành viên nhận chức năng nào thì làm trong thư mục con cùng tên ở ba tầng. Luồng gọi không đổi.
+Kiến trúc 3 tầng (Controller, Service, DAO) kết hợp MVC. Thư mục gốc chia theo **tầng kỹ thuật**; bên trong mỗi tầng chia tiếp theo **chức năng** (`auth`, `account`, `shop`, `cart`, `order`, `admin`). Một thành viên nhận chức năng nào thì làm trong thư mục con cùng tên ở ba tầng. Luồng gọi không đổi.
 
 ```
 src/main/java/com/fashionweb/
@@ -247,7 +247,7 @@ src/main/java/com/fashionweb/
       AdminOpsParams     hàm đọc tham số an toàn dùng chung cho Servlet admin
   service/               nghiệp vụ và transaction
     auth/  account/  shop/  cart/  order/  admin/
-  repository/                   toàn bộ SQL (PreparedStatement)
+  dao/                   toàn bộ SQL (PreparedStatement)
     auth/  account/  shop/  cart/  order/  admin/
   model/                 16 lớp ánh xạ bảng (User, Product, Order...), dùng chung
   dto/                   đối tượng truyền dữ liệu (DashboardStats)
@@ -267,18 +267,18 @@ src/main/webapp/
       error/         403, 404, 500
 ```
 
-Ví dụ chức năng đăng nhập nằm ở `controller/auth/LoginServlet`, `service/auth/AuthService`, `repository/auth/UserRepository`, JSP `views/auth/login.jsp`. Servlet admin dùng lại Service và Repository của các chức năng khác (ví dụ `service/order/OrderService`, `service/cart/VoucherService`).
+Ví dụ chức năng đăng nhập nằm ở `controller/auth/LoginServlet`, `service/auth/AuthService`, `dao/auth/UserDAO`, JSP `views/auth/login.jsp`. Servlet admin dùng lại Service và DAO của các chức năng khác (ví dụ `service/order/OrderService`, `service/cart/VoucherService`).
 
 Mỗi package Servlet có `package-info.java` ghi: chức năng, Servlet đã có khung, thư mục JSP tương ứng.
 
-Tên package đã chốt: `model` (thay cho `entity`), `repository` (thay cho `dao`), chia tầng rồi chia theo chức năng.
+Tên package đã chốt: `model` (thay cho `entity`), `dao` (không dùng `repository`), chia tầng rồi chia theo chức năng.
 
 ## Quy ước sơ bộ
 
 > Quy trình từ nhận yêu cầu tới merge: [`docs/HUONG_DAN_QUY_TRINH_PHAT_TRIEN.md`](docs/HUONG_DAN_QUY_TRINH_PHAT_TRIEN.md). Bối cảnh dự án cho quy trình: [`docs/SPECIFICATIONS.md`](docs/SPECIFICATIONS.md). Kế hoạch kiểm thử: [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md). Danh sách yêu cầu: [`docs/requirements/`](docs/requirements/README.md).
 
 
-- Servlet đặt tên kết thúc bằng `Servlet`, Repository bằng `Repository`, Service bằng `Service`.
+- Servlet đặt tên kết thúc bằng `Servlet`, DAO bằng `DAO`, Service bằng `Service`.
 - JSP viết thường, nối bằng gạch ngang (`product-list.jsp`).
 - URL: `/home`, `/products`, `/product?slug=`, `/cart`, `/checkout`, `/orders`, `/order?code=`, `/login`, `/login/code`, `/admin/login`, `/admin/*`.
 - Mọi câu SQL dùng `PreparedStatement`.
@@ -290,7 +290,7 @@ Tên package đã chốt: `model` (thay cho `entity`), `repository` (thay cho `d
 - [x] Logo Saltair: đã có, lưu ở `src/main/webapp/assets/brand/` (`saltair-logo.png`, `saltair-logo-white.png`, bản gốc `saltair-logo-original.webp`)
 - [x] Gắn logo vào ảnh sản phẩm (đã xong, ảnh ở `src/main/webapp/assets/images/`)
 - [x] Màu nhấn cobalt, font Manrope, responsive điện thoại (điểm ngắt 990px và 750px)
-- [x] Giao diện JSP của toàn bộ trang và khung file (Servlet, Service, Repository, Filter)
+- [x] Giao diện JSP của toàn bộ trang và khung file (Servlet, Service, DAO, Filter)
 - [ ] Database: `database/schema.sql` (17 bảng) và `database/data.sql` (dữ liệu demo, tài khoản và voucher mẫu ghi ở đầu file) đã chạy thử trên MySQL 8.0, chờ team review. Chạy `schema.sql` trước rồi `data.sql`
 - [ ] Code convention đầy đủ
 - [x] Quy trình GitHub (branch, PR, giao task): xem `docs/HUONG_DAN_QUY_TRINH_PHAT_TRIEN.md`

@@ -2,7 +2,7 @@
  * CHỨC NĂNG: Hồ sơ cá nhân, đổi mật khẩu, sổ địa chỉ giao hàng, danh sách yêu thích.
  *
  * Servlet: ProfileServlet, AddressServlet, WishlistServlet.
- * Khung đã có: AccountService, AddressRepository, WishlistRepository.
+ * Khung đã có: AccountService, AddressDAO, WishlistDAO.
  * JSP: WEB-INF/views/account/.
  */
 package com.fashionweb.controller.account;

@@ -1,4 +1,4 @@
-package com.fashionweb.repository.cart;
+package com.fashionweb.dao.cart;
 
 import com.fashionweb.exception.DataAccessException;
 import com.fashionweb.model.Cart;
@@ -18,7 +18,7 @@ import java.util.List;
  *
  * <p>Chỉ chứa SQL (PreparedStatement) và chuyển ResultSet thành entity. Kết nối lấy từ DBContext.getConnection().
  */
-public class CartRepository {
+public class CartDAO {
 
     private static final String SELECT_ITEMS = "SELECT ci.*, p.id AS product_id, p.category_id, p.name AS product_name, "
             + "p.slug AS product_slug, p.image_thumb, p.price, p.is_deleted, v.stock, co.name AS color_name, s.name AS size_name "

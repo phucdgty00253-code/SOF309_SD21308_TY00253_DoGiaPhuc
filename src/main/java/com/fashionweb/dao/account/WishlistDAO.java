@@ -1,4 +1,4 @@
-package com.fashionweb.repository.account;
+package com.fashionweb.dao.account;
 
 import com.fashionweb.exception.DataAccessException;
 import com.fashionweb.model.Product;
@@ -16,7 +16,7 @@ import java.util.List;
  *
  * <p>Chỉ chứa SQL (PreparedStatement) và chuyển ResultSet thành entity. Kết nối lấy từ DBContext.getConnection().
  */
-public class WishlistRepository {
+public class WishlistDAO {
 
     /**
      * JOIN products, chỉ sản phẩm chưa xóa mềm, mới thêm trước. Kèm điểm, số đánh giá và tổng tồn để hiện thẻ sản phẩm.

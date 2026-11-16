@@ -1,4 +1,4 @@
-package com.fashionweb.repository.cart;
+package com.fashionweb.dao.cart;
 
 import com.fashionweb.constant.DiscountType;
 import com.fashionweb.exception.DataAccessException;
@@ -21,7 +21,7 @@ import java.util.List;
  * <p>Chỉ chứa SQL (PreparedStatement) và chuyển ResultSet thành entity. Kết nối lấy từ DBContext.getConnection().
  * Các hàm increaseUsed / decreaseUsed nhận Connection để chạy chung transaction đặt hàng, hủy đơn.
  */
-public class VoucherRepository {
+public class VoucherDAO {
 
     private static final String SELECT = "SELECT v.*, c.name AS category_name FROM vouchers v "
             + "LEFT JOIN categories c ON c.id = v.category_id ";

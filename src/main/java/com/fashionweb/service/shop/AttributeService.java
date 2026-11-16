@@ -1,7 +1,7 @@
 package com.fashionweb.service.shop;
 
-import com.fashionweb.repository.shop.ColorRepository;
-import com.fashionweb.repository.shop.SizeRepository;
+import com.fashionweb.dao.shop.ColorDAO;
+import com.fashionweb.dao.shop.SizeDAO;
 import com.fashionweb.exception.ValidationException;
 import com.fashionweb.model.Color;
 import com.fashionweb.model.Size;
@@ -16,64 +16,64 @@ import java.util.regex.Pattern;
 /**
  * Màu và size.
  *
- * <p>Luồng gọi: Servlet -> Service -> Repository -> MySQL.
+ * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL.
  * <p>Quy ước: không cho xóa mềm màu hoặc size đang có trong biến thể của sản phẩm chưa xóa (báo rõ số sản phẩm).
  */
 public class AttributeService {
 
     private static final Pattern HEX = Pattern.compile("#[0-9A-Fa-f]{6}");
 
-    private final ColorRepository colorRepository = new ColorRepository();
-    private final SizeRepository sizeRepository = new SizeRepository();
+    private final ColorDAO colorDAO = new ColorDAO();
+    private final SizeDAO sizeDAO = new SizeDAO();
 
     /**
      * Màu chưa xóa mềm.
      */
     public List<Color> findColors() {
-        return colorRepository.findAll();
+        return colorDAO.findAll();
     }
 
     /**
      * Size chưa xóa mềm, sắp theo sortOrder.
      */
     public List<Size> findSizes() {
-        return sizeRepository.findAll();
+        return sizeDAO.findAll();
     }
 
     /**
      * Màu đã xóa mềm (Thùng rác).
      */
     public List<Color> findDeletedColors() {
-        return colorRepository.findDeleted();
+        return colorDAO.findDeleted();
     }
 
     /**
      * Size đã xóa mềm (Thùng rác).
      */
     public List<Size> findDeletedSizes() {
-        return sizeRepository.findDeleted();
+        return sizeDAO.findDeleted();
     }
 
     /**
      * Khôi phục màu từ Thùng rác.
      */
     public void restoreColor(int id) {
-        Color c = colorRepository.findById(id);
+        Color c = colorDAO.findById(id);
         if (c == null || !c.isDeleted()) {
             throw new ValidationException(null, "Màu không có trong Thùng rác.");
         }
-        colorRepository.setDeleted(id, false);
+        colorDAO.setDeleted(id, false);
     }
 
     /**
      * Khôi phục size từ Thùng rác.
      */
     public void restoreSize(int id) {
-        Size s = sizeRepository.findById(id);
+        Size s = sizeDAO.findById(id);
         if (s == null || !s.isDeleted()) {
             throw new ValidationException(null, "Size không có trong Thùng rác.");
         }
-        sizeRepository.setDeleted(id, false);
+        sizeDAO.setDeleted(id, false);
     }
 
     /**
@@ -93,14 +93,14 @@ public class AttributeService {
         }
         if (code.isEmpty() || code.length() > 30 || !SlugUtil.isValid(code)) {
             errors.put("code", "Mã màu chỉ gồm chữ thường không dấu, số và dấu gạch ngang (tối đa 30 ký tự).");
-        } else if (colorRepository.existsCode(code, c.getId())) {
+        } else if (colorDAO.existsCode(code, c.getId())) {
             errors.put("code", "Mã màu \"" + code + "\" đã được dùng (có thể ở màu trong Thùng rác).");
         }
         if (!HEX.matcher(hex).matches()) {
             errors.put("hexCode", "Mã màu hex phải có dạng #RRGGBB.");
         }
         if (c.getId() > 0) {
-            Color existing = colorRepository.findById(c.getId());
+            Color existing = colorDAO.findById(c.getId());
             if (existing == null || existing.isDeleted()) {
                 errors.put("name", "Màu không tồn tại hoặc đã bị xóa.");
             }
@@ -113,9 +113,9 @@ public class AttributeService {
         c.setCode(code);
         c.setHexCode(hex.toUpperCase(Locale.ROOT));
         if (c.getId() > 0) {
-            colorRepository.update(c);
+            colorDAO.update(c);
         } else {
-            c.setId(colorRepository.insert(c));
+            c.setId(colorDAO.insert(c));
         }
     }
 
@@ -123,16 +123,16 @@ public class AttributeService {
      * Xóa mềm. Chặn nếu màu đang gắn biến thể của sản phẩm chưa xóa.
      */
     public void deleteColor(int id) {
-        Color c = colorRepository.findById(id);
+        Color c = colorDAO.findById(id);
         if (c == null || c.isDeleted()) {
             throw new ValidationException(null, "Màu không tồn tại hoặc đã nằm trong Thùng rác.");
         }
-        int used = colorRepository.countProductsUsing(id);
+        int used = colorDAO.countProductsUsing(id);
         if (used > 0) {
             throw new ValidationException(null, "Không thể xóa màu \"" + c.getName() + "\" vì đang có trong biến thể của "
                     + used + " sản phẩm.");
         }
-        colorRepository.setDeleted(id, true);
+        colorDAO.setDeleted(id, true);
     }
 
     /**
@@ -144,14 +144,14 @@ public class AttributeService {
 
         if (name.isEmpty() || name.length() > 20) {
             errors.put("name", "Tên size từ 1 đến 20 ký tự.");
-        } else if (sizeRepository.existsName(name, s.getId())) {
+        } else if (sizeDAO.existsName(name, s.getId())) {
             errors.put("name", "Size \"" + name + "\" đã tồn tại (có thể ở size trong Thùng rác).");
         }
         if (s.getSortOrder() < 0 || s.getSortOrder() > 99) {
             errors.put("sortOrder", "Thứ tự là số nguyên từ 0 đến 99.");
         }
         if (s.getId() > 0) {
-            Size existing = sizeRepository.findById(s.getId());
+            Size existing = sizeDAO.findById(s.getId());
             if (existing == null || existing.isDeleted()) {
                 errors.put("name", "Size không tồn tại hoặc đã bị xóa.");
             }
@@ -162,9 +162,9 @@ public class AttributeService {
 
         s.setName(name);
         if (s.getId() > 0) {
-            sizeRepository.update(s);
+            sizeDAO.update(s);
         } else {
-            s.setId(sizeRepository.insert(s));
+            s.setId(sizeDAO.insert(s));
         }
     }
 
@@ -172,15 +172,15 @@ public class AttributeService {
      * Xóa mềm, tương tự màu.
      */
     public void deleteSize(int id) {
-        Size s = sizeRepository.findById(id);
+        Size s = sizeDAO.findById(id);
         if (s == null || s.isDeleted()) {
             throw new ValidationException(null, "Size không tồn tại hoặc đã nằm trong Thùng rác.");
         }
-        int used = sizeRepository.countProductsUsing(id);
+        int used = sizeDAO.countProductsUsing(id);
         if (used > 0) {
             throw new ValidationException(null, "Không thể xóa size \"" + s.getName() + "\" vì đang có trong biến thể của "
                     + used + " sản phẩm.");
         }
-        sizeRepository.setDeleted(id, true);
+        sizeDAO.setDeleted(id, true);
     }
 }

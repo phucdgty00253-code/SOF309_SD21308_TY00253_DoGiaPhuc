@@ -54,18 +54,18 @@ Quy tắc nhớ nhanh: khách chỉ hủy được khi đơn **Chờ xác nhận
 
 ## 4. Code được tổ chức thế nào
 
-Code chia theo **tầng** (`controller`, `service`, `repository`, `model`), mỗi tầng chia tiếp thư mục con theo chức năng (`auth`, `account`, `shop`, `cart`, `order`, `admin`). Ví dụ đăng nhập: `controller/auth/LoginServlet`, `service/auth/AuthService`, `repository/auth/UserRepository`.
+Code chia theo **tầng** (`controller`, `service`, `dao`, `model`), mỗi tầng chia tiếp thư mục con theo chức năng (`auth`, `account`, `shop`, `cart`, `order`, `admin`). Ví dụ đăng nhập: `controller/auth/LoginServlet`, `service/auth/AuthService`, `dao/auth/UserDAO`.
 
 ```
-Trình duyệt → Servlet → Service → Repository → MySQL
+Trình duyệt → Servlet → Service → DAO → MySQL
                  ↓
                JSP (chỉ hiển thị)
 ```
 
 - **Servlet** nhận yêu cầu, gọi Service, chuyển dữ liệu sang JSP. Không viết SQL.
 - **Service** chứa logic nghiệp vụ (kiểm tra voucher, trừ tồn kho, transaction).
-- **Repository** chứa toàn bộ câu SQL, dùng `PreparedStatement`. Không có logic nghiệp vụ.
-- **JSP** chỉ hiển thị, không gọi Service hay Repository.
+- **DAO** chứa toàn bộ câu SQL, dùng `PreparedStatement`. Không có logic nghiệp vụ.
+- **JSP** chỉ hiển thị, không gọi Service hay DAO.
 
 ## 5. Hiện đang ở đâu
 

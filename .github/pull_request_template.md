@@ -42,7 +42,7 @@ Closes #
 
 <!-- Sang dự án mới: thay các dòng dưới bằng checklist trong SPECIFICATIONS.md của dự án đó -->
 
-- [ ] Đúng luồng `Servlet -> Service -> Repository`; Servlet không viết SQL, JSP không gọi Repository/Service
+- [ ] Đúng luồng `Servlet -> Service -> DAO`; Servlet không viết SQL, JSP không gọi DAO/Service
 - [ ] SQL dùng `PreparedStatement`, không nối chuỗi từ dữ liệu người dùng
 - [ ] Đổi `schema.sql` thì có `database/migration_<số>_<tên>.sql`
 - [ ] Giao diện đúng ở 1440px và 375px, Console không có lỗi đỏ

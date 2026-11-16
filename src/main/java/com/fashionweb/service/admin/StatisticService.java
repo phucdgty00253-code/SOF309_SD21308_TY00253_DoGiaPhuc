@@ -1,7 +1,7 @@
 package com.fashionweb.service.admin;
 
 import com.fashionweb.constant.OrderStatus;
-import com.fashionweb.repository.admin.StatisticRepository;
+import com.fashionweb.dao.admin.StatisticDAO;
 import com.fashionweb.dto.DashboardStats;
 
 import java.time.LocalDate;
@@ -11,13 +11,13 @@ import java.util.Map;
 /**
  * Số liệu cho dashboard của Admin.
  *
- * <p>Luồng gọi: Servlet -> Service -> Repository -> MySQL.
+ * <p>Luồng gọi: Servlet -> Service -> DAO -> MySQL.
  */
 public class StatisticService {
 
     private static final int TOP_PRODUCTS = 5;
 
-    private final StatisticRepository statisticRepository = new StatisticRepository();
+    private final StatisticDAO statisticDAO = new StatisticDAO();
 
     /**
      * Trong khoảng [from, to]: tổng đơn, doanh thu (chỉ đơn COMPLETED), doanh thu theo ngày, top sản phẩm bán chạy
@@ -25,13 +25,13 @@ public class StatisticService {
      */
     public DashboardStats getStats(LocalDate from, LocalDate to) {
         DashboardStats s = new DashboardStats();
-        s.setTotalOrders(statisticRepository.countOrders(from, to, null));
-        s.setTotalRevenue(statisticRepository.sumRevenue(from, to));
-        s.setTotalCustomers(statisticRepository.countCustomers());
-        s.setPendingOrders(statisticRepository.countPendingNow());
-        s.setRevenueByDay(statisticRepository.revenueByDay(from, to));
-        s.setTopProducts(statisticRepository.topProducts(from, to, TOP_PRODUCTS));
-        Map<String, Integer> raw = statisticRepository.ordersByStatus(from, to);
+        s.setTotalOrders(statisticDAO.countOrders(from, to, null));
+        s.setTotalRevenue(statisticDAO.sumRevenue(from, to));
+        s.setTotalCustomers(statisticDAO.countCustomers());
+        s.setPendingOrders(statisticDAO.countPendingNow());
+        s.setRevenueByDay(statisticDAO.revenueByDay(from, to));
+        s.setTopProducts(statisticDAO.topProducts(from, to, TOP_PRODUCTS));
+        Map<String, Integer> raw = statisticDAO.ordersByStatus(from, to);
         Map<String, Integer> byStatus = new LinkedHashMap<>();
         for (OrderStatus st : OrderStatus.values()) {
             byStatus.put(st.getLabel(), raw.getOrDefault(st.name(), 0));
