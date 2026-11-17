@@ -1,8 +1,9 @@
 # KẾ HOẠCH KIỂM THỬ (TEST PLAN)
 > *File RIÊNG của dự án. Bối cảnh dự án: [SPECIFICATIONS.md](SPECIFICATIONS.md). Quy trình: [HUONG_DAN_QUY_TRINH_PHAT_TRIEN.md](HUONG_DAN_QUY_TRINH_PHAT_TRIEN.md) (Bước 5).*
 
-* **Dự án:** Saltair - website bán quần áo basic (JAV102)
-* **Người phụ trách:** Trưởng nhóm (`nhan0x`)
+* **Dự án:** Saltair - website bán quần áo basic (JAV102), kiểm thử theo môn SOF309
+* **Người phụ trách:** Trưởng nhóm (`nhan0x`); phần SOF309 của Phúc (`phucdgty00253-code`): sản phẩm, giỏ hàng, đăng nhập/đăng ký
+* **Bộ test case chi tiết:** [TEST_CASES.md](TEST_CASES.md) · **Nhật ký AI:** [ai-logs/01_test_design_ai.md](ai-logs/01_test_design_ai.md), [ai-logs/02_junit_script_ai.md](ai-logs/02_junit_script_ai.md)
 
 ---
 
@@ -26,6 +27,7 @@
 | Cấp độ | Công cụ | Thư mục / Tài liệu | Khi nào chạy |
 | :--- | :--- | :--- | :--- |
 | Unit test | JUnit 5 (`mvn test`), `@Tag("unit")` | `src/test/java/com/fashionweb/<tầng>/<mảng>/` | Mỗi lần commit có sửa Service |
+| Unit test Controller (Y3) | JUnit 5 + Mockito (`mockConstruction`), `@Tag("unit")`; request/response/session giả ở `controller/FakeWeb` | `src/test/java/com/fashionweb/controller/{auth,cart,shop}/` | Mỗi lần commit có sửa Servlet |
 | Giao diện | Selenium + Page Object (`mvn test -Pui`), `@Tag("ui")` | `src/test/java/com/fashionweb/ui/{pages,tests}/` | Khi web đang chạy local, trước khi mở PR có sửa JSP |
 | Test case theo yêu cầu | Làm tay theo bảng | `docs/requirements/REQ_<số>_<TEN>/03_TEST_CASES.md` | Bước 5, trước khi mở PR |
 | Toàn luồng | Làm tay (hoặc script curl) | Mục 5 bên dưới | Trước khi merge PR lớn, trước khi lên `main` |
@@ -45,9 +47,27 @@ Mỗi người sở hữu test trong package của mảng mình; `ui/pages/` dù
 | Minh (`HoangMinh219`) | Đơn hàng, đánh giá | `service/order`, `ui/tests/Order*` |
 | Phúc (`phucdgty00253-code`) | Sản phẩm, giỏ hàng, voucher | `service/shop`, `service/cart`, `util`, `ui/tests/Cart*` |
 
+### 3.3. Kỹ thuật thiết kế test và kỹ thuật JUnit (Controller)
+* **Phân vùng tương đương + giá trị biên** (đặc tả ở [SPECIFICATIONS.md](SPECIFICATIONS.md) mục 8): mật khẩu 7/8/64/65 ký tự, họ tên 100/101, email 150/151, ghi chú 500/501, `quantity` 0/1/10, `page` 0/1/vượt trang, khoảng giá min > max...
+* `@ParameterizedTest` + `@CsvSource`: quét nhiều bộ dữ liệu biên trong một hàm test.
+* `assertThrows`: `ValidationException` từ Service, và `DataAccessException` phải được Servlet ném tiếp (không nuốt).
+* `@Timeout(2s)` ở mọi class test Controller để phát hiện vòng lặp treo.
+* Không cần Tomcat hay MySQL: Service/DAO được thay bằng mock, nên chạy trong vài giây.
+* Chạy riêng nhóm Controller: `mvn test -Dtest='*ServletTest,LoginSupportTest'`.
+
+### 3.4. Kết quả chạy gần nhất (17/11/2026)
+| Nhóm | Số ca (đã tính từng dòng `@CsvSource`) | Kết quả |
+| :--- | :---: | :---: |
+| `controller/auth` (Login, Register, Logout, LoginSupport) | 68 | Pass |
+| `controller/cart` (CartServlet) | 40 | Pass |
+| `controller/shop` (ProductList, ProductDetail) | 74 | Pass |
+| Test có từ trước (util, service/order) | 36 | Pass |
+| **Tổng `mvn test`** | **218** | **BUILD SUCCESS, 0 Failure, 0 Error** |
+
 ## 4. MÔI TRƯỜNG & DỮ LIỆU
 * Cách chạy, cấu hình và dữ liệu mẫu: [SPECIFICATIONS.md](SPECIFICATIONS.md) mục 2 và mục 6.
-* Trước mỗi đợt test: chạy lại `database/schema.sql` rồi `database/data.sql` để có dữ liệu sạch.
+* Dữ liệu mẫu tạo bởi Flyway (`src/main/resources/db/migration/V1..V4`) khi web khởi động; `db.properties` trỏ MySQL của máy.
+* Chạy web local: `mvn clean package` rồi deploy `target/saltair.war` lên Tomcat 11, mở `http://localhost:8080/saltair/home`. **Dùng `clean`**: class cũ còn sót trong `target/` từng làm Tomcat không khởi động (hai Servlet trùng `/admin/trash`).
 
 ## 5. CÁC LUỒNG CHÍNH PHẢI LUÔN CHẠY ĐƯỢC (SMOKE)
 1. Khách chưa đăng nhập mở trang chủ, tìm kiếm, mở chi tiết sản phẩm, thêm vào giỏ.
