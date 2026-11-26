@@ -1,0 +1,28 @@
+# Maven
+target/
+
+# Java build
+*.class
+*.jar
+*.war
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Credentials
+src/main/resources/cloudinary.properties
+src/main/resources/db.properties
+src/main/resources/mail.properties
