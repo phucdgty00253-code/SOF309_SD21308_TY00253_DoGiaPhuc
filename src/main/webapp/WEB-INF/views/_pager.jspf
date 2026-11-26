@@ -1,0 +1,9 @@
+<%-- Cần: result (Page) và pagerUrl (đường dẫn đã kèm tham số lọc, kết thúc bằng "page=") --%>
+<c:if test="${result.totalPages > 1}">
+    <nav class="pager" aria-label="Phân trang">
+        <c:forEach var="p" begin="1" end="${result.totalPages}">
+            <a class="${p == result.page ? 'current' : ''}" href="${pagerUrl}${p}">${p}</a>
+        </c:forEach>
+    </nav>
+</c:if>
+<p class="muted">Tổng: ${result.totalItems} bản ghi</p>

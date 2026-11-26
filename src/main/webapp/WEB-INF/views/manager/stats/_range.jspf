@@ -1,0 +1,5 @@
+<form class="panel inline" method="get">
+    <label for="from">Từ ngày</label><input id="from" type="date" name="from" value="<c:out value='${from}'/>">
+    <label for="to">Đến ngày</label><input id="to" type="date" name="to" value="<c:out value='${to}'/>">
+    <button type="submit">Thống kê</button>
+</form>

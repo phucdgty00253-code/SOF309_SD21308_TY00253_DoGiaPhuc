@@ -1,0 +1,4 @@
+# Sao chép thành db.properties (không commit) rồi điền mật khẩu của máy bạn
+db.url=jdbc:sqlserver://localhost:1433;databaseName=polycoffee;encrypt=false
+db.user=sa
+db.password=

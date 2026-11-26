@@ -38,11 +38,9 @@ Closes #
 - [ ] Commit theo dạng `<loại>(<phạm vi>): ... (#số)`
 - [ ] Không commit file cấu hình bí mật, file build, mật khẩu, khóa API
 
-## Checklist riêng dự án (theo docs/SPECIFICATIONS.md mục 7)
-
-<!-- Sang dự án mới: thay các dòng dưới bằng checklist trong SPECIFICATIONS.md của dự án đó -->
+## Checklist riêng dự án (theo docs/SPECIFICATIONS.md)
 
 - [ ] Đúng luồng `Servlet -> Service -> DAO`; Servlet không viết SQL, JSP không gọi DAO/Service
 - [ ] SQL dùng `PreparedStatement`, không nối chuỗi từ dữ liệu người dùng
-- [ ] Đổi `schema.sql` thì có `database/migration_<số>_<tên>.sql`
+- [ ] Đổi cấu trúc CSDL thì cập nhật `database/polycoffee.sql` và `docs/SPECIFICATIONS.md`
 - [ ] Giao diện đúng ở 1440px và 375px, Console không có lỗi đỏ

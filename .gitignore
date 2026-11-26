@@ -23,6 +23,11 @@ target/
 !.env.example
 
 # Credentials
-src/main/resources/cloudinary.properties
 src/main/resources/db.properties
 src/main/resources/mail.properties
+
+# Ảnh người dùng upload
+src/main/webapp/uploads/
+
+# Ảnh chụp khi test Selenium fail
+screenshots/

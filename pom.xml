@@ -4,23 +4,24 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.fashionweb</groupId>
-    <artifactId>saltair</artifactId>
+    <groupId>com.polycoffee</groupId>
+    <artifactId>polycoffee</artifactId>
     <version>1.0.0</version>
     <packaging>war</packaging>
-    <name>Saltair</name>
+    <name>PolyCoffee</name>
+    <description>Website quản lý quán PolyCoffee (JAV102) - đối tượng kiểm thử của môn SOF309</description>
 
     <properties>
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <failOnMissingWebXml>false</failOnMissingWebXml>
         <junit.jupiter.version>5.10.2</junit.jupiter.version>
-        <selenium.version>4.20.0</selenium.version>
         <mockito.version>5.17.0</mockito.version>
+        <selenium.version>4.20.0</selenium.version>
     </properties>
 
     <dependencies>
-        <!-- Tomcat 11 uses Jakarta EE APIs; the container provides these. -->
+        <!-- Tomcat 11 (Jakarta EE) cung cấp sẵn Servlet và JSP API -->
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
@@ -34,7 +35,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- JSTL implementation is packaged because Tomcat does not provide JSTL. -->
+        <!-- JSTL: Tomcat không có sẵn nên đóng gói vào WAR -->
         <dependency>
             <groupId>jakarta.servlet.jsp.jstl</groupId>
             <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
@@ -46,39 +47,28 @@
             <version>3.0.1</version>
         </dependency>
 
+        <!-- SQL Server (yêu cầu của JAV102) -->
         <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-            <version>9.1.0</version>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>12.8.1.jre11</version>
         </dependency>
+
+        <!-- Gửi mail cấp lại mật khẩu (Lab 5) -->
         <dependency>
             <groupId>org.eclipse.angus</groupId>
             <artifactId>angus-mail</artifactId>
             <version>2.0.3</version>
         </dependency>
 
+        <!-- Băm mật khẩu -->
         <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
-            <version>10.20.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-mysql</artifactId>
-            <version>10.20.1</version>
+            <groupId>org.mindrot</groupId>
+            <artifactId>jbcrypt</artifactId>
+            <version>0.4</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.15.2</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.zxing</groupId>
-            <artifactId>core</artifactId>
-            <version>3.5.3</version>
-        </dependency>
-
+        <!-- Kiểm thử: JUnit 5 + Mockito (tuần 2), Selenium (tuần 3) -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -100,15 +90,12 @@
     </dependencies>
 
     <build>
-        <finalName>saltair</finalName>
+        <finalName>polycoffee</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
-                <configuration>
-                    <release>${maven.compiler.release}</release>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -120,7 +107,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
                 <configuration>
-                    <!-- Mockito (Byte Buddy) vẫn chạy được khi máy dùng JDK mới hơn bản Byte Buddy hỗ trợ -->
+                    <!-- Cho Mockito chạy được khi máy dùng JDK mới hơn bản Byte Buddy hỗ trợ -->
                     <argLine>-Dnet.bytebuddy.experimental=true</argLine>
                 </configuration>
             </plugin>

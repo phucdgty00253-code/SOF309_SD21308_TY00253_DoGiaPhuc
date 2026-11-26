@@ -1,0 +1,7 @@
+# Sao chép thành mail.properties (không commit). Gmail: dùng "Mật khẩu ứng dụng".
+mail.host=smtp.gmail.com
+mail.port=587
+mail.starttls=true
+mail.user=
+mail.password=
+mail.from=

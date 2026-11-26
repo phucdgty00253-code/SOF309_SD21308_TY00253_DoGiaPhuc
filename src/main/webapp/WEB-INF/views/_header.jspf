@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PolyCoffee</title>
+    <link rel="stylesheet" href="${ctx}/assets/css/style.css">
+</head>
+<body>
+<header class="topbar">
+    <a class="brand" href="${ctx}/home">PolyCoffee</a>
+    <nav>
+        <c:choose>
+            <c:when test="${empty sessionScope.user}">
+                <a href="${ctx}/auth/login">Đăng nhập</a>
+            </c:when>
+            <c:otherwise>
+                <a href="${ctx}/employee/pos">Bán hàng</a>
+                <a href="${ctx}/employee/bills">Hóa đơn của tôi</a>
+                <c:if test="${sessionScope.user.role}">
+                    <a href="${ctx}/manager/categories">Loại đồ uống</a>
+                    <a href="${ctx}/manager/drinks">Đồ uống</a>
+                    <a href="${ctx}/manager/staff">Nhân viên</a>
+                    <a href="${ctx}/manager/bills">Quản lý hóa đơn</a>
+                    <a href="${ctx}/manager/stats/top-drinks">Top 5</a>
+                    <a href="${ctx}/manager/stats/revenue">Doanh thu</a>
+                </c:if>
+                <a href="${ctx}/account/profile"><c:out value="${sessionScope.user.fullName}"/></a>
+                <a href="${ctx}/account/password">Đổi mật khẩu</a>
+                <form method="post" action="${ctx}/auth/logout"><button class="link" id="logout">Đăng xuất</button></form>
+            </c:otherwise>
+        </c:choose>
+    </nav>
+</header>
+<main>
+<c:if test="${not empty sessionScope.flashSuccess}">
+    <p class="alert success" role="status"><c:out value="${sessionScope.flashSuccess}"/></p>
+    <c:remove var="flashSuccess" scope="session"/>
+</c:if>
+<c:if test="${not empty sessionScope.flashError}">
+    <p class="alert error" role="alert"><c:out value="${sessionScope.flashError}"/></p>
+    <c:remove var="flashError" scope="session"/>
+</c:if>
+<c:if test="${not empty requestScope.error}">
+    <p class="alert error" role="alert"><c:out value="${requestScope.error}"/></p>
+</c:if>
