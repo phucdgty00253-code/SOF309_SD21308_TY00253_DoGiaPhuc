@@ -19,6 +19,7 @@ import static org.mockito.Mockito.mock;
  *   TC_SEC_002  BR-SEC-02   Nhân viên không vào được /manager/*
  *   TC_SEC_003  BR-SEC-02   Đúng quyền thì được đi tiếp
  *   TC_SEC_004  BR-SEC-03   POST khi chưa đăng nhập không lưu returnUrl
+ *   TC_SEC_005  BR-SEC-02   Nhân viên không vượt quyền bằng URL mã hóa
  *
  * Dựng ở đây: AuthFilter THẬT; FilterChain, request, response là GIẢ.
  * </pre>

@@ -22,7 +22,8 @@ import java.io.IOException;
 /** Quản lý đồ uống: tìm kiếm, phân trang, thêm, sửa, xóa (Lab 5 bài 1). */
 @WebServlet({"/manager/drinks", "/manager/drinks/form", "/manager/drinks/create", "/manager/drinks/update",
         "/manager/drinks/delete"})
-@MultipartConfig(maxFileSize = 5 * 1024 * 1024, maxRequestSize = 6 * 1024 * 1024)
+// Giới hạn của container đặt rộng hơn giới hạn nghiệp vụ 2 MB (FileUtil) để còn trả được thông báo dễ hiểu
+@MultipartConfig(maxFileSize = 10 * 1024 * 1024, maxRequestSize = 11 * 1024 * 1024)
 public class DrinkServlet extends BaseServlet {
     private static final String LIST = "/manager/drinks";
 

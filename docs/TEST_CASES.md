@@ -9,7 +9,7 @@
 | Nhóm | Chức năng | Package test | Số TC |
 |---|---|---|--:|
 | TC_AUTH | Đăng nhập và tài khoản | `controllers/auth` | 16 |
-| TC_SEC | Phân quyền | `controllers/security` | 4 |
+| TC_SEC | Phân quyền | `controllers/security` | 5 |
 | TC_HOME | Trang chủ | `controllers/home` | 2 |
 | TC_CAT | Loại đồ uống | `controllers/category` | 8 |
 | TC_DRINK | Đồ uống | `controllers/drink` | 11 |
@@ -17,7 +17,7 @@
 | TC_POS | Bán hàng POS | `controllers/pos` | 12 |
 | TC_BILL | Hóa đơn | `controllers/bill` | 11 |
 | TC_STATS | Thống kê | `controllers/stats` | 6 |
-| **Tổng (unit)** | | | **81** |
+| **Tổng (unit)** | | | **82** |
 
 Kết quả cột *KQ* lấy từ lần chạy `mvn test` ghi ở cuối file. Ca kiểm tra tích hợp (TC_IT) nằm ở mục cuối.
 
@@ -50,6 +50,7 @@ Kết quả cột *KQ* lấy từ lần chạy `mvn test` ghi ở cuối file. C
 | [TC_SEC_002](../src/test/java/com/poly/sof309/controllers/security/TC_SEC_002_StaffBlockedFromManagerControllerTest.java) | BR-SEC-02 | Nhân viên không vào được /manager/* | Invalid; @ParameterizedTest, bảng quyết định | 5 URL quản lý | Nhân viên truy cập | Chuyển hướng, báo chỉ dành cho quản lý, không vào controller | `AuthFilter.doFilter` → (không có service) → FilterChain | Pass |
 | [TC_SEC_003](../src/test/java/com/poly/sof309/controllers/security/TC_SEC_003_AllowedRequestsControllerTest.java) | BR-SEC-02 | Đúng quyền thì được đi tiếp | Happy; @ParameterizedTest, bảng quyết định | Quản lý vào /manager, /employee; nhân viên vào /employee, /account | Truy cập URL | Request được chuyển tới controller | `AuthFilter.doFilter` → (không có service) → FilterChain | Pass |
 | [TC_SEC_004](../src/test/java/com/poly/sof309/controllers/security/TC_SEC_004_AnonymousPostControllerTest.java) | BR-SEC-03 | POST khi chưa đăng nhập không lưu returnUrl | Invalid; Đoán lỗi | POST /employee/pos/checkout | Gửi form khi hết phiên | Chuyển tới đăng nhập, không lưu returnUrl, không vào controller | `AuthFilter.doFilter` → (không có service) → FilterChain | Pass |
+| [TC_SEC_005](../src/test/java/com/poly/sof309/controllers/security/TC_SEC_005_EncodedUrlBypassControllerTest.java) | BR-SEC-02 | Nhân viên không vượt quyền bằng URL mã hóa | Invalid; @ParameterizedTest, đoán lỗi (bảo mật) | /%6Danager/staff, /manager;x/staff, /manage%72/staff | Nhân viên gửi URL đã làm biến dạng | Vẫn bị chặn vì filter xét đường dẫn đã được container giải mã | `AuthFilter.doFilter` → (không có service) → FilterChain | Pass |
 
 ## Trang chủ (TC_HOME)
 
@@ -149,10 +150,52 @@ Kết quả cột *KQ* lấy từ lần chạy `mvn test` ghi ở cuối file. C
 
 ---
 
-## Kết quả chạy unit test
-Lần chạy ngày 26/11/2026, lệnh `mvn test`: **81 test case ID, 167 lượt test (gồm các dòng tham số hóa), 0 lỗi, 0 bỏ qua.**
+## Kiểm tra tích hợp (TC_IT) - Tomcat 11 + SQL Server 2022 thật
+Script: [`scripts/integration_check.py`](../scripts/integration_check.py), mail đi vào máy chủ giả [`scripts/mail_sink.py`](../scripts/mail_sink.py).
+Chạy trên CSDL vừa tạo lại (script thêm và sửa dữ liệu):
+```bash
+python3 scripts/mail_sink.py /tmp/mail.txt 2525      # cửa sổ 1; chạy Tomcat với MAIL_HOST=127.0.0.1, MAIL_PORT=2525, MAIL_STARTTLS=false
+python3 scripts/integration_check.py /tmp/mail.txt http://localhost:8080/polycoffee
+```
 
-**Kiểm tra bộ test có bắt được lỗi không** (cố ý làm sai code, chạy lại, rồi khôi phục):
+| ID | Nội dung | KQ |
+|---|---|:-:|
+| TC_IT_001 | Trang chủ hiển thị đúng tiếng Việt, giá; ẩn đồ uống ngừng bán | Pass |
+| TC_IT_002 | Chưa đăng nhập bị chuyển đi; đăng nhập xong quay lại trang cũ; cookie HttpOnly + SameSite | Pass |
+| TC_IT_003 | Sai mật khẩu và tài khoản khóa bị từ chối | Pass |
+| TC_IT_004 | Nhân viên không vào được /manager/* | Pass |
+| TC_IT_005 | Không vượt quyền bằng URL mã hóa hoặc tham số đường dẫn | Pass |
+| TC_IT_006 | CRUD loại đồ uống với tiếng Việt; chặn trùng tên và xóa loại đã dùng | Pass |
+| TC_IT_007 | Dữ liệu chứa thẻ HTML được escape khi hiển thị | Pass |
+| TC_IT_008 | Thêm đồ uống có ảnh; ảnh tải được; xóa đồ uống chưa bán | Pass |
+| TC_IT_009 | Chặn upload file không phải ảnh | Pass |
+| TC_IT_010 | File ảnh quá lớn (3 MB và 7 MB) báo lỗi thân thiện, không lỗi 500 | Pass |
+| TC_IT_011 | Tìm kiếm kết hợp phân trang đồ uống; ký tự đặc biệt không phá câu SQL | Pass |
+| TC_IT_012 | POS: tạo đơn, tăng/giảm, thanh toán; tổng tiền đúng; doanh thu tăng đúng số tiền | Pass |
+| TC_IT_013 | Lịch sử của nhân viên chỉ có hóa đơn của mình; xem hóa đơn người khác bị 403 | Pass |
+| TC_IT_014 | Quản lý xem chi tiết hóa đơn đủ thông tin và hủy hóa đơn đã thanh toán | Pass |
+| TC_IT_015 | Top 5 chỉ tính hóa đơn finish; lọc ngày; khoảng ngày sai báo lỗi | Pass |
+| TC_IT_016 | Thêm, tìm, khóa, mở khóa nhân viên; chặn trùng email | Pass |
+| TC_IT_017 | Cấp lại mật khẩu: thư đến, mật khẩu mới dùng được, mật khẩu cũ hết hiệu lực | Pass |
+| TC_IT_018 | Quên mật khẩu, đổi mật khẩu, sửa thông tin cá nhân, đăng xuất | Pass |
+| TC_IT_019 | Trang lỗi 404 và gọi sai phương thức | Pass |
+
+## Kết quả chạy ngày 26/11/2026
+* **Unit test** (`mvn test`): 82 test case ID, 170 lượt test, 0 lỗi.
+* **Tích hợp:** 19 ca, 19 pass.
+
+## Lỗi đã phát hiện khi chạy thật (đã sửa)
+| Lỗi | Mức độ | Phát hiện bởi | Mô tả | Cách sửa | Test chặn tái phát |
+|---|---|---|---|---|---|
+| BUG-01 | Critical | TC_IT_005 | Nhân viên mở `/%6Danager/staff` vào được trang quản lý | `AuthFilter` dùng đường dẫn đã giải mã thay cho `getRequestURI()` | TC_SEC_005, TC_IT_005 |
+| BUG-02 | High | TC_IT_012, TC_IT_015 | Trang Doanh thu, Top 5 lỗi 500 khi không chọn ngày | `JdbcUtil` gửi NULL kiểu NVARCHAR | TC_IT_012, TC_IT_015 |
+| BUG-03 | Medium | TC_IT_010 | Upload 7 MB làm đứt kết nối | Nới giới hạn container (10 MB), giữ giới hạn nghiệp vụ 2 MB, thêm kiểm tra ở form | TC_IT_010 (file trên 11 MB vẫn chưa được xử lý) |
+| BUG-04 | Low | TC_IT_012 | Giá hiển thị `87000`, không phân cách hàng nghìn khi client không gửi ngôn ngữ | Cố định locale `vi_VN` trong `web.xml` | TC_IT_012 |
+
+BUG-01 và BUG-02 không bị unit test ban đầu phát hiện vì unit test giả request và DAO.
+
+## Kiểm tra bộ unit test có bắt được lỗi không
+Cố ý làm sai code, chạy lại, rồi khôi phục:
 
 | Lỗi cố ý đưa vào | Test chuyển sang đỏ |
 |---|---|

@@ -4,6 +4,11 @@
          xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
          version="6.0">
     <display-name>PolyCoffee</display-name>
+    <!-- Định dạng số, ngày luôn theo tiếng Việt (87.000), không phụ thuộc ngôn ngữ trình duyệt -->
+    <context-param>
+        <param-name>jakarta.servlet.jsp.jstl.fmt.locale</param-name>
+        <param-value>vi_VN</param-value>
+    </context-param>
     <session-config>
         <session-timeout>30</session-timeout>
         <cookie-config>

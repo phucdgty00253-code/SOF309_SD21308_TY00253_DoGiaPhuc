@@ -10,7 +10,7 @@ controllers/
 │   └── TC_AUTH_001 ... TC_AUTH_016   # mỗi Test Case ID một file
 ├── security/                     # Phân quyền
 │   ├── SecurityControllerTest.java # lớp nền: dựng đối tượng được test
-│   └── TC_SEC_001 ... TC_SEC_004   # mỗi Test Case ID một file
+│   └── TC_SEC_001 ... TC_SEC_005   # mỗi Test Case ID một file
 ├── home/                         # Trang chủ
 │   ├── HomeControllerTest.java   # lớp nền: dựng đối tượng được test
 │   └── TC_HOME_001 ... TC_HOME_002   # mỗi Test Case ID một file
@@ -87,6 +87,7 @@ Ví dụ với `TC_AUTH_001`:
 | TC_SEC_002 | [TC_SEC_002_StaffBlockedFromManagerControllerTest](security/TC_SEC_002_StaffBlockedFromManagerControllerTest.java) | GET /manager/* | `AuthFilter.doFilter` → (không có service) |
 | TC_SEC_003 | [TC_SEC_003_AllowedRequestsControllerTest](security/TC_SEC_003_AllowedRequestsControllerTest.java) | GET /manager/*, /employee/*, /account/* | `AuthFilter.doFilter` → (không có service) |
 | TC_SEC_004 | [TC_SEC_004_AnonymousPostControllerTest](security/TC_SEC_004_AnonymousPostControllerTest.java) | POST /employee/pos/checkout | `AuthFilter.doFilter` → (không có service) |
+| TC_SEC_005 | [TC_SEC_005_EncodedUrlBypassControllerTest](security/TC_SEC_005_EncodedUrlBypassControllerTest.java) | GET /%6Danager/staff (đã đăng nhập là nhân viên) | `AuthFilter.doFilter` → (không có service) |
 
 ### Trang chủ (`home/`)
 

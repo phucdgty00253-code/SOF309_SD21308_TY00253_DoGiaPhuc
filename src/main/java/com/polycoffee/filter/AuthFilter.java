@@ -35,8 +35,11 @@ public class AuthFilter implements Filter {
             response.sendRedirect(request.getContextPath() + "/auth/login");
             return;
         }
-        String path = request.getRequestURI().substring(request.getContextPath().length());
-        if (path.startsWith("/manager/") && !AuthUtil.isManager(request)) {
+        // Phải dùng đường dẫn container đã giải mã và chuẩn hóa. getRequestURI() giữ nguyên chuỗi người dùng gõ,
+        // nên "/%6Danager/..." hoặc "/manager;x/..." sẽ lọt qua nếu so sánh trên đó.
+        String pathInfo = request.getPathInfo();
+        String path = request.getServletPath() + (pathInfo == null ? "" : pathInfo);
+        if ((path.equals("/manager") || path.startsWith("/manager/")) && !AuthUtil.isManager(request)) {
             FlashUtil.error(request, "Chức năng này chỉ dành cho quản lý.");
             response.sendRedirect(request.getContextPath() + "/auth/login");
             return;

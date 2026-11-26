@@ -22,6 +22,9 @@ Ví dụ: [TC_DRINK_004](../../src/test/java/com/poly/sof309/controllers/drink/)
 | TC_DRINK_010 có một dòng thừa chỉ để cài mock, gây khó hiểu | Thay bằng câu `when(...)` rõ ràng |
 | Test do cùng AI viết với code nên có thể luôn xanh | Cố ý đưa 4 lỗi vào code; cả 4 đều làm đỏ đúng test (bảng cuối `TEST_CASES.md`) |
 
+### 4.1b. Lỗi trong code do AI sinh, chỉ lộ ra khi chạy thật
+Unit test ban đầu đều xanh nhưng khi chạy với Tomcat và SQL Server thì có 4 lỗi (BUG-01 đến BUG-04, bảng cuối [TEST_CASES.md](../TEST_CASES.md)), trong đó có lỗ hổng phân quyền. Bài học: unit test giả request và DAO không thay được kiểm tra tích hợp.
+
 ### 4.2. Phần sinh viên tự sửa (SINH VIÊN TỰ ĐIỀN)
 > Ghi đoạn code bạn tự đổi, trước và sau, kèm lý do. Nên chuẩn bị giải thích được WebMock, `@CsvSource`, `assertThrows` khi vấn đáp.
 

@@ -10,6 +10,7 @@ import html
 import http.cookiejar
 import re
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -190,6 +191,7 @@ def drink_with_image():
     assert served.status == 200 and served.raw == PNG
     page = admin.get("/manager/drinks?" + urllib.parse.urlencode({"keyword": "kem trứng"}))
     assert "Đã xóa đồ uống." in admin.follow("/manager/drinks/delete", id=row_id(page, "Cà phê kem trứng")).text
+    time.sleep(6)  # Tomcat cache file tĩnh khoảng 5 giây
     assert guest.get(image.group(1)).status == 404, "ảnh chưa được dọn"
 
 
@@ -243,11 +245,17 @@ def pos_flow():
     staff.follow("/employee/pos/init", billId=bill, drinkId=5)
     staff.follow("/employee/pos/update-quantity", billId=bill, drinkId=2, action="increase")
     page = staff.follow("/employee/pos/update-quantity", billId=bill, drinkId=5, action="decrease")
-    assert re.search(r"Tổng: 87[.,]000 đ", page.text), "3 x 29000 phải bằng 87000"
+    assert "Tổng: 87.000 đ" in page.text, "3 x 29000 phải hiển thị 87.000"
     assert "Thanh toán thành công." in staff.follow("/employee/pos/checkout", billId=bill).text
     assert revenue_total() == before + 87000
     page = staff.follow("/employee/pos/update-quantity", billId=bill, drinkId=2, action="increase")
     assert "Chỉ sửa được hóa đơn đang chờ thanh toán." in page.text
+    # Đơn mang đi (card_id = NULL)
+    r = staff.post("/employee/pos/init", billId=0, drinkId=1, cardId=0)
+    assert r.status == 302 and "billId=" in r.location, (r.status, r.location)
+    away = r.location.split("billId=")[1]
+    assert "Mang đi" in staff.get(f"/employee/bills/detail?id={away}").text
+    assert "Đã hủy hóa đơn." in staff.follow("/employee/pos/cancel", billId=away).text
 
 
 @check("TC_IT_013", "Lịch sử của nhân viên chỉ có hóa đơn của mình; xem hóa đơn người khác bị 403")
@@ -283,7 +291,7 @@ def statistics():
     assert "Không có dữ liệu" in empty.text
     one_day = admin.get(f"/manager/stats/revenue?from={today - datetime.timedelta(days=3)}"
                         f"&to={today - datetime.timedelta(days=3)}")
-    assert re.search(r"Tổng doanh thu: 83[.,]000 đ", one_day.text), "lọc đúng một ngày phải ra 83000"
+    assert "Tổng doanh thu: 83.000 đ" in one_day.text, "lọc đúng một ngày phải ra 83.000"
     assert 'class="bar"' in one_day.source
     assert "Ngày bắt đầu không được sau" in admin.get(
         "/manager/stats/revenue?from=2026-02-02&to=2026-02-01").text

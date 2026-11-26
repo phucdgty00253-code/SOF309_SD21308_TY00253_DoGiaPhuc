@@ -58,7 +58,9 @@ public final class JdbcUtil {
     private static void bind(PreparedStatement statement, Object... values) throws SQLException {
         for (int i = 0; i < values.length; i++) {
             if (values[i] == null) {
-                statement.setNull(i + 1, Types.NULL);
+                // Types.NULL bị driver SQL Server gửi thành varbinary, không đổi được sang DATE trong stored
+                // procedure. NULL kiểu NVARCHAR được SQL Server đổi sang mọi kiểu cột dự án dùng.
+                statement.setNull(i + 1, Types.NVARCHAR);
             } else {
                 statement.setObject(i + 1, values[i]);
             }

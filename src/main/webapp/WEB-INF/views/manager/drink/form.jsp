@@ -21,7 +21,8 @@
         <label for="description">Mô tả</label>
         <textarea id="description" name="description" maxlength="500" rows="3"><c:out value="${form.description}"/></textarea>
         <label for="imageFile">Ảnh (JPG, PNG, WEBP, tối đa 2 MB)</label>
-        <input id="imageFile" name="imageFile" type="file" accept=".jpg,.jpeg,.png,.webp">
+        <input id="imageFile" name="imageFile" type="file" accept=".jpg,.jpeg,.png,.webp"
+               onchange="this.setCustomValidity(this.files[0] && this.files[0].size > 2 * 1024 * 1024 ? 'Ảnh tối đa 2 MB.' : ''); this.reportValidity()">
         <label class="check"><input type="checkbox" name="active" ${form.active ? 'checked' : ''}> Đang bán</label>
         <button type="submit">Lưu</button>
         <a href="${ctx}/manager/drinks">Quay lại</a>

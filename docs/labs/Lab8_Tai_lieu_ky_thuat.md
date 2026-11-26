@@ -67,7 +67,7 @@ src/test/java/    # Unit test
 ```bash
 read -s SA_PASSWORD && export SA_PASSWORD
 docker run -d --name polycoffee-sql --platform linux/amd64 \
-  -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD="$SA_PASSWORD" \
+  -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD="$SA_PASSWORD" -e TZ=Asia/Ho_Chi_Minh \
   -p 127.0.0.1:1433:1433 mcr.microsoft.com/mssql/server:2022-latest
 ```
 **2. Tạo CSDL** (chờ SQL Server khởi động xong). Script **xóa database `polycoffee` cũ** rồi tạo lại:
